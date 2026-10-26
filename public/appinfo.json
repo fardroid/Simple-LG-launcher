@@ -1,0 +1,20 @@
+{
+  "id": "tld.my.simplelauncher",
+  "version": "1.7.0",
+  "vendor": "tld.my.simplelauncher",
+  "type": "web",
+  "main": "index.html",
+  "title": "Simple LG launcher",
+  "appDescription": "A calm home screen for LG TVs: clock, 7-day weather, your calendar and a row of apps over your wallpaper.",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "iconColor": "#050505",
+  "bgColor": "#000000",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "transparent": false,
+  "splashBackground": "splash.png",
+  "requiredMemory": 20,
+  "supportGIP": true,
+  "noSplashOnLaunch": true
+}

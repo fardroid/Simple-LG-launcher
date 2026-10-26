@@ -1,0 +1,22 @@
+// Tests for the prop comparison of the cards (src/lib/memoprops.ts).   Run: npm test
+import {build} from 'esbuild';
+const out = new URL('../node_modules/.cache-memoprops-test.mjs', import.meta.url).pathname;
+await build({entryPoints: [new URL('../src/lib/memoprops.ts', import.meta.url).pathname], bundle: true, format: 'esm', outfile: out, platform: 'node', logLevel: 'error'});
+const m = await import(out);
+let fail = 0;
+const eq = (a, b, msg) => { const ok = JSON.stringify(a) === JSON.stringify(b); if (!ok) { fail++; console.log('FAIL', msg, JSON.stringify(a), '!=', JSON.stringify(b)); } else console.log('ok  ', msg); };
+eq(m.sameProps(1, 1), true, 'equal numbers are the same');
+eq(m.sameProps('a', 'b'), false, 'different strings differ');
+eq(m.sameProps(() => 1, () => 2), true, 'two functions count as the same (handlers only call setters)');
+eq(m.sameProps(new Date(5), new Date(5)), true, 'dates of one moment are the same');
+eq(m.sameProps(new Date(5), new Date(6)), false, 'dates of different moments differ');
+eq(m.sameProps({a: [1, {b: 2}]}, {a: [1, {b: 2}]}), true, 'objects made of the same things are the same');
+eq(m.sameProps({a: [1, {b: 2}]}, {a: [1, {b: 3}]}), false, 'a different value deep inside differs');
+eq(m.sameProps({a: 1}, {a: 1, b: 2}), false, 'a different set of keys differs');
+eq(m.sameProps([1, 2], {0: 1, 1: 2}), false, 'an array is not an object');
+eq(m.sameProps(null, {}), false, 'null is not an object');
+const props = {view: {hours: [1, 2, 3]}, size: 100, now: new Date(1000), onPick: () => 1};
+eq(m.sameProps(props, {view: {hours: [1, 2, 3]}, size: 100, now: new Date(1000), onPick: () => 2}), true, 'a card redrawn with a copy of its data and a new handler is skipped');
+eq(m.sameProps(props, {view: {hours: [1, 2, 3]}, size: 100, now: new Date(61000), onPick: () => 2}), false, 'a new minute redraws it');
+console.log(fail ? `\n${fail} FAILED` : '\nall passed');
+process.exit(fail ? 1 : 0);

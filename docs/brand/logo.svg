@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.25" y2="1">
+      <stop offset="0" stop-color="#181B36"/>
+      <stop offset="0.58" stop-color="#3A3365"/>
+      <stop offset="1" stop-color="#E0906A"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.12"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <rect x="80" y="80" width="352" height="200" rx="44" fill="url(#glass)"/>
+  <rect x="81.5" y="81.5" width="349" height="197" rx="42.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="3"/>
+  <circle cx="174" cy="180" r="50" fill="none" stroke="#FFFFFF" stroke-width="14"/>
+  <path d="M174 150 V180 L196 194" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="252" y="150" width="132" height="20" rx="10" fill="#FFFFFF"/>
+  <rect x="252" y="192" width="88" height="20" rx="10" fill="#FFFFFF" fill-opacity="0.55"/>
+  <rect x="80" y="340" width="96" height="96" rx="26" fill="#FFFFFF" fill-opacity="0.28"/>
+  <rect x="336" y="340" width="96" height="96" rx="26" fill="#FFFFFF" fill-opacity="0.28"/>
+  <rect x="198" y="320" width="116" height="116" rx="30" fill="#FFFFFF"/>
+</svg>

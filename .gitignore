@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+*.ipk
+.DS_Store
+
+# local, per-person settings
+tv.env
+src/config/catalog.local.ts
+
+# a throw-away calendar feed for trying the calendar card in a desktop browser (dates in it are made up)
+tools/sample.ics
+wallpapers-generated/

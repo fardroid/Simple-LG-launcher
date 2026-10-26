@@ -1,0 +1,782 @@
+/* Global styles. Values come from tokens.ts via CSS custom properties (see applyTokens).
+   Written for Chrome 79: no flex `gap`, no `inset`, no `aspect-ratio`. */
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: block;
+	src: url('../assets/inter-latin-wght.woff2') format('woff2');
+}
+
+/* Fonts for the clock (Look → Clock font). The browser fetches a file only when the clock uses it. */
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 200; font-display: block; src: url('../assets/poppins-latin-200.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/poppins-latin-300.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/poppins-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 200; font-display: block; src: url('../assets/oswald-latin-200.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/oswald-latin-300.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/oswald-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 200; font-display: block; src: url('../assets/roboto-mono-latin-200.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/roboto-mono-latin-300.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/roboto-mono-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/cormorant-garamond-latin-300.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/cormorant-garamond-latin-400.woff2') format('woff2'); }
+
+/* Cyrillic letters for the same families (Russian text); Poppins has none, so it falls back to the TV's font for them. */
+@font-face { font-family: 'Inter Variable'; font-style: normal; font-weight: 100 900; font-display: block; src: url('../assets/inter-cyrillic-wght.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 200; font-display: block; src: url('../assets/oswald-cyrillic-200.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/oswald-cyrillic-300.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/oswald-cyrillic-400.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 200; font-display: block; src: url('../assets/roboto-mono-cyrillic-200.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/roboto-mono-cyrillic-300.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/roboto-mono-cyrillic-400.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-300.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-400.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	width: var(--layout-screen-width);
+	height: var(--layout-screen-height);
+	overflow: hidden;
+	background: var(--color-bg);
+	color: var(--color-text-primary);
+	font-family: var(--font-family);
+	-webkit-font-smoothing: antialiased;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#root { width: 100%; height: 100%; }
+
+/* ---------- screen ---------- */
+
+.screen {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	padding: 0 var(--layout-edge-padding);
+	z-index: 1;
+}
+/* Settings and the picker dim the wallpaper so text stays easy to read. */
+.screen--settings { background: var(--color-overlay); }
+.screen--picker { background: var(--color-picker-bg); }
+/* Home stays mounted (to remember its position) but is not drawn while Settings is open. */
+.screen--away { visibility: hidden; }
+
+/* ---------- wallpaper ---------- */
+
+.wallpaper {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	z-index: 0;
+	overflow: hidden;
+	background: linear-gradient(155deg, var(--color-wallpaper-start) 0%, var(--color-wallpaper-mid) 55%, var(--color-wallpaper-end) 100%);
+}
+.wallpaper__layer {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	opacity: 0;
+	transition: opacity 1400ms ease-in-out;     /* keep in sync with WALLPAPER.fadeMs */
+}
+.wallpaper__layer--on { opacity: 1; }
+/* A soft shade at the top and bottom keeps the clock and the app row readable on any picture. */
+.wallpaper__scrim {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.08) 35%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* ---------- clock ---------- */
+
+.clock {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;     /* the date hangs from the top of the digits (its margin is set in Clock.tsx) */
+	padding: 12px 40px;
+	pointer-events: none;
+}
+.clock--dark .clock__time, .clock--dark .clock__period, .clock--dark .clock__date { text-shadow: 0 1px 3px rgba(255, 255, 255, 0.35), 0 2px 20px rgba(255, 255, 255, 0.25); }
+/* A gradient fills the letters. Each line gets its own fill (a line with its own opacity cannot be filled from its parent),
+   and the soft shadow becomes a drop shadow (a text shadow would show through the transparent letters). */
+.clock--gradient { filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3)); }
+.clock--gradient .clock__time, .clock--gradient .clock__period, .clock--gradient .clock__date {
+	background-image: var(--clock-gradient);
+	-webkit-background-clip: text; background-clip: text;
+	-webkit-text-fill-color: transparent; color: transparent;
+	text-shadow: none;
+}
+.clock__time {
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28), 0 4px 44px rgba(0, 0, 0, 0.5);
+}
+.clock__period {
+	font-weight: 300;
+	letter-spacing: 0.1em;
+	opacity: 0.75;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 2px 24px rgba(0, 0, 0, 0.5);
+}
+.clock__date {
+	font-weight: 400;
+	line-height: 1.2;
+	letter-spacing: 0.02em;
+	opacity: 0.75;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 2px 24px rgba(0, 0, 0, 0.5);
+}
+.clock__day { font-weight: 500; opacity: 1; }
+
+/* ---------- board: the cards ---------- */
+
+/* The cards form one group in the middle of the screen, 40 px between them. Both columns end on the same line, because the
+   board has a fixed height and its cards fill it. */
+.board {
+	position: absolute;
+	left: 0; right: 0; top: 40px;
+	height: 686px;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: stretch;
+	z-index: 1;
+}
+.board__left { flex: 0 0 880px; display: flex; flex-direction: column; min-width: 0; }
+.board__left + .cal { margin-left: 40px; }
+.board__left > .weather { margin-top: 40px; }
+
+/* ---------- cards (weather, calendar) ---------- */
+
+.card {
+	position: relative;
+	box-sizing: border-box;
+	border-radius: 36px;
+	/* The plate is built in .frost (below): the blurred wallpaper, its colour (--pb, chosen per plate from the wallpaper behind it) and the rim.
+	   There is no live backdrop blur, which would make the TV redraw the card whenever a tile moves behind it. The soft shadow lifts it off any background. */
+	background: none;
+	box-shadow: 0 34px 70px rgba(0, 0, 0, 0.45);
+	isolation: isolate;                       /* so the focus layer below can sit between the plate's colour and its contents */
+	transition: transform 130ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	white-space: nowrap;
+	color: var(--color-text-primary);
+}
+
+/* Frosted glass. .frost lies under everything else in the card (the focus layer is above it): two layers hold the blurred wallpaper
+   (16:9, stretched over the whole screen and shifted by the card's own place, --fx and --fy, so it lines up with the picture behind), and
+   they cross-fade like the wallpaper does (same length and curve as .wallpaper__layer: keep in sync). ::after is the plate's colour and its
+   rim: a bright edge on top and a faint one all round. */
+.frost { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -2; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.frost__layer {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	background-repeat: no-repeat;
+	background-size: 1920px 1080px;
+	background-position: calc(-1 * var(--fx, 0px)) calc(-1 * var(--fy, 0px));
+	opacity: 0;
+	transition: opacity 1400ms ease-in-out;
+}
+.frost__layer--on { opacity: 1; }
+.frost::after {
+	content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: inherit;
+	background: var(--pb, rgba(255, 255, 255, 0.11));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+	transition: background-color 1400ms ease-in-out;
+}
+
+/* Settings → Look → "Card shadows" off */
+.board--flat .card { box-shadow: none; }
+
+/* One type scale for both cards, so they read as one family. --k is the size chosen in Settings (1 = standard).
+   --t-hero: the current temperature   --t-title: the date heading   --t1: main text   --t2: secondary text   --t3: small labels */
+.weather, .cal {
+	--k: 1;
+	--t-hero: calc(64px * var(--k));
+	--t-title: calc(26px * var(--k));
+	--t1: calc(22px * var(--k));
+	--t2: calc(17px * var(--k));
+	--t3: calc(14px * var(--k));
+}
+.weather {
+	flex: 1 1 auto;
+	min-height: 0;
+	padding: 26px 32px;
+	display: flex;
+	flex-direction: column;
+}
+.weather__now { display: flex; flex-direction: row; align-items: center; height: calc(68px * var(--k)); flex: 0 0 auto; }
+.weather__now-icon { width: calc(60px * var(--k)); height: calc(60px * var(--k)); flex: 0 0 auto; margin-right: 20px; }
+.weather__temp { font-size: var(--t-hero); font-weight: 300; line-height: 1; letter-spacing: -2px; margin-right: 24px; }
+.weather__main { font-size: var(--t1); font-weight: 500; line-height: 1.25; }
+.weather__detail { font-size: var(--t2); color: var(--color-text-secondary); line-height: 1.3; }
+.weather__place { margin-left: auto; text-align: right; font-size: var(--t2); color: var(--color-text-secondary); line-height: 1.3; }
+.weather__city { font-size: var(--t1); color: var(--color-text-primary); font-weight: 500; }
+.weather__hours { height: 150px; flex: 0 0 auto; margin-top: 6px; }
+.wx-curve { width: 100%; height: 100%; overflow: visible; }
+.wx-curve__temp { fill: #fff; font-size: var(--t2); font-weight: 600; font-family: inherit; }
+.wx-curve__hour { fill: rgba(255, 255, 255, 0.62); font-size: var(--t3); font-family: inherit; }
+.weather__days { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: row; margin-top: 6px; }
+.wday { flex: 1 1 0; min-width: 0; margin-right: 8px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: background 55ms ease-out, transform 70ms ease-out, box-shadow 70ms ease-out; }
+.wday:last-child { margin-right: 0; }
+.wday--sel { background: rgba(255, 255, 255, 0.14); }
+.weather--focus .wday--sel { background: rgba(255, 255, 255, 0.21); }
+.wday__name { font-size: var(--t2); color: var(--color-text-secondary); line-height: 1; }
+.wday--today .wday__name { color: #ffc36b; }
+.wday__icon { width: calc(36px * var(--k)); height: calc(36px * var(--k)); margin: 4px 0; }
+.wday__high { font-size: var(--t1); font-weight: 600; line-height: 1; }
+.wday__low { font-size: var(--t2); color: var(--color-text-secondary); line-height: 1; margin-top: 5px; }
+
+/* weather pictures: line art in the text colour; the sun and the moon get a tint */
+.wx-icon { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.wx-icon--sun, .wx-icon--partly { stroke: #ffc857; }
+.wx-icon--moon, .wx-icon--cmoon { stroke: #dfe8ff; }
+.wx-icon--rain, .wx-icon--storm { stroke: #8cc4ff; }
+
+/* Focus on a card: a layer over the plate that only fades in (opacity is all the TV has to animate: no shadow or size change) */
+.weather::before, .cal::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
+.weather--focus::before, .cal--focus::before { opacity: 1; }
+/* and a small growth: transform only (no will-change, so the text is drawn sharp at the final size; the shadow is not touched) */
+.weather--focus, .cal--focus { transform: scale(1.02); }
+
+.cal {
+	flex: 0 0 600px;
+	min-width: 0;
+	padding: 26px 28px;
+	display: flex;
+	flex-direction: column;
+}
+.cal__head { display: flex; flex-direction: row; align-items: center; flex: 0 0 auto; }
+.cal__title { flex: 1 1 auto; min-width: 0; padding: 0 16px; }
+.cal__rel { font-size: var(--t3); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #ffc36b; line-height: 1; }
+.cal__full { font-size: var(--t-title); font-weight: 500; line-height: 1.2; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; }
+.cal__nav { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.1); color: var(--color-text-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.cal__nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.cal__stage { position: relative; flex: 1 1 auto; min-height: 0; margin-top: 14px; overflow: hidden; }
+.cal__layer { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; transition: transform 440ms cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
+/* day view <-> month: one vertical move from top to bottom, the month comes down from above and pushes the days down and out; back, the days rise */
+.cal__layer--day { transform: none; }
+.cal__layer--month { transform: translateY(-100%); pointer-events: none; }
+.cal--month .cal__layer--day { transform: translateY(100%); pointer-events: none; }
+.cal--month .cal__layer--month { transform: none; pointer-events: auto; }
+.cal__title { animation: cal-fade 260ms ease-out; }
+@keyframes cal-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.cal__strip { position: relative; height: calc(var(--t3) + var(--t1) * 1.2 + 42px); flex: 0 0 auto; overflow: hidden; }
+/* the chosen day stays in the middle and the days slide under this highlight */
+.cal__hl { position: absolute; left: calc(300% / 7); top: 0; bottom: 0; width: calc(100% / 7); border-radius: 22px; background: rgba(255, 255, 255, 0.16); transition: background 70ms ease-out; }
+.cal--focus .cal__hl { background: rgba(255, 255, 255, 0.22); }
+.cal__track { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
+.cal__day { position: absolute; top: 0; width: calc(100% / 7); box-sizing: border-box; padding: 12px 0 14px; text-align: center; cursor: pointer; }
+.cal__day span { display: block; font-size: var(--t3); color: var(--color-text-secondary); line-height: 1; }
+.cal__day b { display: block; font-size: var(--t1); font-weight: 600; line-height: 1.2; margin-top: 4px; }
+.cal__day em { display: block; height: 8px; margin-top: 4px; }
+.cal__day em i { display: inline-block; width: 8px; height: 8px; margin: 0 2px; border-radius: 50%; background: #ffc36b; }
+.cal__day span, .cal__day b { transition: color 70ms ease-out; }
+.cal__day--sel span { color: #ffc36b; }
+/* today stays marked in the accent colour when the strip is on another day */
+.cal__day--today span, .cal__day--today b { color: #ffc36b; }
+.cal__events { flex: 1 1 auto; min-height: 0; margin-top: 14px; overflow: hidden; }
+
+.cal__weekdays { display: flex; flex-direction: row; flex: 0 0 auto; }
+.cal__weekdays span { flex: 1 1 0; text-align: center; font-size: var(--t3); color: var(--color-text-secondary); line-height: 1; padding: 6px 0 10px; }
+.cal__slide--fwd { animation: cal-from-right-s 300ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cal__slide--back { animation: cal-from-left-s 300ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+@keyframes cal-from-right-s { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes cal-from-left-s { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: none; } }
+.cal__months { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+/* the months sit side by side and slide past: the panel of the chosen month is in view */
+.cal__mtrack { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transition: transform 380ms cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
+.cal__mpanel { position: absolute; top: 0; bottom: 0; width: 100%; display: flex; flex-direction: column; }
+.cal__week { flex: 1 1 0; min-height: 0; display: flex; flex-direction: row; }
+.cal__cell { flex: 1 1 0; min-width: 0; margin: 2px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cal__cell b { font-size: var(--t1); font-weight: 500; line-height: 1.1; }
+.cal__cell em { display: block; height: 8px; margin-top: 4px; }
+.cal__cell em i { display: inline-block; width: 8px; height: 8px; margin: 0 2px; border-radius: 50%; }
+.cal__cell--out { opacity: 0.3; }
+.cal__cell--sel { background: rgba(255, 255, 255, 0.16); }
+.cal__cell--today b { color: #ffc36b; font-weight: 600; }
+.cal__ev { display: flex; flex-direction: row; align-items: stretch; margin-bottom: 12px; padding: 12px 18px 12px 14px; border-radius: 20px; background: rgba(255, 255, 255, 0.07); }
+.cal__time { flex: 0 0 auto; width: calc(84px * var(--k)); margin-right: 16px; font-size: var(--t1); font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.cal__time small { display: block; font-size: var(--t3); font-weight: 400; color: var(--color-text-secondary); margin-top: 4px; }
+.cal__bar { flex: 0 0 auto; width: 5px; margin-right: 16px; border-radius: 3px; background: #ffc36b; }
+.cal__body { flex: 1 1 auto; min-width: 0; align-self: center; }
+.cal__name { font-size: var(--t1); font-weight: 500; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; }
+.cal__place { font-size: var(--t2); color: var(--color-text-secondary); line-height: 1.2; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; }
+.cal__ev--past { opacity: 0.42; }
+.cal__ev--now { background: rgba(255, 195, 107, 0.18); box-shadow: inset 0 0 0 2px rgba(255, 195, 107, 0.55); }
+.cal__ev--now .cal__time small { color: #ffc36b; }
+.cal__more { padding: 4px 18px; font-size: var(--t2); color: var(--color-text-secondary); }
+.cal__empty { padding-top: 70px; text-align: center; font-size: var(--t1); color: var(--color-text-secondary); }
+
+/* ---------- rows ---------- */
+
+.rows {
+	position: absolute;       /* left, right and bottom are set from the settings */
+}
+
+.row { margin-bottom: var(--layout-row-gap); }
+.row:last-child { margin-bottom: 0; }
+
+.row__label {
+	margin: 0 0 var(--layout-row-label-gap);
+	font-size: var(--font-row-label);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+	transition: color var(--motion-focus-ms) ease-out;
+}
+.row--focused .row__label { color: var(--color-text-secondary); }
+
+/* The viewport clips; the track slides. Extra vertical padding leaves room for the
+   focus scale so tiles are never clipped while enlarged. */
+.row__viewport {
+	overflow: hidden;
+	padding: 230px 140px 130px;  /* room for the magnified tile and its glow above the row, its name and shadow below it, and its glow at either end */
+	margin: -230px -140px -130px;
+	pointer-events: none;      /* the empty margin must not catch the pointer (the cards above are clickable); the tiles do */
+	opacity: var(--motion-unfocused-row-opacity);
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.row--focused .row__viewport { opacity: 1; }
+
+.row__track {
+	pointer-events: auto;     /* the whole strip, gaps included, follows the pointer */
+	display: flex;
+	flex-direction: row;
+	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+	will-change: transform;
+}
+.row__track--centered { justify-content: center; }
+/* Left/right held down: each step is short and linear, so the steps run together into one smooth glide
+   (an ease-out curve restarting on every key repeat looks like stuttering). */
+.row__track--fast { transition: transform 150ms linear; }
+
+.row__empty {
+	font-size: var(--font-tile-label);
+	color: var(--color-text-muted);
+	font-weight: 400;
+}
+
+/* ---------- tiles ---------- */
+
+.tile {
+	pointer-events: auto;
+	flex: 0 0 auto;
+	width: var(--layout-tile-size);
+	transform-origin: 50% var(--layout-tile-size);   /* the dock grows upwards from the icon's bottom edge */
+	transition: transform 240ms cubic-bezier(0.3, 0.9, 0.3, 1);
+	margin-right: var(--layout-tile-gap);
+	text-align: center;
+	outline: none;
+}
+.tile:last-child { margin-right: 0; }
+
+/* The frame is what grows when a tile is focused; the ring is the white border, shown by fading it in.
+   Only transform and opacity change, which the TV can animate without repainting the tile (animating
+   box-shadow and background was what made scrolling stutter). */
+.tile__frame {
+	position: relative;
+	width: var(--layout-tile-size);
+	height: var(--layout-tile-size);
+	transform: scale(1);
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+.tile--focused .tile__frame {
+	transform: scale(var(--motion-focus-scale));
+	z-index: 1;
+}
+/* On the home row the whole tile is magnified instead (see Row.tsx), so the frame itself stays put. */
+/* The selected app grows a little, its name with it. The whole tile is scaled, always about the icon's bottom edge (.tile's transform-origin,
+   the same whether selected or not, so growing and shrinking is one movement), so the icon grows upwards and the name downwards. */
+.row--dock .tile--focused .tile__frame { transform: none; }
+.row--dock .tile--focused { transform: scale(var(--motion-focus-scale)); }
+/* no outlines on the home row: a tile has a soft shadow, and the selected one gets a glow (its ring layer, which fades with opacity only) */
+.row--dock .tile__box { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4); }
+.row--dock .tile__ring { box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45); }
+.row--dock .tile--focused { z-index: 2; }
+.row--dock .tile--focused .tile__label { color: var(--color-text-primary); }
+.row__track--fast .tile { transition-duration: 150ms; }
+/* with the pointer the sizes change every frame: only a short smoothing */
+.row--pointer .tile { transition-duration: 70ms; transition-timing-function: linear; }
+.row--dock .tile { transition: transform 200ms cubic-bezier(0.25, 0.8, 0.3, 1); }        /* one smooth curve, with keys or the pointer alike */
+.tile__box {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--layout-tile-radius);
+	background: var(--color-tile-bg);
+	box-shadow: 0 0 0 2px var(--color-tile-border);
+	overflow: hidden;
+}
+.tile--focused .tile__box { background: var(--color-tile-bg-focus); }
+.tile__ring {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	border-radius: var(--layout-tile-radius);
+	box-shadow: 0 0 0 5px var(--color-tile-border-focus);
+	opacity: 0;
+	transition: opacity var(--motion-focus-ms) ease-out;
+	pointer-events: none;
+}
+.tile--focused .tile__ring { opacity: 1; }
+
+.tile__image {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	object-fit: cover;
+}
+.tile__image--glyph {
+	/* LG's input glyphs are dark grey line art on transparency: lift them to light grey. */
+	left: 18%; top: 18%;
+	width: 64%; height: 64%;
+	object-fit: contain;
+	filter: brightness(2.4);
+}
+.tile__glyph {
+	position: absolute;
+	left: 25%; top: 25%;
+	width: 50%; height: 50%;
+	fill: none;
+	stroke: var(--color-text-primary);
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.tile__monogram {
+	position: absolute;
+	left: 0; top: 0;
+	width: 100%; height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 64px;
+	font-weight: 600;
+	color: var(--color-text-primary);
+}
+
+.tile__label {
+	/* up to two lines, using a little of the gutter either side, so long input names fit */
+	width: calc(var(--layout-tile-size) + var(--layout-tile-gap) - 8px);
+	height: calc(var(--font-tile-label) * 2.4);
+	margin: 14px 0 0 calc((var(--layout-tile-gap) - 8px) / -2);
+	line-height: 1.2;
+	font-size: var(--font-tile-label);
+	font-weight: 400;
+	color: var(--color-text-secondary);
+	white-space: normal;
+	overflow: hidden;
+	transition: color var(--motion-focus-ms) ease-out;
+}
+.tile--focused .tile__label { color: var(--color-text-primary); }
+
+.tile__badge {
+	position: absolute;
+	right: 12px; top: 12px;
+	width: 34px; height: 34px;
+	border-radius: 50%;
+	background: var(--color-badge);
+	color: var(--color-badge-text);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.tile__badge svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- settings ---------- */
+
+.settings {
+	position: absolute;
+	left: var(--layout-edge-padding);
+	right: var(--layout-edge-padding);
+	top: var(--layout-header-top);
+	bottom: 60px;
+}
+.settings__title {
+	margin: 0;
+	font-size: var(--font-settings-title);
+	font-weight: 300;
+	color: var(--color-text-primary);
+}
+.settings__hint {
+	margin: 8px 0 0;
+	font-size: var(--font-tile-label);
+	color: var(--color-text-muted);
+}
+.settings__tabs {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin: 36px 0 30px;
+}
+/* the tabs slide sideways when there are too many for the screen; the buttons beside them stay in place */
+.tabs__scroll { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.tabs__scroll--left { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 60px); mask-image: linear-gradient(to right, transparent 0, #000 60px); }
+.tabs__scroll--right { -webkit-mask-image: linear-gradient(to left, transparent 0, #000 60px); mask-image: linear-gradient(to left, transparent 0, #000 60px); }
+.tabs__scroll--left.tabs__scroll--right { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%); }
+.tabs__track { display: flex; flex-direction: row; width: max-content; transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.tab {
+	flex: 0 0 auto;
+	white-space: nowrap;
+	margin-right: 40px;
+	padding: 10px 4px;
+	font-size: var(--font-settings-tab);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+	border-bottom: 3px solid transparent;
+	transition: color var(--motion-focus-ms) ease-out, border-color var(--motion-focus-ms) ease-out;
+}
+.tab--active { color: var(--color-text-secondary); border-bottom-color: var(--color-tile-border); }
+.tab--focused { color: var(--color-text-primary); border-bottom-color: var(--color-tile-border-focus); }
+.tab--locked { opacity: 0.35; }
+
+/* top-right of the tabs row */
+.settings__button {
+	margin-left: auto;
+	align-self: center;
+	padding: 12px 28px;
+	border-radius: 999px;
+	font-size: var(--font-settings-button);
+	font-weight: 500;
+	color: var(--color-text-secondary);
+	box-shadow: 0 0 0 2px var(--color-button-border);
+	transform: scale(1);
+	transition: transform var(--motion-focus-ms) ease-out, box-shadow var(--motion-focus-ms) ease-out, background var(--motion-focus-ms) ease-out, color var(--motion-focus-ms) ease-out;
+}
+.settings__button { flex: 0 0 auto; white-space: nowrap; margin-left: 20px; }
+.settings__button--refresh + .settings__button { margin-left: 16px; }
+.settings__button--focused {
+	color: var(--color-text-primary);
+	box-shadow: 0 0 0 4px var(--color-tile-border-focus);
+	transform: scale(1.06);
+}
+.settings__button--active {
+	background: var(--color-button-active-bg);
+	color: var(--color-button-active-text);
+}
+
+.grid__viewport {
+	overflow: hidden;
+	height: 720px;
+	padding: 16px 0;
+}
+/* Flex-wrap instead of CSS grid: older webOS web views (Chrome 53) have no grid. Nine tiles
+   (plus their right-hand gaps) fill one line, so the tenth wraps, as the grid did. */
+.grid__track {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: calc(var(--layout-grid-columns) * (var(--layout-tile-size) + var(--layout-tile-gap)));
+	margin: 0 auto;
+	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+	will-change: transform;
+}
+.grid__track .tile { margin-right: var(--layout-tile-gap); margin-bottom: 40px; }
+.tile--dimmed .tile__box { opacity: 0.45; }
+
+/* re-order mode: the picked-up tile floats above the others */
+.tile--lifted .tile__frame,
+.tile--lifted.tile--focused .tile__frame {
+	transform: scale(var(--motion-lift-scale)) translateY(-6px);
+	z-index: 2;
+}
+.tile--lifted .tile__ring {
+	opacity: 1;
+	box-shadow: 0 0 0 5px var(--color-tile-border-focus), 0 18px 40px var(--color-lift-shadow);
+}
+.tile--lifted .tile__label { color: var(--color-text-primary); }
+.tile--dimmed .tile__label { color: var(--color-text-muted); }
+/* two rows of apps: both stay fully visible, with a little space between */
+.rows--multi .row__viewport { opacity: 1; }
+.rows--multi .row + .row { margin-top: 14px; }
+/* Look → Show app names: off */
+.rows--no-labels .tile__label { display: none; }
+
+/* ---------- options ---------- */
+
+.options { width: 1116px; margin-left: -8px; overflow: hidden; }     /* a window: the height is set from the real screen size (OptionList) */
+.options__track {
+	position: relative;
+	padding: 8px 8px;         /* room for a focused row's border, so the window does not clip it */
+	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.option {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 15px 28px;       /* compact: the Clock tab has seven settings and must fit the screen */
+	margin-bottom: 11px;
+	border-radius: var(--layout-tile-radius);
+	background: var(--color-tile-bg);
+	box-shadow: 0 0 0 2px var(--color-tile-border);
+	transition: box-shadow var(--motion-focus-ms) ease-out, background var(--motion-focus-ms) ease-out;
+}
+.option--focused {
+	background: var(--color-tile-bg-focus);
+	box-shadow: 0 0 0 5px var(--color-tile-border-focus);
+}
+.option__text { flex: 1 1 auto; margin-right: 40px; }
+.option__label { font-size: var(--font-option-label); color: var(--color-text-primary); }
+.option--disabled .option__label, .option--disabled .option__value, .option--disabled .switch { opacity: 0.4; }
+.option__description--reason { color: var(--color-text-secondary); font-style: italic; }
+.option__description { margin-top: 8px; font-size: var(--font-option-description); line-height: 1.4; color: var(--color-text-secondary); }
+
+.switch {
+	flex: 0 0 auto;
+	position: relative;
+	width: 76px; height: 40px;
+	border-radius: 20px;
+	background: var(--color-switch-track);
+	transition: background var(--motion-focus-ms) ease-out;
+}
+.switch__knob {
+	position: absolute;
+	left: 4px; top: 4px;
+	width: 32px; height: 32px;
+	border-radius: 50%;
+	background: var(--color-switch-knob);
+	transition: transform var(--motion-focus-ms) ease-out, background var(--motion-focus-ms) ease-out;
+}
+.option__value {
+	flex: 0 0 auto;
+	max-width: 520px;
+	font-size: var(--font-option-label);
+	text-align: right;
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.option--focused .option__value { color: var(--color-text-primary); }
+.option__chevron { display: inline-block; width: 28px; text-align: center; opacity: 0; font-size: 34px; line-height: 1; }
+.option--focused .option__chevron { opacity: 0.9; }
+.switch--on { background: var(--color-switch-track-on); }
+.switch--on .switch__knob { transform: translateX(36px); background: var(--color-switch-knob-on); }
+
+/* ---------- wallpaper picker ---------- */
+
+.picker__path {
+	margin: 28px 0 18px;
+	font-size: var(--font-tile-label);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.picker { width: 1300px; }
+.picker__status { padding: 40px 8px; font-size: var(--font-option-label); color: var(--color-text-secondary); }
+.picker__status--error { color: var(--color-danger); }
+.picker__row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 84px;
+	margin-bottom: 12px;
+	padding: 0 28px;
+	border-radius: 20px;
+	background: var(--color-tile-bg);
+	box-shadow: 0 0 0 2px var(--color-tile-border);
+	transition: box-shadow var(--motion-focus-ms) ease-out, background var(--motion-focus-ms) ease-out;
+}
+.picker__row--focused {
+	background: var(--color-tile-bg-focus);
+	box-shadow: 0 0 0 5px var(--color-tile-border-focus);
+}
+.picker__row--info { background: transparent; box-shadow: none; opacity: 0.8; }
+.picker__icon {
+	flex: 0 0 auto;
+	width: 40px; height: 40px;
+	margin-right: 28px;
+	fill: none;
+	stroke: var(--color-text-secondary);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.picker__row--focused .picker__icon { stroke: var(--color-text-primary); }
+.picker__text { flex: 1 1 auto; min-width: 0; }
+.picker__label {
+	font-size: var(--font-option-label);
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.picker__detail {
+	margin-top: 4px;
+	font-size: var(--font-option-description);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ---------- the menu that opens when OK is held on an app ---------- */
+
+.screen--dialog { background: rgba(0, 0, 0, 0.72); }
+.dialog {
+	position: absolute;
+	left: 50%; top: 50%;
+	width: 900px;
+	padding: 40px 44px 32px;
+	transform: translate(-50%, -50%);
+	border-radius: 28px;
+	background: var(--color-picker-bg);
+	box-shadow: 0 0 0 2px var(--color-tile-border), 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.dialog__title {
+	margin: 0 0 8px;
+	font-size: var(--font-settings-title);
+	font-weight: 300;
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.dialog__text { margin: 0 0 22px; font-size: var(--font-option-description); color: var(--color-text-secondary); }
+.dialog .picker__row { margin-top: 8px; margin-bottom: 0; }
+.picker__row--disabled { opacity: 0.5; }
+
+.picker__input {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	background: transparent;
+	color: var(--color-text-primary);
+	font-family: inherit;
+	font-size: var(--font-option-label);
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+/* ---------- toast ---------- */
+
+.toast {
+	position: absolute;
+	z-index: 5;
+	left: 50%;
+	top: 72px;
+	transform: translateX(-50%);
+	padding: 14px 28px;
+	border-radius: 999px;
+	background: var(--color-tile-bg-focus);
+	box-shadow: 0 0 0 1px var(--color-tile-border);
+	font-size: var(--font-toast);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	pointer-events: none;
+}
+.toast--error { color: var(--color-danger); }
