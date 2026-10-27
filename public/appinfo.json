@@ -1,6 +1,6 @@
 {
   "id": "tld.my.simplelauncher",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "vendor": "tld.my.simplelauncher",
   "type": "web",
   "main": "index.html",

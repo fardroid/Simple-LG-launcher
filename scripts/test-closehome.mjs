@@ -4,7 +4,7 @@ import {execSync, spawn} from 'child_process';
 const out = new URL('../node_modules/.cache-system-test.mjs', import.meta.url).pathname;
 await build({entryPoints: [new URL('../src/lib/system.ts', import.meta.url).pathname], bundle: true, format: 'esm', outfile: out, platform: 'node', logLevel: 'error',
   plugins: [{name: 'stub', setup(b) { b.onResolve({filter: /\.\/(apps|luna)$/}, (a) => ({path: a.path, namespace: 'stub'})); b.onLoad({filter: /.*/, namespace: 'stub'}, () => ({contents: 'export const exec = () => Promise.resolve(""); export const isWebOS = () => false;', loader: 'js'})); }}]});
-const {CLOSE_HOME_COMMAND, homeSettingCommand, parseHomeApp} = await import(out);
+const {CLOSE_HOME_COMMAND} = await import(out);
 let fail = 0;
 const eq = (a, b, m) => { const ok = a === b; if (!ok) fail++; console.log(ok ? 'ok  ' : 'FAIL', m, ok ? '' : `(${a} != ${b})`); };
 const start = (name) => { const p = spawn('bash', ['-c', `exec -a "${name}" sleep 60`], {stdio: 'ignore', detached: true}); p.unref(); return p; };
@@ -40,12 +40,5 @@ await new Promise((r) => setTimeout(r, 300));
 eq(alive(homeA), false, 'and its process is gone');
 rm(bin, {recursive: true, force: true});
 
-// ---- the home-app setting commands ----
-eq(homeSettingCommand('tld.my.simplelauncher').includes('"home":"tld.my.simplelauncher"'), true, 'home-app command carries the app id');
-eq(homeSettingCommand('com.webos.app.home').includes('setSystemSettings'), true, 'home-app command uses setSystemSettings');
-let rejected = 0; for (const bad of ["x'; reboot; '", 'a b', '', 'a"b', '$(id)']) { try { homeSettingCommand(bad); } catch { rejected++; } }
-eq(rejected, 5, 'anything that is not a plain app id is refused (no shell injection)');
-eq(parseHomeApp('{\n "returnValue": true,\n "settings": {"defaultApps": {"home": "tld.my.simplelauncher"}}\n}'), 'tld.my.simplelauncher', 'reads the home app out of the reply');
-eq(parseHomeApp('{"returnValue": false}'), null, 'no home app in the reply -> null');
 for (const p of [home, homeEnd, connect, other, web]) { try { process.kill(p.pid); } catch {} }
 process.exit(fail ? 1 : 0);

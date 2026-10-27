@@ -13,7 +13,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 | | |
 |---|---|
 | ![On a light wallpaper the cards turn darker on their own](docs/screenshots/home-light.jpg) | ![Up on the calendar opens the whole month](docs/screenshots/calendar-month.jpg) |
-| ![Right and left on the weather pick a day; the curve follows](docs/screenshots/weather-day.jpg) | ![Settings, Look tab, with the language switch](docs/screenshots/settings.jpg) |
+| ![Right and left on the weather pick a day; the curve follows](docs/screenshots/weather-day.jpg) | ![Settings: sections on the left, the clock settings on the right](docs/screenshots/settings.jpg) |
 
 ## What's on the screen
 
@@ -23,7 +23,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Frosted glass.** The cards blur the wallpaper behind them. Each card checks how bright the picture is right behind it and goes light or dark, so the text stays readable on any photo.
 - **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is.
 - **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour.
-- **English or Russian.** It follows the TV's language by default. Settings → Look → Language changes it.
+- **English or Russian.** It follows the TV's language by default. Settings → General → Language changes it.
 
 ## What you need
 
@@ -64,7 +64,7 @@ Things to know:
 - Updating the launcher needs no extra step: the folder links to the installed app.
 - The method comes from [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma).
 
-**2. The Home button helper** (Settings → Options → *Make the launcher the default instead of LG Home*). This is lighter: a small background script watches for LG Home and opens the launcher instead. It doesn't mount anything, but LG Home can show for a moment before the launcher takes over. *Start the helper when the TV starts* keeps it running after a restart. The takeover script turns the helper off while it's enabled.
+**2. The background helper** (Settings → Home screen → *Background helper*). This is lighter: a small script on the TV watches for LG Home and opens the launcher instead, from the moment the TV starts. It doesn't mount anything, but LG Home can show for a moment before the launcher takes over. The switch is only offered while the launcher is not in LG Home's place; Settings → Home screen tells you which way is in use.
 
 **Optional: a lighter TV** ([tools/tv-tweaks.sh](tools/tv-tweaks.sh)). It stops LG Channels and the browser from preloading, which leaves more memory free so the TV unloads the launcher less often. It also turns off LG's promotions, sports alerts, recommendations and Live Plus (the TV recognising what is on screen). It saves the old values first, so `restore` undoes everything. Run it the same way: `sh tv-tweaks.sh apply | restore | status`. The ideas are from [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco.
 
@@ -86,7 +86,7 @@ The secret address gives read access to that calendar to anyone who has it. It i
 
 ## Wallpapers
 
-Settings → Wallpaper → Wallpaper opens a folder browser for USB drives and the TV's storage (`/media/developer`). OK on a picture sets it, and *Play this folder as a slideshow* plays the whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
+Settings → Wallpaper → Picture opens a folder browser for USB drives and the TV's storage (`/media/developer`). OK on a picture sets it, and *Play this folder as a slideshow* plays the whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
 
 ```bash
 ssh root@<tv-ip> mkdir -p /media/developer/wallpapers

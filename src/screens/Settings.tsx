@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'preact/hooks';
+import {useCallback, useState} from 'preact/hooks';
 import {Grid} from '../components/Grid';
 import {OptionList, type OptionItem} from '../components/OptionList';
 import type {TileModel} from '../components/Tile';
@@ -8,10 +8,13 @@ import {moveItem} from '../lib/order';
 import {LAYOUT} from '../theme/tokens';
 import {tr} from '../lib/i18n';
 
+export type SectionIcon = 'apps' | 'inputs' | 'look' | 'clock' | 'weather' | 'calendar' | 'wallpaper' | 'home' | 'general';
+
 export interface SettingsTab {
 	id: string;
+	icon: SectionIcon;
 	label: string;
-	/** the re-order button, e.g. "Arrange apps" (grid tabs) */
+	/** the re-order button (grid sections) */
 	arrange: string;
 	/** everything available */
 	items: TileModel[];
@@ -19,7 +22,7 @@ export interface SettingsTab {
 	shown: TileModel[];
 	/** a "Refresh list" button next to the re-order button */
 	refresh?: boolean;
-	/** present on option tabs (a list of settings instead of a grid of tiles) */
+	/** present on option sections (a list of settings instead of a grid of tiles) */
 	options?: OptionItem[];
 }
 
@@ -29,15 +32,15 @@ interface Props {
 	onToggle: (tabId: string, key: string) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
 	onOption: (optionId: string) => void;
-	/** the "Refresh list" button on the Apps tab */
+	/** the "Refresh list" button of the Apps section */
 	onRefresh?: () => void;
 	/** ← or → on a stepper option: -1 or +1 */
 	onAdjust: (optionId: string, direction: -1 | 1) => void;
 	onClose: () => void;
 }
 
-/** Focus is on the tabs row (a tab, or the re-order button) or in the tab's content. */
-type Zone = 'tabs' | 'refresh' | 'button' | 'content';
+/** Focus is in the list of sections, on the buttons above a grid, or in the section's content. */
+type Zone = 'nav' | 'buttons' | 'content';
 
 /** A tile that has been picked up in re-order mode, and the order to restore on Back. */
 interface Held {
@@ -45,47 +48,52 @@ interface Held {
 	original: string[];
 }
 
-const hints = () => ({
-	select: tr('OK adds or removes · Hold OK to re-order · Back returns home', 'OK добавляет или убирает · Удерживайте OK для порядка · Назад — на главный экран'),
-	reorder: tr('OK picks an item up · Hold OK or choose Done to finish', 'OK берёт элемент · Удерживайте OK или выберите «Готово», чтобы закончить'),
-	holding: tr('Arrows move it · OK puts it down · Back cancels', 'Стрелки двигают · OK кладёт на место · Назад отменяет'),
-	options: tr('OK changes a setting · ← → change numbers · Back returns home', 'OK меняет настройку · ← → меняют числа · Назад — на главный экран')
-});
+/** The pictures of the sections (24 x 24, drawn as lines), each on its own colour like the iOS settings. */
+const ICONS: Record<SectionIcon, {color: string; path: string}> = {
+	apps: {color: '#0A84FF', path: 'M4.5 4.5h5v5h-5z M14.5 4.5h5v5h-5z M4.5 14.5h5v5h-5z M14.5 14.5h5v5h-5z'},
+	inputs: {color: '#30B0C7', path: 'M4 8h16v5l-3 3H7l-3-3z M8 11.5h8 M12 16v4'},
+	look: {color: '#5E5CE6', path: 'M12 3.5a8.5 8.5 0 1 0 0 17c1 0 1.6-.7 1.6-1.5s-.6-1.3-.6-2.1c0-.9.7-1.6 1.6-1.6h2a3.9 3.9 0 0 0 3.9-3.9c0-4.4-3.8-7.9-8.5-7.9z M7.8 11.5h.01 M10.2 7.6h.01 M14.6 7.8h.01'},
+	clock: {color: '#FF9F0A', path: 'M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17z M12 7.5v4.8l3.2 2'},
+	weather: {color: '#32ADE6', path: 'M7.5 18.5h9.5a3.8 3.8 0 0 0 .3-7.6 5.2 5.2 0 0 0-10 1.2 3.2 3.2 0 0 0 .2 6.4z'},
+	calendar: {color: '#FF453A', path: 'M4.5 6h15v13.5h-15z M4.5 10h15 M8.5 3.5v4 M15.5 3.5v4'},
+	wallpaper: {color: '#BF5AF2', path: 'M4 5h16v14H4z M4 16l4.5-4.5 4 4 3-3 4.5 4.5 M15.5 9h.01'},
+	home: {color: '#30D158', path: 'M4.5 11l7.5-6.5 7.5 6.5v8.5h-15z M10 19.5v-5h4v5'},
+	general: {color: '#8E8E93', path: 'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z M12 2.8v2.6 M12 18.6v2.6 M2.8 12h2.6 M18.6 12h2.6 M5.5 5.5l1.8 1.8 M16.7 16.7l1.8 1.8 M5.5 18.5l1.8-1.8 M16.7 7.3l1.8-1.8'}
+};
 
-/** Settings: pick which apps and sources appear on the home row and their order, plus the
- *  wallpaper and other options.
+const COLUMNS = LAYOUT.gridColumns;
+
+/** Settings: the sections on the left, the chosen one on the right.
  *
- *  Tabs: grid tabs (Apps, Sources) and option tabs (Look, Clock, Wallpaper, Options).
- *  Grid tabs, select mode: everything available; OK adds/removes an item.
- *  Grid tabs, re-order mode (hold OK, or the button): only what's on the home screen, in order;
- *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave. */
+ *  ↑ ↓ pick a section, → or OK go into it, Back comes out again (and, from the list of sections, closes Settings).
+ *  Option sections: a list of settings in groups; OK changes one, ← → nudge numbers and choices.
+ *  Apps and Inputs: a grid of tiles; OK shows or hides one. Re-order mode (hold OK, or the Arrange button) shows only
+ *  what's on the home screen, in order: OK picks an item up, arrows move it, OK puts it down. */
 export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefresh, onAdjust, onClose}: Props) {
 	const [tabIndex, setTabIndex] = useState(0);
-	const [zone, setZone] = useState<Zone>('tabs');
-	const scrollRef = useRef<HTMLDivElement>(null);
-	const trackRef = useRef<HTMLDivElement>(null);
-	const [tabScroll, setTabScroll] = useState({shift: 0, left: false, right: false});
+	const [zone, setZone] = useState<Zone>('nav');
+	const [buttonIndex, setButtonIndex] = useState(0);
 	const [gridIndex, setGridIndex] = useState(0);
 	const [optionIndex, setOptionIndex] = useState(0);
 	const [reordering, setReordering] = useState(false);
 	const [held, setHeld] = useState<Held | null>(null);
 
-	const tabCount = tabs.length;
 	const current: SettingsTab | undefined = tabs[tabIndex];
 	const options: OptionItem[] = (current && current.options) || [];
 	const onOptions = !!(current && current.options);
-	const tab: SettingsTab | undefined = onOptions ? undefined : current;     // grid tab, if any
-	const hasRefresh = !!(tab && tab.refresh && onRefresh);
+	const tab: SettingsTab | undefined = onOptions ? undefined : current;     // grid section, if any
+	const buttons: ('refresh' | 'arrange')[] = !tab ? [] : reordering ? ['arrange'] : (tab.refresh && onRefresh ? ['refresh', 'arrange'] : ['arrange']);
 	const items = tab ? (reordering ? tab.shown : tab.items) : [];
 	const count = onOptions ? options.length : items.length;
-	const cols = LAYOUT.gridColumns;
+	const optionAt = clamp(optionIndex, 0, Math.max(0, options.length - 1));      // a row may have gone (rows show only when they apply)
 	const keysOf = (list: TileModel[]) => list.map((t) => t.key);
 
 	const selectTab = (i: number) => {
-		if (reordering) return;          // tab is locked while re-ordering
+		if (reordering) return;          // the section is locked while re-ordering
 		setTabIndex(i);
 		setGridIndex(0);
 		setOptionIndex(0);
+		setButtonIndex(0);
 	};
 
 	/** Switch re-order mode, keeping focus on the same item where it exists in both lists. */
@@ -97,7 +105,8 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 		setGridIndex(Math.max(0, i));
 		setHeld(null);
 		setReordering(next);
-		if (next && (zone === 'tabs' || target.length === 0)) setZone('button');
+		setButtonIndex(0);
+		if (next && target.length === 0) setZone('buttons');
 	};
 
 	/** Move the held tile to `to`, updating the home screen as it goes. */
@@ -122,15 +131,24 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 		setGridIndex(i);
 	};
 
+	const pressButton = (b: 'refresh' | 'arrange') => {
+		if (b === 'refresh') { if (onRefresh) onRefresh(); }
+		else setMode(!reordering);
+	};
+
+	const enter = () => {
+		if (count > 0) setZone('content');
+		else if (buttons.length) setZone('buttons');
+	};
+
 	const onPress = () => {
-		if (zone === 'refresh') { if (onRefresh) onRefresh(); return; }
-		if (zone === 'button') { setMode(!reordering); return; }
-		if (zone === 'tabs') { if (count > 0) setZone('content'); return; }
-		if (onOptions) { if (options[optionIndex]) onOption(options[optionIndex].id); return; }
+		if (zone === 'nav') { enter(); return; }
+		if (zone === 'buttons') { if (buttons[buttonIndex]) pressButton(buttons[buttonIndex]); return; }
+		if (onOptions) { if (options[optionAt]) onOption(options[optionAt].id); return; }
 		activateGridItem(gridIndex);
 	};
 
-	const onLongPress = () => { if (tab) setMode(!reordering); };
+	const onLongPress = () => { if (tab && zone !== 'nav') setMode(!reordering); };
 
 	useOkPress({onPress, onLongPress}, active);
 
@@ -140,6 +158,7 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 		if (key === 'back') {
 			if (held && tab) { onReorder(tab.id, held.original); setGridIndex(held.index); setHeld(null); }
 			else if (reordering) setMode(false);
+			else if (zone !== 'nav') setZone('nav');
 			else onClose();
 			return true;
 		}
@@ -147,128 +166,122 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 		if (held) {
 			if (key === 'left') moveHeld(held.index - 1);
 			else if (key === 'right') moveHeld(held.index + 1);
-			else if (key === 'up') moveHeld(held.index - cols);
-			else if (key === 'down') moveHeld(held.index + cols);
+			else if (key === 'up') moveHeld(held.index - COLUMNS);
+			else if (key === 'down') moveHeld(held.index + COLUMNS);
 			return true;
 		}
 
-		if (zone === 'tabs') {
-			if (key === 'left') selectTab(clamp(tabIndex - 1, 0, tabCount - 1));
-			else if (key === 'right') selectTab(clamp(tabIndex + 1, 0, tabCount - 1));
-			else if (key === 'down' && count > 0) setZone('content');
+		if (zone === 'nav') {
+			if (key === 'up') selectTab(clamp(tabIndex - 1, 0, tabs.length - 1));
+			else if (key === 'down') selectTab(clamp(tabIndex + 1, 0, tabs.length - 1));
+			else if (key === 'right') enter();
 			return true;
 		}
-		if (zone === 'refresh') {
-			if (key === 'left') setZone('tabs');
-			else if (key === 'right') setZone('button');
-			else if (key === 'down' && count > 0) setZone('content');
-			return true;
-		}
-		if (zone === 'button') {
-			if (key === 'left' && !reordering) setZone(hasRefresh ? 'refresh' : 'tabs');
+
+		if (zone === 'buttons') {
+			if (key === 'left') { if (buttonIndex > 0) setButtonIndex(buttonIndex - 1); else if (!reordering) setZone('nav'); }
+			else if (key === 'right') setButtonIndex(clamp(buttonIndex + 1, 0, buttons.length - 1));
 			else if (key === 'down' && count > 0) setZone('content');
 			return true;
 		}
 
 		if (onOptions) {
-			if (key === 'up') { if (optionIndex === 0) setZone('tabs'); else setOptionIndex(optionIndex - 1); }
-			else if (key === 'down') setOptionIndex(clamp(optionIndex + 1, 0, count - 1));
-			else if ((key === 'left' || key === 'right') && options[optionIndex] && options[optionIndex].stepper) {
-				onAdjust(options[optionIndex].id, key === 'left' ? -1 : 1);
-			}
+			const option = options[optionAt];
+			if (key === 'up') setOptionIndex(clamp(optionAt - 1, 0, count - 1));
+			else if (key === 'down') setOptionIndex(clamp(optionAt + 1, 0, count - 1));
+			else if ((key === 'left' || key === 'right') && option && option.stepper && !option.disabled) onAdjust(option.id, key === 'left' ? -1 : 1);
+			else if (key === 'left') setZone('nav');
 			return true;
 		}
 
 		switch (key) {
-			case 'left': setGridIndex((i) => clamp(i - 1, 0, count - 1)); break;
-			case 'right': setGridIndex((i) => clamp(i + 1, 0, count - 1)); break;
-			case 'up':
-				if (gridIndex >= cols) setGridIndex((i) => i - cols);
-				// Spatial: the button sits top-right, so leave the grid towards whichever is above.
-				else setZone(reordering || gridIndex % cols >= cols / 2 ? 'button' : 'tabs');
+			case 'left':
+				if (gridIndex % COLUMNS === 0) { if (!reordering) setZone('nav'); }
+				else setGridIndex(gridIndex - 1);
 				break;
-			case 'down': setGridIndex((i) => (i + cols < count ? i + cols : i)); break;
+			case 'right': setGridIndex(clamp(gridIndex + 1, 0, count - 1)); break;
+			case 'up':
+				if (gridIndex >= COLUMNS) setGridIndex(gridIndex - COLUMNS);
+				else if (buttons.length) setZone('buttons');
+				break;
+			case 'down': if (gridIndex + COLUMNS < count) setGridIndex(gridIndex + COLUMNS); break;
 		}
 		return true;
-	}, [zone, tabIndex, tabCount, gridIndex, optionIndex, count, tab, onOptions, options, reordering, held, items, hasRefresh, onReorder, onAdjust, onClose]);
+	}, [zone, tabIndex, tabs.length, gridIndex, optionAt, buttonIndex, count, tab, onOptions, options, buttons.length, reordering, held, items, onReorder, onAdjust, onClose]);
 
 	useKeys(handleKey, active);
 
-	// The row of tabs is wider than the screen: it slides to keep the chosen tab in the middle, and the buttons beside it stay put.
-	useEffect(() => {
-		const scroll = scrollRef.current, track = trackRef.current;
-		if (!scroll || !track || !track.children[tabIndex]) return;
-		const el = track.children[tabIndex] as HTMLElement;
-		const room = Math.max(0, track.scrollWidth - scroll.clientWidth);
-		const shift = clamp(el.offsetLeft + el.offsetWidth / 2 - scroll.clientWidth / 2, 0, room);
-		setTabScroll({shift, left: shift > 1, right: shift < room - 1});
-	}, [tabIndex, tabCount, hasRefresh, reordering]);
-
-	const HINT = hints();
-	const hint = onOptions ? HINT.options : held ? HINT.holding : reordering ? HINT.reorder : HINT.select;
-	const labels = tabs.map((t) => t.label);
-	const buttonClass = ['settings__button', reordering && 'settings__button--active', zone === 'button' && 'settings__button--focused'].filter(Boolean).join(' ');
+	const hint = zone === 'nav' ? tr('↑ ↓ choose · → open · Back closes Settings', '↑ ↓ выбор · → открыть · «Назад» закрывает настройки')
+		: onOptions ? tr('OK changes · ← → adjust · Back returns to the list', 'OK меняет · ← → подстраивают · «Назад» к списку')
+		: held ? tr('Arrows move it · OK puts it down · Back cancels', 'Стрелки двигают · OK кладёт на место · «Назад» отменяет')
+		: reordering ? tr('OK picks a tile up · hold OK or choose Done to finish', 'OK берёт плитку · удерживайте OK или выберите «Готово»')
+		: tr('OK shows or hides · hold OK to re-order', 'OK показывает или скрывает · удерживайте OK для порядка');
+	const focusedOption = zone === 'content' && onOptions ? options[optionAt] : undefined;
+	const footer = focusedOption ? (focusedOption.disabled || focusedOption.description) : '';
 
 	return (
 		<div class="screen screen--settings">
-			<div class="settings">
-				<h1 class="settings__title">{tr('Settings', 'Настройки')}</h1>
-				<p class="settings__hint">{hint}</p>
-				<div class="settings__tabs">
-					<div class={`tabs__scroll${tabScroll.left ? ' tabs__scroll--left' : ''}${tabScroll.right ? ' tabs__scroll--right' : ''}`} ref={scrollRef}>
-					<div class="tabs__track" ref={trackRef} style={{transform: `translateX(${-tabScroll.shift}px)`}}>
-					{labels.map((label, i) => (
-						<div
-							key={label}
-							class={['tab', i === tabIndex && 'tab--active', reordering && i !== tabIndex && 'tab--locked', zone === 'tabs' && i === tabIndex && 'tab--focused'].filter(Boolean).join(' ')}
-							onMouseEnter={() => { if (!reordering) { setZone('tabs'); selectTab(i); } }}
-						>
-							{label}
-						</div>
-					))}
-					</div>
-					</div>
-					{hasRefresh && !reordering && (
-						<div
-							class={['settings__button', 'settings__button--refresh', zone === 'refresh' && 'settings__button--focused'].join(' ')}
-							onMouseEnter={() => setZone('refresh')}
-							onClick={() => { if (onRefresh) onRefresh(); }}
-						>
-							{tr('Refresh list', 'Обновить список')}
+			<div class="set">
+				<nav class="set__nav">
+					<h1 class="set__heading">{tr('Settings', 'Настройки')}</h1>
+					{tabs.map((t, i) => {
+						const icon = ICONS[t.icon];
+						return (
+							<div
+								key={t.id}
+								class={['navitem', i === tabIndex && 'navitem--current', zone === 'nav' && i === tabIndex && 'navitem--focused', reordering && i !== tabIndex && 'navitem--locked'].filter(Boolean).join(' ')}
+								onMouseEnter={() => { if (!reordering) { setZone('nav'); selectTab(i); } }}
+								onClick={enter}
+							>
+								<span class="navitem__icon" style={{background: icon.color}}>
+									<svg viewBox="0 0 24 24"><path d={icon.path} /></svg>
+								</span>
+								<span class="navitem__label">{t.label}</span>
+							</div>
+						);
+					})}
+				</nav>
+				<section class="set__main">
+					<h2 class="set__title">{current ? current.label : ''}</h2>
+					<p class="set__hint">{hint}</p>
+					{tab && (
+						<div class="set__buttons">
+							{buttons.map((b, i) => (
+								<div
+									key={b}
+									class={['pill', b === 'arrange' && reordering && 'pill--active', zone === 'buttons' && i === buttonIndex && 'pill--focused'].filter(Boolean).join(' ')}
+									onMouseEnter={() => { setZone('buttons'); setButtonIndex(i); }}
+									onClick={() => pressButton(b)}
+								>
+									{b === 'refresh' ? tr('Refresh list', 'Обновить список') : reordering ? tr('Done', 'Готово') : tab.arrange}
+								</div>
+							))}
 						</div>
 					)}
 					{tab && (
-						<div
-							class={buttonClass}
-							onMouseEnter={() => setZone('button')}
-							onClick={() => setMode(!reordering)}
-						>
-							{reordering ? tr('Done', 'Готово') : tab.arrange}
-						</div>
+						<Grid
+							items={items}
+							mode={reordering ? 'reorder' : 'select'}
+							checkedKeys={keysOf(tab.shown)}
+							liftedIndex={held ? held.index : -1}
+							focused={zone === 'content'}
+							selected={gridIndex}
+							onSelect={(i) => { if (!held) { setZone('content'); setGridIndex(i); } }}
+							onActivate={(i) => { setZone('content'); activateGridItem(i); }}
+						/>
 					)}
-				</div>
-				{tab && (
-					<Grid
-						items={items}
-						mode={reordering ? 'reorder' : 'select'}
-						checkedKeys={keysOf(tab.shown)}
-						liftedIndex={held ? held.index : -1}
-						focused={zone === 'content'}
-						selected={gridIndex}
-						onSelect={(i) => { if (!held) { setZone('content'); setGridIndex(i); } }}
-						onActivate={(i) => { setZone('content'); activateGridItem(i); }}
-					/>
-				)}
-				{onOptions && (
-					<OptionList
-						options={options}
-						focused={zone === 'content'}
-						selected={optionIndex}
-						onSelect={(i) => { setZone('content'); setOptionIndex(i); }}
-						onActivate={(i) => { setZone('content'); onOption(options[i].id); }}
-					/>
-				)}
-				{reordering && count === 0 && <p class="settings__hint">{tr('Nothing on the home screen yet.', 'На главном экране пока ничего нет.')}</p>}
+					{tab && reordering && count === 0 && <p class="set__empty">{tr('Nothing on the home screen yet.', 'На главном экране пока ничего нет.')}</p>}
+					{onOptions && (
+						<OptionList
+							options={options}
+							focused={zone === 'content'}
+							selected={optionAt}
+							onSelect={(i) => { setZone('content'); setOptionIndex(i); }}
+							onActivate={(i) => { setZone('content'); setOptionIndex(i); onOption(options[i].id); }}
+						/>
+					)}
+					<p class={`set__footer${focusedOption && focusedOption.disabled ? ' set__footer--warn' : ''}`}>{footer}</p>
+				</section>
 			</div>
 		</div>
 	);

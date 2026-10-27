@@ -31,29 +31,18 @@ f.noteExec();
 eq([f.rootState(), f.lastFailure(), f.whySuffix()], ['yes', null, ''], 'a good call clears it');
 
 // rows
-const rowsOf = (info) => p.optionsFor('options', f.DEFAULT_CONFIG, info);
+const rowsOf = (info) => p.optionsFor('home', f.DEFAULT_CONFIG, info);
 eq(rowsOf().filter((o) => o.disabled).length, 0, 'nothing is greyed out when nothing is known');
-eq(rowsOf({homeApp: null, homeHook: null, root: 'yes'}).filter((o) => o.disabled).length, 0, 'nothing is greyed out on a rooted TV');
+eq(rowsOf({homeHook: null, root: 'yes'}).filter((o) => o.disabled).length, 0, 'nothing is greyed out on a rooted TV');
 f.noteExec(new Error('Service does not exist: org.webosbrew.hbchannel.service'));
-const grey = rowsOf({homeApp: null, homeHook: null, root: 'no', rootDetail: 'Service does not exist'});
+const grey = rowsOf({homeHook: null, root: 'no', rootDetail: 'Service does not exist'});
 eq(grey.filter((o) => o.disabled).map((o) => o.id).sort(), p.ROOT_OPTIONS.slice().sort(), 'every row that needs root is greyed out without it');
-eq(grey.filter((o) => !o.disabled).map((o) => o.id), [], 'every Options row needs root, so all are greyed out');
-eq(p.optionsFor('look', f.DEFAULT_CONFIG, {root: 'no'}).some((o) => o.id === 'resetLook' && !o.disabled), true, 'Reset look and clock (on the Look tab) stays usable without root');
-eq(grey[0].disabled.indexOf('Нужен рутованный ТВ') === 0 && grey[0].disabled.indexOf('ответ ТВ: Service does not exist') > 0, true, 'the reason says what the TV said');
+eq(grey.find((o) => o.id === 'replaceHome').disabled.indexOf('Нужен рутованный ТВ') === 0 && grey.find((o) => o.id === 'replaceHome').disabled.indexOf('ответ ТВ: Service does not exist') > 0, true, 'the reason says what the TV said');
+eq(p.optionsFor('general', f.DEFAULT_CONFIG, {root: 'no'}).some((o) => o.id === 'resetLook' && !o.disabled), true, 'Reset look and clock stays usable without root');
 eq(p.disabledReason('theme', {root: 'no'}), null, 'a look setting is never greyed out');
-eq(p.optionsFor('look', f.DEFAULT_CONFIG, {root: 'no'}).filter((o) => o.disabled).length, 0, 'the Look tab has no greyed rows');
+eq(p.optionsFor('look', f.DEFAULT_CONFIG, {root: 'no'}).filter((o) => o.disabled).length, 0, 'Appearance has no greyed rows');
 
-// the LG logo setting
-const sys = f.system;
-eq(sys.parseLogo('{"category":"other","settings":{"lgLogoDisplay":"off"},"returnValue":true}'), 'off', 'logo off is read');
-eq(sys.parseLogo('{"settings":{"lgLogoDisplay":"on"},"returnValue":true}'), 'on', 'logo on is read');
-eq(sys.parseLogo('{"returnValue":true,"settings":{}}'), 'unsupported', 'an answer without the key means the TV has no such setting');
-eq(sys.parseLogo('{"returnValue":false,"errorText":"x"}'), null, 'an error is not an answer');
-eq(sys.parseLogo(''), null, 'no output is not an answer');
-eq(sys.setLogoCommand(false).indexOf('"lgLogoDisplay":"off"') > 0 && sys.setLogoCommand(true).indexOf('"lgLogoDisplay":"on"') > 0, true, 'set command carries the wanted value');
-eq(sys.GET_LOGO_COMMAND.indexOf('"category":"other"') > 0, true, 'read command uses the other category');
-const logoRow = (info) => p.optionsFor('options', f.DEFAULT_CONFIG, info).find((o) => o.id === 'lgLogo');
-eq([logoRow({logo: 'off'}).valueText, logoRow({logo: 'on'}).valueText, logoRow({logo: null}).valueText], ['Выкл.', 'Вкл.', 'Неизвестно'], 'the row shows the real state');
-eq(logoRow({logo: 'unsupported', root: 'yes'}).disabled.indexOf('нет настройки') > 0, true, 'greyed out with a reason when this TV has no such setting');
-eq(logoRow({logo: 'off', root: 'yes'}).disabled, undefined, 'usable on a rooted TV that has it');
+// Home screen: the helper is offered only while the launcher is not in LG Home's place
+eq(rowsOf({homeHook: {running: false, linked: false}, takeover: true}).map((o) => o.id), ['homeStatus'], 'in LG Home\'s place: only the status, no helper');
+eq(rowsOf({homeHook: {running: true, linked: true}, takeover: false}).map((o) => [o.id, o.valueText]), [['homeStatus', 'Нет'], ['replaceHome', 'Вкл.']], 'otherwise the status and the helper');
 process.exit(fail ? 1 : 0);

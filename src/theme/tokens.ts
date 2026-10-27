@@ -111,7 +111,7 @@ export const LAYOUT = {
 	tileRadius: 24,
 	rowLabelGap: 14,        // gap between a row's subheader and its tiles
 	rowGap: 28,             // vertical space between rows
-	gridColumns: 9          // settings picker grid
+	gridColumns: 6          // the grid of apps and inputs in Settings
 } as const;
 
 /** Magnification of the home row's selected tile and of the tiles 1 and 2 places away (like a dock). */

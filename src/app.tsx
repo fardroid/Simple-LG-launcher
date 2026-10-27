@@ -7,7 +7,7 @@ import {Toast, type ToastMessage} from './components/Toast';
 import {Wallpaper} from './components/Wallpaper';
 import type {TileModel} from './components/Tile';
 import {cacheApps, cachedApps, listApps, probeRoot, type AppEntry} from './lib/apps';
-import {failureText, lastFailureDetail, rootState, whySuffix} from './lib/failure';
+import {lastFailureDetail, rootState, whySuffix} from './lib/failure';
 import {keepKnownIcons, sameApps} from './lib/appcache';
 import type {TimeFormat} from './lib/clock';
 import {count, lang, setLang, tr} from './lib/i18n';
@@ -15,8 +15,8 @@ import {listInputs, mockInputs, type InputSource} from './lib/inputs';
 import {launchApp, launchLgHome, launchSystemSettings} from './lib/launch';
 import {isWebOS} from './lib/luna';
 import {hidePointerOnForeground} from './lib/pointer';
-import {getLogo, setLogo, closeHomeAndMeasure, closeLgHome, getHomeApp, LG_HOME_ID, setHomeApp} from './lib/system';
-import {applyHomeHook, getHookStatus, hookMessage, installHomeHook, logLine, markAliveSoon, reapplyHomeHook, removeHomeHook, setBootLink, stockHome} from './lib/homehook';
+import {closeLgHome, takeoverActive} from './lib/system';
+import {applyHomeHook, getHookStatus, hookMessage, installHomeHook, logLine, markAliveSoon, reapplyHomeHook, removeHomeHook, stockHome} from './lib/homehook';
 import {applyPref, disabledReason, findPref, optionsFor, resetLook, type Press, type SystemInfo} from './lib/prefs';
 import {hasStoredConfig, loadConfig, parseConfig, saveConfig, toggleId, DEFAULT_WALLPAPER, type UserConfig} from './lib/storage';
 import {AS_HOME, forHome, readConfigFile, saveConfigFile} from './lib/ashome';
@@ -24,7 +24,6 @@ import {applyTheme} from './theme/tokens';
 import {useTimeFormat} from './hooks/useTimeFormat';
 import {AppMenu} from './components/AppMenu';
 import {hiddenAfterUpgrade, toggleHidden, visibleApps} from './lib/apporder';
-import {addTvInput, removeTvInput, TV_INPUT_LOG} from './lib/tvinput';
 import {uninstallApp, uninstallVerdict, UNINSTALL_LOG} from './lib/uninstall';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {moveKey, movesFor, orderTiles, orderUpdate, reslot, type MoveAction} from './lib/tileorder';
@@ -40,7 +39,7 @@ import {FRESH_MS, isFresh, readWeatherCache, usableCached, weatherView, writeWea
 
 type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl';
 
-const TAB = {apps: 'apps', sources: 'sources', look: 'look', clock: 'clock', weather: 'weather', calendar: 'calendar', wallpaper: 'wallpaper', options: 'options'} as const;
+const TAB = {apps: 'apps', sources: 'sources', look: 'look', clock: 'clock', weather: 'weather', calendar: 'calendar', wallpaper: 'wallpaper', home: 'home', general: 'general'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings', system: 'system-settings'} as const;
 
 /** The three tiles that always end the row. */
@@ -80,7 +79,6 @@ export function App () {
 	const [allInputs, setInputs] = useState<InputSource[]>([]);
 	// the launcher itself may be in the TV's input list (see Options): it is not offered as a source
 	const inputs = useMemo(() => allInputs.filter((i) => i.appId !== APP_ID), [allInputs]);
-	const tvInput: boolean | null = allInputs.length === 0 ? null : allInputs.some((i) => i.appId === APP_ID);
 	const [weather, setWeather] = useState<WeatherData | null>(() => (WEATHER_ENABLED ? readWeatherCache() : null));
 	const weatherRef = useRef(weather);
 	weatherRef.current = weather;
@@ -92,7 +90,7 @@ export function App () {
 	const [toast, setToast] = useState<ToastMessage | null>(null);
 	const toastTimer = useRef(0);
 	const closedAt = useRef(0);
-	const [systemInfo, setSystemInfo] = useState<SystemInfo>({homeApp: null, homeHook: null});
+	const [systemInfo, setSystemInfo] = useState<SystemInfo>({homeHook: null, takeover: AS_HOME ? true : null});
 	const tvFormat = useTimeFormat();
 
 	// With the hand-over helper on, note in its log how long this launcher took to show its first screen.
@@ -276,8 +274,8 @@ export function App () {
 			probeRoot().then((root) => {
 				const rootDetail = lastFailureDetail();
 				if (!live) return undefined;
-				if (root === 'no') { setSystemInfo({homeApp: null, homeHook: null, logo: null, root, rootDetail}); return undefined; }
-				return Promise.all([getHomeApp(), getHookStatus(), getLogo()]).then(([homeApp, homeHook, logo]) => { if (live) setSystemInfo({homeApp, homeHook, logo, root, rootDetail}); });
+				if (root === 'no') { setSystemInfo({homeHook: null, takeover: AS_HOME ? true : null, root, rootDetail}); return undefined; }
+				return Promise.all([getHookStatus(), AS_HOME ? Promise.resolve(true) : takeoverActive()]).then(([homeHook, takeover]) => { if (live) setSystemInfo({homeHook, takeover, root, rootDetail}); });
 			});
 			return () => { live = false; };
 		}
@@ -458,15 +456,16 @@ export function App () {
 	const timeFormat: TimeFormat = config.clockFormat === 'tv' ? tvFormat : config.clockFormat;
 
 	const tabs: SettingsTab[] = useMemo(() => [
-		{id: TAB.apps, label: tr('Apps', 'Приложения'), arrange: tr('Arrange apps', 'Порядок приложений'), refresh: true, items: apps.map(appTile), shown: shownApps.map(appTile)},
-		{id: TAB.sources, label: tr('Sources', 'Источники'), arrange: tr('Arrange sources', 'Порядок источников'), items: inputs.map(inputTile), shown: shownInputs.map(inputTile)},
-		{id: TAB.look, label: tr('Look', 'Вид'), arrange: '', items: [], shown: [], options: optionsFor('look', config)},
-		{id: TAB.clock, label: tr('Clock', 'Часы'), arrange: '', items: [], shown: [], options: optionsFor('clock', config)},
-		...(WEATHER_ENABLED ? [{id: TAB.weather, label: tr('Weather', 'Погода'), arrange: '', items: [], shown: [], options: optionsFor('weather', config)}] : []),
-		{id: TAB.calendar, label: tr('Calendar', 'Календарь'), arrange: '', items: [], shown: [], options: optionsFor('calendar', config)},
-		{id: TAB.wallpaper, label: tr('Wallpaper', 'Обои'), arrange: '', items: [], shown: [], options: optionsFor('wallpaper', config)},
-		{id: TAB.options, label: tr('Options', 'Параметры'), arrange: '', items: [], shown: [], options: optionsFor('options', config, {...systemInfo, tvInput})}
-	], [apps, inputs, shownApps, shownInputs, config, systemInfo, tvInput, language]);
+		{id: TAB.apps, icon: 'apps', label: tr('Apps', 'Приложения'), arrange: tr('Arrange', 'Порядок'), refresh: true, items: apps.map(appTile), shown: shownApps.map(appTile)},
+		{id: TAB.sources, icon: 'inputs', label: tr('Inputs', 'Входы'), arrange: tr('Arrange', 'Порядок'), items: inputs.map(inputTile), shown: shownInputs.map(inputTile)},
+		{id: TAB.look, icon: 'look', label: tr('Appearance', 'Оформление'), arrange: '', items: [], shown: [], options: optionsFor('look', config)},
+		{id: TAB.clock, icon: 'clock', label: tr('Clock', 'Часы'), arrange: '', items: [], shown: [], options: optionsFor('clock', config)},
+		...(WEATHER_ENABLED ? [{id: TAB.weather, icon: 'weather', label: tr('Weather', 'Погода'), arrange: '', items: [], shown: [], options: optionsFor('weather', config)}] : []),
+		{id: TAB.calendar, icon: 'calendar', label: tr('Calendar', 'Календарь'), arrange: '', items: [], shown: [], options: optionsFor('calendar', config)},
+		{id: TAB.wallpaper, icon: 'wallpaper', label: tr('Wallpaper', 'Обои'), arrange: '', items: [], shown: [], options: optionsFor('wallpaper', config)},
+		{id: TAB.home, icon: 'home', label: tr('Home screen', 'Главный экран'), arrange: '', items: [], shown: [], options: optionsFor('home', config, systemInfo)},
+		{id: TAB.general, icon: 'general', label: tr('General', 'Общие'), arrange: '', items: [], shown: [], options: optionsFor('general', config)}
+	] as SettingsTab[], [apps, inputs, shownApps, shownInputs, config, systemInfo, language]);
 
 	const boardY = boardTop({iconScale: config.iconScale, bottomMargin: config.bottomMargin, showLabels: config.showLabels, rows: 1}, homeItems.length);
 	const plates = useMemo(
@@ -525,76 +524,34 @@ export function App () {
 		if (blocked) { showToast(blocked, 'error'); return; }
 		if (optionId === 'weatherOn' && !config.weather.city) { showToast(tr('Choose a city first', 'Сначала выберите город')); setScreen('cities'); return; }
 		if (optionId === 'calendarOn' && !config.calendar.sources.length) { showToast(tr('Add a calendar first', 'Сначала подключите календарь')); setScreen('calendarUrl'); return; }
+		if (pref.kind === 'info') return;
 		if (pref.kind === 'action') {
 			if (optionId === 'wallpaper') setScreen('picker');
 			else if (optionId === 'weatherCity') setScreen('cities');
 			else if (optionId === 'calendarUrl') setScreen('calendarUrl');
 			else if (optionId === 'resetLook') { updateConfig(resetLook(config)); showToast(tr('Look and clock reset', 'Вид и часы сброшены')); }
-			else if (optionId === 'replaceHome' || optionId === 'startAtBoot') {
+			else if (optionId === 'replaceHome') {
 				const refresh = () => getHookStatus().then((homeHook) => setSystemInfo((previous) => ({...previous, homeHook})));
-				const running = !!(systemInfo.homeHook && systemInfo.homeHook.running);
-				if (optionId === 'replaceHome' && running) {
+				if (systemInfo.homeHook && systemInfo.homeHook.running) {
 					removeHomeHook().then(() => {
 						updateConfig({...config, replaceHome: false});
 						refresh();
 						showToast(tr('Off. LG Home opens as usual', 'Выключено. LG Home открывается как обычно'));
 					});
-				} else if (optionId === 'replaceHome') {
+				} else {
 					showToast(tr('Setting up…', 'Настройка…'));
-					installHomeHook(config.hookBoot).then(({result, detail}) => {
-						if (result === 'applied') updateConfig({...config, replaceHome: true});
+					installHomeHook(true).then(({result, detail}) => {
+						if (result === 'applied') updateConfig({...config, replaceHome: true, hookBoot: true});
 						refresh();
 						showToast(hookMessage(result, detail), result === 'applied' ? 'info' : 'error');
 					});
-				} else if (!running && !config.replaceHome) {
-					showToast(tr('First turn on "Make the launcher the default instead of LG Home"', 'Сначала включите «Сделать лаунчер главным вместо LG Home»'), 'error');
-				} else {
-					const wantLink = !(systemInfo.homeHook && systemInfo.homeHook.linked);
-					setBootLink(wantLink).then((ok) => {
-						if (ok) updateConfig({...config, hookBoot: wantLink});
-						refresh();
-						showToast(ok ? (wantLink ? tr('The helper will start when the TV starts', 'Помощник будет запускаться при включении ТВ') : tr('Start at boot removed', 'Автозапуск убран')) : tr('Could not change it', 'Не удалось изменить') + (whySuffix() || tr('. The TV did not accept the command', '. ТВ не принял команду')), ok ? 'info' : 'error');
-					});
 				}
-			}
-			else if (optionId === 'useAsHome') {
-				const target = systemInfo.homeApp === APP_ID ? LG_HOME_ID : APP_ID;
-				setHomeApp(target).then((accepted) => getHomeApp().then((homeApp) => {
-					setSystemInfo((previous) => ({...previous, homeApp}));
-					if (!accepted || homeApp !== target) showToast(tr('The TV did not accept the change', 'ТВ не принял изменение') + whySuffix(), 'error');
-					else showToast(target === APP_ID ? tr('The Home and Back keys now open the launcher', 'Кнопки «Домой» и «Назад» теперь открывают лаунчер') : tr('LG Home is the default again', 'LG Home снова главное приложение'));
-				}));
-			}
-			else if (optionId === 'tvInput') {
-				const adding = tvInput !== true;
-				showToast(adding ? tr('Adding the launcher as an input…', 'Добавляем лаунчер как вход…') : tr('Removing the launcher from the inputs…', 'Убираем лаунчер из входов…'));
-				(adding ? addTvInput() : removeTvInput())
-					.then((accepted) => (isWebOS() ? listInputs() : Promise.resolve(mockInputs())).then((list) => {
-						setInputs(list);
-						const listed = list.some((i) => i.appId === APP_ID);
-						if (listed === adding) showToast(adding ? tr('Added. Now set the TV to start on its last input, and choose this one', 'Добавлено. Теперь настройте запуск ТВ с последнего входа и выберите этот') : tr('Removed from the TV\'s inputs', 'Убрано из входов ТВ'));
-						else showToast(accepted ? tr('The TV accepted the command, but the change does not show yet. Check the TV\'s input list', 'ТВ принял команду, но изменение пока не видно. Проверьте список входов ТВ') : tr('The TV did not accept the command (details: ', 'ТВ не принял команду (подробности: ') + TV_INPUT_LOG + ')', 'error');
-					}))
-					.catch((error) => showToast(failureText(error, tr('change the TV input', 'изменить вход ТВ')), 'error'));
-			}
-			else if (optionId === 'lgLogo') {
-				const wantOn = systemInfo.logo !== 'on';
-				showToast(tr('Changing…', 'Меняем…'));
-				setLogo(wantOn).then((ok) => getLogo().then((logo) => {
-					setSystemInfo((previous) => ({...previous, logo}));
-					showToast(ok ? (wantOn ? tr('The LG logo will show when the TV starts', 'Логотип LG будет показываться при запуске ТВ') : tr('The LG logo is off from the next start', 'Логотип LG отключён со следующего запуска')) : tr('The TV did not accept the change', 'ТВ не принял изменение') + whySuffix(), ok ? 'info' : 'error');
-				}));
-			}
-			else if (optionId === 'closeHomeNow') {
-				closeHomeAndMeasure().then(({before, after}) => showToast(
-					before < 0 || after < 0 ? tr('LG Home closed (no memory figures)', 'LG Home закрыт (данные о памяти недоступны)') : tr(`LG Home closed: ${after} MB free (was ${before} MB)`, `LG Home закрыт: свободно ${after} МБ (было ${before} МБ)`)
-				));
 			}
 			return;
 		}
 		const next = applyPref(config, optionId, press);
 		if (next !== config) updateConfig(next);
-	}, [config, showToast, systemInfo, tvInput]);
+	}, [config, showToast, systemInfo]);
 
 	const onRefresh = useCallback(() => {
 		manualLoad.current = true;

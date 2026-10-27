@@ -62,9 +62,9 @@ ssh root@TV sh /media/developer/takeover.sh enable
 ssh root@TV sh /media/developer/takeover.sh status
 ```
 
-`status` should print `enabled: yes`, `mounted: yes`, `Home type: web`, `boot link: yes` and `Homebrew access for Home: yes`. Pressing Home on the remote should now open the launcher. Undo: `ssh root@TV sh /media/developer/takeover.sh disable`.
+`status` should print `enabled: yes`, `mounted: yes`, `Home type: web`, `boot link: yes` and `Homebrew access for Home: yes`. Pressing Home on the remote should now open the launcher, and Settings → Home screen should say "In place of LG Home: Yes". Undo: `ssh root@TV sh /media/developer/takeover.sh disable`.
 
-**B. The Home button helper.** Lighter, mounts nothing, but LG Home can flash for a moment. It is switched on from the TV itself: Settings (the last tile on the row) → Options → *Make the launcher the default instead of LG Home*, then *Start the helper when the TV starts*. Tell the person which keys to press; you can't press them for them. Undo: the same two switches, off.
+**B. The Home button helper.** Lighter, mounts nothing, but LG Home can flash for a moment. It is switched on from the TV itself: Settings (the last tile on the row) → Home screen → *Background helper*; it also starts with the TV from then on. Tell the person which keys to press; you can't press them for them. Undo: the same switch, off.
 
 ## 6. Calendars (optional; ask first)
 
@@ -88,13 +88,13 @@ ssh root@TV mkdir -p /media/developer/wallpapers
 scp -O <pictures> root@TV:/media/developer/wallpapers/
 ```
 
-On the TV: Settings → Wallpaper → Wallpaper → *TV storage* → `wallpapers` → *Play this folder as a slideshow*.
+On the TV: Settings → Wallpaper → Picture → *TV storage* → `wallpapers` → *Play this folder as a slideshow*.
 
 `tools/tv-tweaks.sh` stops some preloading and LG's promotions and Live Plus. Describe it first, as README.md does, and run it only on a yes: `scp -O tools/tv-tweaks.sh root@TV:/media/developer/ && ssh root@TV sh /media/developer/tv-tweaks.sh apply`. Undo: `… tv-tweaks.sh restore`.
 
 ## 8. Finish
 
-Tell the person what was done, what is left for them on the TV (the city for the weather: Settings → Weather → City; the language: Settings → Look → Language), and how to undo each step.
+Tell the person what was done, what is left for them on the TV (the city for the weather: Settings → Weather → City; the language: Settings → General → Language), and how to undo each step.
 
 ## Updating later
 

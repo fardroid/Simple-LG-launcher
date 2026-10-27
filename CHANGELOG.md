@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+- **New Settings.** The sections are listed on the left, each with its own colour, and the chosen one opens on the right in rounded groups. The focused row is a light pill, and its explanation sits at the foot of the screen. ↑ ↓ pick a section, → or OK open it, Back goes back. The pickers (wallpaper, city, calendars) and the app menu share the look.
+- Rows show only where they apply: the slideshow interval and shuffle only with a slideshow, frosted glass only with a picture, the date size only with the date on.
+- **Home screen** (was Options) says whether the launcher is in LG Home's place (tools/takeover.sh). The background helper is offered only when it is not, as one switch that also starts it with the TV. "Close LG Home now" and "Close LG Home at start" are gone: with the takeover the first would have closed the launcher itself. LG Home is now closed when the launcher opens only together with the helper.
+- The colour theme moved to Wallpaper; the language, "Reset look and clock" and the version moved to a new General section.
+- Removed the code of options that were no longer shown (the TV input, the LG logo switch, the webOS 5 home-app setting).
+
 ## 1.7.0
 
 - **New name: Simple LG launcher**, with a new icon (a frosted card with a clock over a row of apps, the chosen one larger). New app ID too, `tld.my.simplelauncher`, so it no longer collides with Hearth. It installs as a separate app; a launcher that has no settings of its own yet takes them from the copy kept on the TV (/media/developer/launcher-config.json). The Home key helper (version 17) and tools/takeover.sh now look for the new ID; on a TV set up with the old one, run `takeover.sh disable` with the old script, then `enable` with the new one.

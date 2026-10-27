@@ -12,9 +12,10 @@ export const AS_HOME = typeof location !== 'undefined' && location.pathname.inde
 
 export const CONFIG_FILE = '/media/developer/launcher-config.json';
 
-/** The settings with the parts that do not apply when the launcher is the TV's Home switched off. */
+/** The settings as they apply here. Running as the TV's Home there is no helper and no "LG Home" to close; otherwise
+ *  LG Home is closed when the launcher opens only together with the helper (they are one setting, Settings → Home screen). */
 export function forHome (config: UserConfig): UserConfig {
-	return AS_HOME ? {...config, replaceHome: false, closeHome: false} : config;
+	return AS_HOME ? {...config, replaceHome: false, closeHome: false} : {...config, closeHome: config.replaceHome};
 }
 
 /** Keeps a copy of the settings on the TV, so the other copy of the launcher (the normal app or the Home one) can pick them up. */

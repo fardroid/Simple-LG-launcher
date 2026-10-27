@@ -87,18 +87,21 @@ eq([r.theme, r.iconScale, r.sideMargin, r.bottomMargin, r.clockFormat, r.clock.s
 eq([r.appIds, r.wallpaper.mode], [['a'], 'image'], 'reset keeps apps and wallpaper');
 
 // ---- the lists shown in Settings ----
-for (const tab of ['look', 'clock', 'wallpaper', 'options']) {
+for (const tab of ['general', 'look', 'clock', 'wallpaper', 'home']) {
   const list = p.optionsFor(tab, c0);
   eq(list.length >= 1 && list.length <= 12, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
 }
 const look = p.optionsFor('look', c0);
-eq(look.map((o) => o.valueText), ['Как на ТВ', 'Вечернее небо', '100%', '100%', 'Авто', undefined, undefined, undefined, '80 px', '50 px', 'Сбросить'], 'Look tab shows current values (the glass, shadow and app-names switches have no text, they are switches)');
+eq(look.map((o) => o.valueText), ['100%', undefined, '80 px', '50 px', '100%', 'Авто', undefined], 'Appearance shows current values (switches have no text; no frosted glass without a picture)');
+eq(look.map((o) => o.group), ['Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Карточки', 'Карточки', 'Карточки'], 'Appearance is in two groups');
+eq(p.optionsFor('look', {...c0, wallpaper: {...c0.wallpaper, mode: 'image', path: '/a.jpg'}}).some((o) => o.id === 'glass'), true, 'frosted glass appears with a picture');
 eq(look.some((o) => o.id === 'rows'), false, 'no choice of two rows of apps (they leave no room for the cards)');
 eq([p.applyPref(c0, 'shadows', 'ok').shadows, c0.shadows], [false, true], 'the card shadow is on by default and OK turns it off');
 eq(p.applyPref(c0, 'showLabels', 'ok').showLabels, false, 'Show app names switches off');
-eq(p.optionsFor('options', c0).map((o) => o.id).join(','), 'replaceHome,startAtBoot,closeHome,closeHomeNow', 'the Options tab: the Home helper, starting it with the TV, and closing LG Home');
+eq(p.optionsFor('home', c0).map((o) => o.id).join(','), 'homeStatus,replaceHome', 'Home screen: whether the launcher is in LG Home\'s place, and the helper');
+eq(p.optionsFor('general', c0).map((o) => o.id).join(','), 'language,resetLook,about', 'General: language, reset, about');
 eq(c0.tileOrder, null, 'a new config has no saved tile order');
-eq(p.optionsFor('options', c0)[0].label, 'Сделать лаунчер главным вместо LG Home', 'the default-home helper has its new name');
+eq(p.optionsFor('home', c0)[1].label, 'Фоновый помощник', 'the helper says what it is');
 // ---- the scrolling window ----
 const H = [128, 128, 128, 128, 128, 100, 100];                 // seven rows, taller than 800 px together
 eq(ow.windowEnd(H, 0), 6, 'at the top, six of the seven rows fit');
@@ -135,9 +138,11 @@ eq(p.resetLook({...c0, clock: {...c0.clock, font: 'serif'}}).clock.font, 'inter'
 
 // widget colour, opacity, ranges, reset row
 const wall = p.optionsFor('wallpaper', c0).map((o) => o.id).join(',');
-eq(wall, 'wallpaper,interval,shuffle', 'the Wallpaper tab: the picture or folder, the interval and the order');
-eq(p.optionsFor('clock', c0).map((o) => o.id).join(','), 'clockFormat,clockSize,clockFont,clockWeight,showDate,dateSize,clockColor', 'the Clock tab ends with the clock colour; no AM/PM switch (shown whenever the clock is 12-hour)');
-eq(p.optionsFor('look', c0).map((o) => o.id).pop(), 'resetLook', 'Reset look and clock is the last row of the Look tab');
+eq(wall, 'wallpaper,theme', 'Wallpaper without a slideshow: the picture and the colour theme');
+eq(p.optionsFor('wallpaper', {...c0, wallpaper: {...c0.wallpaper, mode: 'folder', path: '/w/'}}).map((o) => o.id).join(','), 'wallpaper,interval,shuffle,theme', 'a slideshow adds its interval and order');
+eq(p.optionsFor('clock', c0).map((o) => o.id).join(','), 'clockFormat,clockSize,clockFont,clockWeight,clockColor,showDate,dateSize', 'Clock: the time, then the date');
+eq(p.optionsFor('clock', {...c0, clock: {...c0.clock, showDate: false}}).some((o) => o.id === 'dateSize'), false, 'no date size without a date');
+
 eq(p.applyPref({...c0, sideMargin: 290}, 'sideMargin', 'right').sideMargin, 300, 'side margin goes up to 300 px');
 const colour = p.applyPref(c0, 'clockColor', 'ok').clock.color;
 eq(colour, 'warm', 'OK steps to the next colour');
