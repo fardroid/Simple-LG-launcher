@@ -76,8 +76,8 @@ Object.defineProperty(globalThis, 'navigator', {value: {language: 'en-GB', langu
 await build({entryPoints: [new URL('../src/lib/weather.ts', import.meta.url).pathname], bundle: true, format: 'esm', outfile: dir + '.cache-weather-en-test.mjs', platform: 'node', logLevel: 'error'});
 const we = await import(dir + '.cache-weather-en-test.mjs');
 const ve = we.weatherView(f, 'c', 'Baku');
-eq([ve.text, ve.detail, ve.days[0].label, ve.days[1].label], ['Partly cloudy', 'Feels like 18° · wind 14 km/h', 'Today', 'Sun 25'], 'the card text, in English');
-eq(we.weatherView(f, 'f', 'Baku').detail, 'Feels like 64° · wind 9 mph', 'mph with Fahrenheit');
+eq([ve.text, ve.detail, ve.days[0].label, ve.days[1].label], ['Partly cloudy', 'Feels like 18° · wind 13 km/h', 'Today', 'Sun 25'], 'the card text, in English (3.6 m/s is 13 km/h)');
+eq(we.weatherView(f, 'f', 'Baku').detail, 'Feels like 64° · wind 8 mph', 'mph with Fahrenheit');
 eq(we.geocodeUrl('Milan').indexOf('language=en') > 0, true, 'the city search answers in English');
 
 process.exit(fail ? 1 : 0);

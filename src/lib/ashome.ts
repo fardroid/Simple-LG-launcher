@@ -18,6 +18,18 @@ export function forHome (config: UserConfig): UserConfig {
 	return AS_HOME ? {...config, replaceHome: false, closeHome: false} : {...config, closeHome: config.replaceHome};
 }
 
+/** True for the TV's own relaunch of its Home app that only keeps it loaded (launch parameters {"keepAlive": true}),
+ *  as opposed to the Home key. */
+export function isKeepAlive (launchParams: string | undefined): boolean {
+	if (!launchParams) return false;
+	try {
+		const params = JSON.parse(launchParams) as Record<string, unknown>;
+		return !!params && params.keepAlive === true;
+	} catch (error) {
+		return false;
+	}
+}
+
 /** Keeps a copy of the settings on the TV, so the other copy of the launcher (the normal app or the Home one) can pick them up. */
 export function saveConfigFile (config: UserConfig): void {
 	if (!isWebOS()) return;

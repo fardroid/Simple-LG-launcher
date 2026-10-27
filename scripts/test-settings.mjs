@@ -87,9 +87,9 @@ eq([r.theme, r.iconScale, r.sideMargin, r.bottomMargin, r.clockFormat, r.clock.s
 eq([r.appIds, r.wallpaper.mode], [['a'], 'image'], 'reset keeps apps and wallpaper');
 
 // ---- the lists shown in Settings ----
-for (const tab of ['general', 'look', 'clock', 'wallpaper', 'home']) {
+for (const tab of ['look', 'widgets', 'wallpaper', 'home']) {
   const list = p.optionsFor(tab, c0);
-  eq(list.length >= 1 && list.length <= 12, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
+  eq(list.length >= 1 && list.length <= 16, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
 }
 const look = p.optionsFor('look', c0);
 eq(look.map((o) => o.valueText), ['100%', undefined, '80 px', '50 px', '100%', 'Авто', undefined], 'Appearance shows current values (switches have no text; no frosted glass without a picture)');
@@ -98,10 +98,10 @@ eq(p.optionsFor('look', {...c0, wallpaper: {...c0.wallpaper, mode: 'image', path
 eq(look.some((o) => o.id === 'rows'), false, 'no choice of two rows of apps (they leave no room for the cards)');
 eq([p.applyPref(c0, 'shadows', 'ok').shadows, c0.shadows], [false, true], 'the card shadow is on by default and OK turns it off');
 eq(p.applyPref(c0, 'showLabels', 'ok').showLabels, false, 'Show app names switches off');
-eq(p.optionsFor('home', c0).map((o) => o.id).join(','), 'homeStatus,replaceHome', 'Home screen: whether the launcher is in LG Home\'s place, and the helper');
-eq(p.optionsFor('general', c0).map((o) => o.id).join(','), 'language,resetLook,about', 'General: language, reset, about');
+eq(p.optionsFor('home', c0).map((o) => o.id).join(','), 'language,resetLook,homeStatus,replaceHome,about', 'Home screen: language, reset, whether the launcher is in LG Home\'s place, the helper, about');
+eq(p.optionsFor('home', c0).map((o) => o.group || '').join(','), ',,Запуск лаунчера,Запуск лаунчера,О лаунчере', 'Home screen: the launch rows and About in their groups');
 eq(c0.tileOrder, null, 'a new config has no saved tile order');
-eq(p.optionsFor('home', c0)[1].label, 'Фоновый помощник', 'the helper says what it is');
+eq(p.optionsFor('home', c0)[3].label, 'Фоновый помощник', 'the helper says what it is');
 // ---- the scrolling window ----
 const H = [128, 128, 128, 128, 128, 100, 100];                 // seven rows, taller than 800 px together
 eq(ow.windowEnd(H, 0), 6, 'at the top, six of the seven rows fit');
@@ -132,7 +132,7 @@ let cf = c0;
 for (let i = 0; i < 6; i++) { cf = p.applyPref(cf, 'clockFont', 'ok'); fonts.push(cf.clock.font); }
 eq(fonts, ['tv', 'poppins', 'oswald', 'mono', 'serif', 'inter'], 'OK steps through the six fonts and wraps');
 eq([p.applyPref(c0, 'clockFont', 'left').clock.font, p.applyPref(c0, 'clockFont', 'right').clock.font], ['inter', 'tv'], 'right goes to the next font; left stops at the first');
-eq(p.optionsFor('clock', {...c0, clock: {...c0.clock, font: 'mono'}}).filter((o) => o.id === 'clockFont')[0].valueText, 'Roboto Mono (цифровой)', 'the font option reads its name');
+eq(p.optionsFor('widgets', {...c0, clock: {...c0.clock, font: 'mono'}}).filter((o) => o.id === 'clockFont')[0].valueText, 'Roboto Mono (цифровой)', 'the font option reads its name');
 eq(p.resetLook({...c0, clock: {...c0.clock, font: 'serif'}}).clock.font, 'inter', 'Reset look and clock puts the font back');
 
 
@@ -140,13 +140,15 @@ eq(p.resetLook({...c0, clock: {...c0.clock, font: 'serif'}}).clock.font, 'inter'
 const wall = p.optionsFor('wallpaper', c0).map((o) => o.id).join(',');
 eq(wall, 'wallpaper,theme', 'Wallpaper without a slideshow: the picture and the colour theme');
 eq(p.optionsFor('wallpaper', {...c0, wallpaper: {...c0.wallpaper, mode: 'folder', path: '/w/'}}).map((o) => o.id).join(','), 'wallpaper,interval,shuffle,theme', 'a slideshow adds its interval and order');
-eq(p.optionsFor('clock', c0).map((o) => o.id).join(','), 'clockFormat,clockSize,clockFont,clockWeight,clockColor,showDate,dateSize', 'Clock: the time, then the date');
-eq(p.optionsFor('clock', {...c0, clock: {...c0.clock, showDate: false}}).some((o) => o.id === 'dateSize'), false, 'no date size without a date');
+eq(p.optionsFor('widgets', c0).map((o) => o.id).join(','), 'clockFont,clockFormat,clockSize,clockWeight,clockColor,showDate,dateSize,weatherOn,weatherCity,weatherUnit,weatherCityName,calendarOn,calendarUrl', 'Widgets: the font for all of them, then the clock, the date, the weather and the calendar');
+eq(p.applyPref(c0, 'clockWeight', 'right').clock.weight, 300, 'weight steps up from thin');
+eq(p.applyPref({...c0, clock: {...c0.clock, weight: 500}}, 'clockWeight', 'right').clock.weight, 600, 'up to bold');
+eq(p.optionsFor('widgets', {...c0, clock: {...c0.clock, showDate: false}}).some((o) => o.id === 'dateSize'), false, 'no date size without a date');
 
 eq(p.applyPref({...c0, sideMargin: 290}, 'sideMargin', 'right').sideMargin, 300, 'side margin goes up to 300 px');
 const colour = p.applyPref(c0, 'clockColor', 'ok').clock.color;
 eq(colour, 'warm', 'OK steps to the next colour');
-eq(p.optionsFor('clock', {...c0, clock: {...c0.clock, color: 'ocean'}}).find((o) => o.id === 'clockColor').valueText.indexOf('Градиент') === 0, true, 'a gradient shows its name');
+eq(p.optionsFor('widgets', {...c0, clock: {...c0.clock, color: 'ocean'}}).find((o) => o.id === 'clockColor').valueText.indexOf('Градиент') === 0, true, 'a gradient shows its name');
 eq(p.resetLook({...c0, clock: {...c0.clock, color: 'black', opacity: 30}}).clock.opacity, 100, 'reset puts the opacity back');
 eq(p.resetLook({...c0, clock: {...c0.clock, color: 'black', opacity: 30}}).clock.color, 'white', 'and the colour');
 process.exit(fail ? 1 : 0);

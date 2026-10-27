@@ -1,4 +1,4 @@
-// The settings screens as data: every option of every section (General, Appearance, Clock, Weather, Calendar, Wallpaper, Home screen),
+// The settings screens as data: every option of every section (Appearance, Widgets, Wallpaper, Home screen),
 // how it reads the config, and how OK / ← → change it. The app builds the Settings lists
 // from this table and applies a change with `applyPref`.
 
@@ -18,7 +18,7 @@ import {lastFailure, type RootState} from './failure';
 import {APP_VERSION} from '../config/constants';
 import {count, lang, langName, LANG_SETTINGS, tr, type Lang} from './i18n';
 
-export type PrefTab = 'general' | 'look' | 'clock' | 'weather' | 'calendar' | 'wallpaper' | 'home';
+export type PrefTab = 'look' | 'widgets' | 'wallpaper' | 'home';
 
 /** Facts about the TV (not user settings) that some rows display. */
 export interface SystemInfo {
@@ -107,13 +107,14 @@ export function intervalText (seconds: number): string {
 const PLATE_MODES: readonly PlateMode[] = ['auto', 'light', 'dark'];
 const THEMES: readonly ThemeName[] = ['dusk', 'black', 'grey'];
 const CLOCK_FORMATS: readonly ClockFormat[] = ['24h', '12h', 'tv'];
-const WEIGHTS: readonly ClockWeight[] = [200, 300, 400];
+const WEIGHTS: readonly ClockWeight[] = [200, 300, 400, 500, 600];
 const UNITS: readonly TempUnit[] = ['c', 'f'];
 
 const plateText = (v: PlateMode): string => v === 'light' ? tr('Light', 'Светлые') : v === 'dark' ? tr('Dark', 'Тёмные') : tr('Auto', 'Авто');
 const themeText = (v: ThemeName): string => v === 'black' ? tr('OLED black', 'Чёрная (OLED)') : v === 'grey' ? tr('Calm blue-grey', 'Серо-голубая') : tr('Evening sky', 'Вечернее небо');
 const formatText = (v: ClockFormat): string => v === '12h' ? tr('12-hour (AM/PM)', '12-часовой (AM/PM)') : v === '24h' ? tr('24-hour', '24-часовой') : tr('Same as the TV', 'Как на ТВ');
-const weightText = (v: ClockWeight): string => v === 300 ? tr('Light', 'Лёгкий') : v === 400 ? tr('Regular', 'Обычный') : tr('Thin', 'Тонкий');
+const weightText = (v: ClockWeight): string =>
+	v === 300 ? tr('Light', 'Лёгкий') : v === 400 ? tr('Regular', 'Обычный') : v === 500 ? tr('Medium', 'Средний') : v === 600 ? tr('Bold', 'Жирный') : tr('Thin', 'Тонкий');
 
 /** The look, margins and clock back to their defaults (apps, sources and wallpaper are left alone). */
 export function resetLook (c: UserConfig): UserConfig {
@@ -133,47 +134,33 @@ export function resetLook (c: UserConfig): UserConfig {
 	};
 }
 
-/** The Weather tab's rows (left out of builds made without the weather widget). */
-const weatherPrefs = (): Pref[] => [
-	toggle('weatherOn', 'weather', tr('Show the weather', 'Показывать погоду'), tr('The temperature and the forecast, on their own card.', 'Температура и погода под датой.'),
+/** The weather rows of Widgets (left out of builds made without the weather widget). */
+const weatherPrefs = (): Pref[] => group(tr('Weather', 'Погода'), [
+	toggle('weatherOn', 'widgets', tr('Show the weather', 'Показывать погоду'), tr('The temperature and the forecast, on their own card.', 'Температура и погода под датой.'),
 		(c) => c.weather.on, (c, v) => ({...c, weather: {...c.weather, on: v && c.weather.city !== null}})),
 	{
-		id: 'weatherCity', tab: 'weather', opens: true, label: tr('City', 'Город'), kind: 'action',
+		id: 'weatherCity', tab: 'widgets', opens: true, label: tr('City', 'Город'), kind: 'action',
 		description: tr('Pick a city from the list, or search for any place by name. Needs the internet.', 'Выберите город из списка или найдите любое место по названию. Нужен интернет.'),
 		text: (c) => (c.weather.city ? c.weather.city.name : tr('Not chosen', 'Не выбран'))
 	},
-	choice('weatherUnit', 'weather', tr('Temperature unit', 'Единицы температуры'), tr('Degrees Celsius or Fahrenheit.', 'Градусы Цельсия или Фаренгейта.'),
+	choice('weatherUnit', 'widgets', tr('Temperature unit', 'Единицы температуры'), tr('Degrees Celsius or Fahrenheit.', 'Градусы Цельсия или Фаренгейта.'),
 		UNITS, (c) => c.weather.unit, (c, v) => ({...c, weather: {...c.weather, unit: v}}), (v) => (v === 'f' ? tr('Fahrenheit (°F)', 'Фаренгейт (°F)') : tr('Celsius (°C)', 'Цельсий (°C)'))),
-	toggle('weatherCityName', 'weather', tr('Show the city', 'Показывать город'), tr('The city name before the temperature.', 'Название города перед температурой.'),
+	toggle('weatherCityName', 'widgets', tr('Show the city', 'Показывать город'), tr('The city name before the temperature.', 'Название города перед температурой.'),
 		(c) => c.weather.showCity, (c, v) => ({...c, weather: {...c.weather, showCity: v}}))
-];
+]);
 
-/** The Calendar tab's rows. */
-const calendarPrefs = (): Pref[] => [
-	toggle('calendarOn', 'calendar', tr('Show the calendar', 'Показывать календарь'), tr('The day\'s events in the top right of the home screen.', 'События дня в правом верхнем углу главного экрана.'),
+/** The calendar rows of Widgets. */
+const calendarPrefs = (): Pref[] => group(tr('Calendar', 'Календарь'), [
+	toggle('calendarOn', 'widgets', tr('Show the calendar', 'Показывать календарь'), tr('The day\'s events in the top right of the home screen.', 'События дня в правом верхнем углу главного экрана.'),
 		(c) => c.calendar.on, (c, v) => ({...c, calendar: {...c.calendar, on: v && c.calendar.sources.length > 0}})),
 	{
-		id: 'calendarUrl', tab: 'calendar', opens: true, label: tr('Calendars', 'Календари'), kind: 'action',
+		id: 'calendarUrl', tab: 'widgets', opens: true, label: tr('Calendars', 'Календари'), kind: 'action',
 		description: tr('iCal links from Google Calendar, .ics files or a whole folder. Several calendars can be shown at once.', 'Ссылки в формате iCal из Google Календаря, файлы .ics или целая папка. Можно подключить несколько календарей сразу.'),
 		text: (c) => (c.calendar.sources.length ? count(c.calendar.sources.length, ['calendar', 'calendars'], ['календарь', 'календаря', 'календарей']) : tr('None', 'Не задан'))
 	}
-];
+]);
 
 const basePrefs = (): Pref[] => [
-	// ----- General -----
-	choice('language', 'general', 'Language · Язык', tr('The language of the launcher. "Same as the TV" follows the TV\'s own language.', 'Язык лаунчера. «Как на ТВ» следует языку самого телевизора.'),
-		LANG_SETTINGS, (c) => c.language, (c, v) => ({...c, language: v}), langName),
-	{
-		id: 'resetLook', tab: 'general', label: tr('Reset look and clock', 'Сбросить вид и часы'), kind: 'action',
-		description: tr('Sizes, margins, cards and the clock go back to how they were at first. Apps, wallpaper, weather and calendars stay.', 'Размеры, поля, карточки и часы вернутся к начальным. Приложения, обои, погода и календари останутся.'),
-		text: () => ''
-	},
-	...group(tr('About', 'О лаунчере'), [{
-		id: 'about', tab: 'general', label: 'Simple LG launcher', kind: 'info',
-		description: tr('Based on Hearth by rudra-avatar. github.com/fardroid/Simple-LG-launcher', 'Основан на Hearth от rudra-avatar. github.com/fardroid/Simple-LG-launcher'),
-		text: () => APP_VERSION
-	}]),
-
 	// ----- Appearance -----
 	...group(tr('App row', 'Ряд приложений'), [
 		range('iconScale', 'look', tr('Icon size', 'Размер значков'), tr('How big the app tiles are.', 'Насколько крупные плитки приложений.'),
@@ -196,23 +183,23 @@ const basePrefs = (): Pref[] => [
 			(c) => c.shadows, (c, v) => ({...c, shadows: v}))
 	]),
 
-	// ----- Clock -----
-	...group(tr('Time', 'Время'), [
-		choice('clockFormat', 'clock', tr('Format', 'Формат'), tr('12-hour, 24-hour, or the same as the TV.', '12 или 24 часа, или как на ТВ.'),
+	// ----- Widgets: the clock, the weather and the calendar -----
+	choice('clockFont', 'widgets', tr('Font', 'Шрифт'), tr('For the clock, the date, the weather and the calendar. "TV font" is built into the TV; the others come with the launcher.', 'Для часов, даты, погоды и календаря. «Шрифт ТВ» встроен в телевизор, остальные идут с лаунчером.'),
+		CLOCK_FONT_IDS, (c) => c.clock.font, (c, v) => ({...c, clock: {...c.clock, font: v}}), (v) => fontLabel(v)),
+	...group(tr('Clock', 'Часы'), [
+		choice('clockFormat', 'widgets', tr('Format', 'Формат'), tr('12-hour, 24-hour, or the same as the TV.', '12 или 24 часа, или как на ТВ.'),
 			CLOCK_FORMATS, (c) => c.clockFormat, (c, v) => ({...c, clockFormat: v}), formatText),
-		range('clockSize', 'clock', tr('Size', 'Размер'), tr('The height of the digits.', 'Высота цифр.'),
+		range('clockSize', 'widgets', tr('Size', 'Размер'), tr('The height of the digits.', 'Высота цифр.'),
 			'clockSize', (c) => c.clock.size, (c, v) => ({...c, clock: {...c.clock, size: v}}), (v) => `${v} px`),
-		choice('clockFont', 'clock', tr('Font', 'Шрифт'), tr('"TV font" is built into the TV; the others come with the launcher.', '«Шрифт ТВ» встроен в телевизор, остальные идут с лаунчером.'),
-			CLOCK_FONT_IDS, (c) => c.clock.font, (c, v) => ({...c, clock: {...c.clock, font: v}}), (v) => fontLabel(v)),
-		choice('clockWeight', 'clock', tr('Weight', 'Толщина'), tr('Thin, light or regular digits.', 'Тонкие, лёгкие или обычные цифры.'),
+		choice('clockWeight', 'widgets', tr('Weight', 'Толщина'), tr('From thin to bold digits.', 'От тонких до жирных цифр.'),
 			WEIGHTS, (c) => c.clock.weight, (c, v) => ({...c, clock: {...c.clock, weight: v}}), weightText),
-		choice('clockColor', 'clock', tr('Colour', 'Цвет'), tr('White is hard to read on a light picture: pick a dark colour or a gradient for light wallpapers.', 'Белый плохо читается на светлой картинке: для светлых обоев выберите тёмный цвет или градиент.'),
+		choice('clockColor', 'widgets', tr('Colour', 'Цвет'), tr('White is hard to read on a light picture: pick a dark colour or a gradient for light wallpapers.', 'Белый плохо читается на светлой картинке: для светлых обоев выберите тёмный цвет или градиент.'),
 			CLOCK_COLOR_IDS, (c) => c.clock.color, (c, v) => ({...c, clock: {...c.clock, color: v}}), (v: ClockColor) => colorLabel(v))
 	]),
 	...group(tr('Date', 'Дата'), [
-		toggle('showDate', 'clock', tr('Show the date', 'Показывать дату'), tr('The weekday and the date beside the time.', 'День недели и дата рядом со временем.'),
+		toggle('showDate', 'widgets', tr('Show the date', 'Показывать дату'), tr('The weekday and the date beside the time.', 'День недели и дата рядом со временем.'),
 			(c) => c.clock.showDate, (c, v) => ({...c, clock: {...c.clock, showDate: v}})),
-		only((c) => c.clock.showDate, range('dateSize', 'clock', tr('Date size', 'Размер даты'), tr('The size of the weekday and the date.', 'Размер дня недели и даты.'),
+		only((c) => c.clock.showDate, range('dateSize', 'widgets', tr('Date size', 'Размер даты'), tr('The size of the weekday and the date.', 'Размер дня недели и даты.'),
 			'dateSize', (c) => c.clock.dateSize, (c, v) => ({...c, clock: {...c.clock, dateSize: v}}), (v) => `${v}%`))
 	]),
 
@@ -234,7 +221,14 @@ const basePrefs = (): Pref[] => [
 	]),
 
 	// ----- Home screen -----
+	choice('language', 'home', 'Language · Язык', tr('The language of the launcher. "Same as the TV" follows the TV\'s own language.', 'Язык лаунчера. «Как на ТВ» следует языку самого телевизора.'),
+		LANG_SETTINGS, (c) => c.language, (c, v) => ({...c, language: v}), langName),
 	{
+		id: 'resetLook', tab: 'home', label: tr('Reset look and clock', 'Сбросить вид и часы'), kind: 'action',
+		description: tr('Sizes, margins, cards and the clock go back to how they were at first. Apps, wallpaper, weather and calendars stay.', 'Размеры, поля, карточки и часы вернутся к начальным. Приложения, обои, погода и календари останутся.'),
+		text: () => ''
+	},
+	...group(tr('Opening the launcher', 'Запуск лаунчера'), [{
 		id: 'homeStatus', tab: 'home', label: tr('In place of LG Home', 'Вместо LG Home'), kind: 'info',
 		description: tr('When the launcher takes LG Home\'s place, the TV itself opens it for the Home button, Back out of the last app and waking up. It is set up from a computer with tools/takeover.sh (see the README); "takeover.sh disable" gives LG Home back.', 'Когда лаунчер стоит на месте LG Home, телевизор сам открывает его по кнопке Home, при выходе из последнего приложения и при включении. Это настраивается с компьютера скриптом tools/takeover.sh (см. README); «takeover.sh disable» возвращает LG Home.'),
 		text: (_c, info) => yesNo(!info || info.takeover === undefined ? null : info.takeover)
@@ -243,7 +237,12 @@ const basePrefs = (): Pref[] => [
 		id: 'replaceHome', tab: 'home', label: tr('Background helper', 'Фоновый помощник'), kind: 'action',
 		description: tr('The other way, for when the launcher is not in LG Home\'s place: a small program on the TV watches for LG Home and opens the launcher instead, from the moment the TV starts. LG Home can show for a moment first.', 'Другой способ, если лаунчер не стоит на месте LG Home: небольшая программа на ТВ замечает LG Home и открывает вместо него лаунчер, с самого включения ТВ. LG Home может мелькнуть на мгновение.'),
 		text: (_c, info) => onOff(!info || !info.homeHook ? null : info.homeHook.running)
-	})
+	})]),
+	...group(tr('About', 'О лаунчере'), [{
+		id: 'about', tab: 'home', label: 'Simple LG launcher', kind: 'info',
+		description: tr('Based on Hearth by rudra-avatar. github.com/fardroid/Simple-LG-launcher', 'Основан на Hearth от rudra-avatar. github.com/fardroid/Simple-LG-launcher'),
+		text: () => APP_VERSION
+	}]),
 ];
 
 let built: {lang: Lang; prefs: Pref[]} | null = null;

@@ -4,7 +4,7 @@ import appinfo from '../../public/appinfo.json';
 
 export const APP_ID = 'tld.my.simplelauncher';
 
-/** The version shown in Settings → General (from the app's manifest). */
+/** The version shown in Settings → Home screen (from the app's manifest). */
 export const APP_VERSION: string = appinfo.version;
 
 /** webOS app IDs the launcher itself needs. */

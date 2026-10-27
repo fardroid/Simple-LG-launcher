@@ -77,15 +77,15 @@ ssh root@TV 'cat > /media/developer/calendar.txt' <<'EOF'
 EOF
 ```
 
-Then the person chooses, on the TV: Settings → Calendar → Calendars → *Read the list from a file*, and turns on *Show the calendar*. Undo: *Remove all calendars* on the same screen, and `ssh root@TV rm /media/developer/calendar.txt`.
+Then the person chooses, on the TV: Settings → Widgets → Calendars → *Read the list from a file*, and turns on *Show the calendar*. Undo: *Remove all calendars* on the same screen, and `ssh root@TV rm /media/developer/calendar.txt`.
 
 ## 7. Wallpapers and tweaks (optional; ask first)
 
-Pictures: JPG or PNG, 1920×1080 to 3840×2160, under 8 MB each.
+Pictures: JPG or PNG, 1920×1080 to 3840×2160, under 8 MB each. The repository's `wallpapers` folder has a set to start with; offer it if the person has none of their own.
 
 ```bash
 ssh root@TV mkdir -p /media/developer/wallpapers
-scp -O <pictures> root@TV:/media/developer/wallpapers/
+scp -O wallpapers/*.jpg root@TV:/media/developer/wallpapers/    # or the person's own pictures
 ```
 
 On the TV: Settings → Wallpaper → Picture → *TV storage* → `wallpapers` → *Play this folder as a slideshow*.
@@ -94,7 +94,7 @@ On the TV: Settings → Wallpaper → Picture → *TV storage* → `wallpapers` 
 
 ## 8. Finish
 
-Tell the person what was done, what is left for them on the TV (the city for the weather: Settings → Weather → City; the language: Settings → General → Language), and how to undo each step.
+Tell the person what was done, what is left for them on the TV (the city for the weather: Settings → Widgets → City; the language: Settings → Home screen → Language), and how to undo each step.
 
 ## Updating later
 
