@@ -1,7 +1,7 @@
 // Why a call to the TV failed, in words a person can act on, and whether this TV can run shell commands at all.
 // Nothing here makes a call of its own: `exec` (apps.ts) reports each result, so knowing costs nothing extra.
 
-import {tr} from './i18n';
+import {fmt, tr} from './i18n';
 
 export type Failure = 'not-webos' | 'no-service' | 'denied' | 'timeout' | 'failed';
 
@@ -24,7 +24,7 @@ export function failureReason (kind: Failure, detail = ''): string {
 		case 'no-service': return tr('The Homebrew Channel service is not running. This needs a rooted TV. If the TV is rooted, open the Homebrew Channel once and try again', 'Служба Homebrew Channel не запущена. Нужен рутованный ТВ. Если ТВ рутован, один раз откройте Homebrew Channel и повторите');
 		case 'denied': return tr('The TV refused. Apps are not allowed to do this without root', 'ТВ отказал. Без root приложениям это запрещено');
 		case 'timeout': return tr('The Homebrew Channel service did not answer in time. It may still be starting; try again in a minute', 'Служба Homebrew Channel не ответила вовремя. Возможно, она ещё запускается, повторите через минуту');
-		default: return detail ? tr('The TV said: ', 'ТВ сообщил: ') + detail : tr('The command did not work', 'Команда не сработала');
+		default: return detail ? fmt(tr('The TV said: {0}', 'ТВ сообщил: {0}'), detail) : tr('The command did not work', 'Команда не сработала');
 	}
 }
 
@@ -32,7 +32,7 @@ export function failureReason (kind: Failure, detail = ''): string {
 export function failureText (error: unknown, doing: string): string {
 	const kind = classifyFailure(error);
 	const detail = String(error && (error as Error).message ? (error as Error).message : '').slice(0, 80);
-	return `${tr('Could not', 'Не удалось')} ${doing}. ${failureReason(kind, detail)}`;
+	return `${fmt(tr('Could not {0}', 'Не удалось {0}'), doing)}. ${failureReason(kind, detail)}`;
 }
 
 let state: RootState = 'unknown';

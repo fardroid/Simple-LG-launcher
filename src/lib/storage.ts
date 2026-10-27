@@ -9,7 +9,7 @@ import {CLOCK_COLOR_IDS, type ClockColor} from './clockcolor';
 import {validCoords, type City, type TempUnit} from './weather';
 import {validSource} from './calendar';
 import type {PlateMode} from './plates';
-import type {LangSetting} from './i18n';
+import {LANG_SETTINGS, type LangSetting} from './i18n';
 
 export type WallpaperMode = 'gradient' | 'image' | 'folder';
 export type ClockFormat = 'tv' | '12h' | '24h';
@@ -220,7 +220,7 @@ export function parseConfig (raw: string | null): UserConfig {
 		const path = typeof w.path === 'string' ? w.path : '';
 		const interval = typeof w.intervalSec === 'number' && w.intervalSec >= 5 ? w.intervalSec : DEFAULT_WALLPAPER.intervalSec;
 		return {
-			language: parsed.language === 'en' || parsed.language === 'ru' ? parsed.language : 'auto',
+			language: LANG_SETTINGS.find((l) => l === parsed.language) || 'auto',
 			appIds: stringList(parsed.appIds),
 			// older settings listed the apps to SHOW: they are converted once the app list is known
 			hiddenIds: stringList(parsed.hiddenIds) !== null ? stringList(parsed.hiddenIds) : (stringList(parsed.appIds) === null ? [] : null),

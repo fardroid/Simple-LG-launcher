@@ -1,6 +1,6 @@
 import {CAL_COLORS, dayHeading, dotsOfDay, eventsOfDay, monthView, relativeDay, startOfDay, type CalendarData} from '../lib/calendar';
 import {dayShort} from '../lib/clock';
-import {tr} from '../lib/i18n';
+import {fmt, tr} from '../lib/i18n';
 import {plateVars, type PlateLook} from '../lib/plates';
 import {Frost} from './Frost';
 import {memoProps} from '../lib/memoprops';
@@ -105,7 +105,7 @@ function CalendarCardView ({data, plate, offset, now, format, focused, mode, mon
 								</div>
 							</div>
 						))}
-						{more > 0 && <div class="cal__more">{tr('and ', 'и ещё ')}{more}{tr(' more', '')}</div>}
+						{more > 0 && <div class="cal__more">{fmt(tr('and {0} more', 'и ещё {0}'), more)}</div>}
 						{events.length === 0 && (
 							<div class="cal__empty">{loading ? tr('Loading the calendar…', 'Загружаю календарь…') : data ? tr('Nothing on this day.', 'В этот день событий нет.') : tr('The calendar has not loaded yet.', 'Календарь пока не загрузился.')}</div>
 						)}

@@ -2,7 +2,7 @@ import {useCallback, useState} from 'preact/hooks';
 import {useKeys, clamp, type NavKey} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import type {MoveAction} from '../lib/tileorder';
-import {tr} from '../lib/i18n';
+import {fmt, tr} from '../lib/i18n';
 
 interface Props {
 	title: string;
@@ -60,7 +60,7 @@ export function AppMenu ({title, moves, hideDetail, showUninstall, blockedReason
 	const [index, setIndex] = useState(() => firstEnabled(menuRows()));
 	const rows: MenuRow[] = step === 'menu' ? menuRows() : step === 'confirm' ? [
 		{key: 'cancel', label: tr('Cancel', 'Отмена'), run: onClose},
-		{key: 'yes', label: tr('Uninstall ', 'Удалить ') + title, detail: tr('This cannot be undone', 'Это нельзя отменить'), run: () => { setStep('working'); onUninstall(); }}
+		{key: 'yes', label: fmt(tr('Uninstall {0}', 'Удалить {0}'), title), detail: tr('This cannot be undone', 'Это нельзя отменить'), run: () => { setStep('working'); onUninstall(); }}
 	] : [];
 
 	const handleKey = useCallback((key: NavKey): boolean => {
@@ -85,7 +85,7 @@ export function AppMenu ({title, moves, hideDetail, showUninstall, blockedReason
 	return (
 		<div class="screen screen--dialog">
 			<div class="dialog">
-				<h1 class="dialog__title">{step === 'confirm' ? tr(`Uninstall ${title}?`, `Удалить ${title}?`) : step === 'working' ? tr(`Uninstalling ${title}…`, `Удаляется ${title}…`) : title}</h1>
+				<h1 class="dialog__title">{step === 'confirm' ? fmt(tr('Uninstall {0}?', 'Удалить {0}?'), title) : step === 'working' ? fmt(tr('Uninstalling {0}…', 'Удаляется {0}…'), title) : title}</h1>
 				{step === 'confirm' && <p class="dialog__text">{tr('The app will be removed from the TV.', 'Приложение будет удалено с ТВ.')}</p>}
 				{step === 'working' && <p class="dialog__text">{tr('Please wait, this can take a few seconds.', 'Подождите, это может занять несколько секунд.')}</p>}
 				{rows.map((row, i) => (

@@ -2,7 +2,7 @@
 // pure part (reading the reply, describing it, formatting, the saved copy); weathernet.ts does the fetching.
 
 import {dayShort, dayTitle} from './clock';
-import {lang, tr} from './i18n';
+import {fmt, lang, langTag, tr} from './i18n';
 
 export type TempUnit = 'c' | 'f';
 export type WeatherIcon = 'sun' | 'moon' | 'partly' | 'cmoon' | 'cloud' | 'fog' | 'rain' | 'snow' | 'storm';
@@ -82,7 +82,7 @@ export function forecastUrl (lat: number, lon: number): string {
 }
 
 export function geocodeUrl (query: string): string {
-	return 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query.trim().slice(0, 60)) + '&count=8&language=' + lang() + '&format=json';
+	return 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query.trim().slice(0, 60)) + '&count=8&language=' + langTag() + '&format=json';
 }
 
 /** Reads Open-Meteo's forecast reply; null when it isn't one. */
@@ -226,7 +226,7 @@ function pickedTitle (date: string): string {
 /** "wind 4 m/s" in Russian; in English km/h, or mph with Fahrenheit. */
 function windText (ms: number, unit: TempUnit): string {
 	if (lang() === 'ru') return 'ветер ' + Math.round(ms) + ' м/с';
-	return unit === 'f' ? 'wind ' + Math.round(ms * 2.237) + ' mph' : 'wind ' + Math.round(ms * 3.6) + ' km/h';
+	return fmt(tr('wind {0}', 'ветер {0}'), unit === 'f' ? Math.round(ms * 2.237) + ' mph' : Math.round(ms * 3.6) + ' km/h');
 }
 
 /** What the weather card shows. */
@@ -234,7 +234,7 @@ export function weatherView (data: WeatherData, unit: TempUnit, cityName: string
 	const picked = Math.max(0, Math.min(day, data.daily.length - 1));
 	const d = describe(data.code, data.isDay);
 	const detail: string[] = [];
-	if (data.feelsC !== null) detail.push(tr('Feels like ', 'Ощущается как ') + formatTemp(data.feelsC, unit));
+	if (data.feelsC !== null) detail.push(fmt(tr('Feels like {0}', 'Ощущается как {0}'), formatTemp(data.feelsC, unit)));
 	if (data.windMs !== null) detail.push(windText(data.windMs, unit));
 	return {
 		icon: d.icon,

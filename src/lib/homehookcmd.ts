@@ -7,7 +7,7 @@
 // Nothing of LG Home is replaced or mounted. A link in the startup folder (optional) starts the
 // watcher at boot; without it the watcher starts when the launcher opens.
 
-import {tr} from './i18n';
+import {fmt, tr} from './i18n';
 
 /** Bump when the scripts change: the launcher then rewrites the installed copy and restarts the watcher. */
 export const HOOK_VERSION = '17';
@@ -88,7 +88,7 @@ const STOP_WATCHER = `pid="$(cat '${PID_FILE}' 2>/dev/null)"; if [ -n "$pid" ]; 
 export function installSteps (files: HookFiles, boot: boolean): InstallStep[] {
 	const write = (name: string, path: string, text: string): InstallStep[] => {
 		const commands = writeFileCommands(path, text);
-		return commands.map((command, i) => ({name: tr('writing ', 'запись ') + name + (commands.length > 1 ? ` (${i + 1}/${commands.length})` : ''), command}));
+		return commands.map((command, i) => ({name: fmt(tr('writing {0}', 'запись {0}'), name) + (commands.length > 1 ? ` (${i + 1}/${commands.length})` : ''), command}));
 	};
 	return [
 		{name: tr('making the folder', 'создание папки'), command: `mkdir -p '${HOOK_DIR}'`},

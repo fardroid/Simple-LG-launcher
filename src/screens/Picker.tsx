@@ -6,7 +6,7 @@ import {
 	baseName, INTERNAL_ROOT, joinPath, listDir, listRoots, parentPath,
 	type DirEntry, type StorageRoot
 } from '../lib/wallpaper';
-import {count as countOf, tr} from '../lib/i18n';
+import {count as countOf, fmt, tr} from '../lib/i18n';
 
 /** What the user picked. */
 export type WallpaperChoice =
@@ -64,7 +64,7 @@ function buildRows (path: string | null, roots: StorageRoot[], entries: DirEntry
 	if (count > 0) {
 		rows.push({
 			key: 'slideshow', kind: 'slideshow', label: tr('Play this folder as a slideshow', 'Показывать папку как слайд-шоу'),
-			detail: countOf(count, ['picture', 'pictures'], ['картинка', 'картинки', 'картинок']) + tr(' in ', ' в папке ') + baseName(path)
+			detail: fmt(tr('{0} in {1}', '{0} в папке {1}'), countOf(count, ['picture', 'pictures'], ['картинка', 'картинки', 'картинок']), baseName(path))
 		});
 	}
 	entries.forEach((e) => rows.push({
@@ -166,7 +166,7 @@ export function Picker ({onChoose, onClose}: Props) {
 	return (
 		<div class="screen screen--picker">
 			<div class="settings">
-				<h1 class="settings__title">{tr('Wallpaper', 'Выбор обоев')}</h1>
+				<h1 class="settings__title">{tr('Wallpaper', 'Выбор обоев', 'Choose wallpaper')}</h1>
 				<p class="settings__hint">{path === null ? hints().roots : hints().folder}</p>
 				<div class="picker__path">{path === null ? tr('Locations', 'Расположения') : shortPath(path)}</div>
 				<div class="picker">

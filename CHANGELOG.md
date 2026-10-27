@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+
+- **Twelve languages.** Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Chinese (Simplified), Japanese and Korean join English and Russian. *Same as the TV* picks the TV's language when the launcher has it, English otherwise. Dates, month and weekday names come from the browser's own locale data; the city search answers in the chosen language.
+- The texts of the other languages are dictionaries in `src/lib/locales/`, keyed by the English text; a text missing from one shows in English. `npm test` checks that every `tr()` text has an entry in every language.
+
 ## 1.9.0
 
 - **Widgets.** The clock, the weather and the calendar are set up in one section, Settings → Widgets. Its first row, *Font*, now sets the font of all three: the clock, the date, and the weather and calendar cards.

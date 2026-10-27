@@ -4,7 +4,7 @@
 
 A quieter home screen for LG webOS TVs. You get a clock, the weather, your day from Google Calendar and one row of apps, laid over a wallpaper of your own. No ads, no rows of recommendations, nothing that autoplays.
 
-It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. Hearth already had the hard parts working: the app row, the clock, the settings screens and the plumbing through the Homebrew Channel. This fork adds the calendar, the frosted-glass cards, a seven-day forecast with an hourly curve, an English/Russian switch and a way to put the launcher in LG Home's place, so the Home button opens it.
+It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. Hearth already had the hard parts working: the app row, the clock, the settings screens and the plumbing through the Homebrew Channel. This fork adds the calendar, the frosted-glass cards, a seven-day forecast with an hourly curve, a language switch (twelve languages) and a way to put the launcher in LG Home's place, so the Home button opens it.
 
 > **The easy way to install it:** give the link to this repository to Claude Code or Codex and ask it to set the launcher up on your TV. [AGENTS.md](AGENTS.md) walks the agent through every step: building, installing, making it the home screen and adding your calendars. It checks with you before it changes anything on the TV. You only need a rooted TV and its IP address.
 
@@ -23,7 +23,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Frosted glass.** The cards blur the wallpaper behind them. Each card checks how bright the picture is right behind it and goes light or dark, so the text stays readable on any photo.
 - **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is.
 - **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour.
-- **English or Russian.** It follows the TV's language by default. Settings → Home screen → Language changes it.
+- **Twelve languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Chinese (Simplified), Japanese and Korean. It follows the TV's language by default (English when the TV speaks another one). Settings → Home screen → Language changes it. The Chinese, Japanese and Korean texts are drawn with the TV's own font.
 
 ## What you need
 

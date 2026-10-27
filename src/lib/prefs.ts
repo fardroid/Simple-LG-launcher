@@ -16,7 +16,7 @@ import {WEATHER_ENABLED} from '../config/features';
 import type {TempUnit} from './weather';
 import {lastFailure, type RootState} from './failure';
 import {APP_VERSION} from '../config/constants';
-import {count, lang, langName, LANG_SETTINGS, tr, type Lang} from './i18n';
+import {count, fmt, lang, langName, LANG_SETTINGS, tr, type Lang} from './i18n';
 
 export type PrefTab = 'look' | 'widgets' | 'wallpaper' | 'home';
 
@@ -40,7 +40,7 @@ export function disabledReason (id: string, info?: SystemInfo): string | null {
 	if (!info || info.root !== 'no' || ROOT_OPTIONS.indexOf(id) === -1) return null;
 	const kind = lastFailure();
 	const why = kind === 'denied' ? tr('the TV refused the command.', 'ТВ отклонил команду.') : tr('the Homebrew Channel service is not running. If the TV is rooted, open the Homebrew Channel once, then open Settings again.', 'служба Homebrew Channel не запущена. Если ТВ рутован, один раз откройте Homebrew Channel, затем заново откройте настройки.');
-	return tr('Needs a rooted TV: ', 'Нужен рутованный ТВ: ') + why + (info.rootDetail ? tr(' (the TV said: ', ' (ответ ТВ: ') + info.rootDetail + ')' : '');
+	return fmt(tr('Needs a rooted TV: {0}', 'Нужен рутованный ТВ: {0}'), why) + (info.rootDetail ? fmt(tr(' (the TV said: {0})', ' (ответ ТВ: {0})'), info.rootDetail) : '');
 }
 
 /** How a key press changes a setting: OK steps and wraps round; ← → nudge and stop at the ends. */
@@ -114,7 +114,7 @@ const plateText = (v: PlateMode): string => v === 'light' ? tr('Light', 'Све�
 const themeText = (v: ThemeName): string => v === 'black' ? tr('OLED black', 'Чёрная (OLED)') : v === 'grey' ? tr('Calm blue-grey', 'Серо-голубая') : tr('Evening sky', 'Вечернее небо');
 const formatText = (v: ClockFormat): string => v === '12h' ? tr('12-hour (AM/PM)', '12-часовой (AM/PM)') : v === '24h' ? tr('24-hour', '24-часовой') : tr('Same as the TV', 'Как на ТВ');
 const weightText = (v: ClockWeight): string =>
-	v === 300 ? tr('Light', 'Лёгкий') : v === 400 ? tr('Regular', 'Обычный') : v === 500 ? tr('Medium', 'Средний') : v === 600 ? tr('Bold', 'Жирный') : tr('Thin', 'Тонкий');
+	v === 300 ? tr('Light', 'Лёгкий', 'Light (weight)') : v === 400 ? tr('Regular', 'Обычный') : v === 500 ? tr('Medium', 'Средний') : v === 600 ? tr('Bold', 'Жирный') : tr('Thin', 'Тонкий');
 
 /** The look, margins and clock back to their defaults (apps, sources and wallpaper are left alone). */
 export function resetLook (c: UserConfig): UserConfig {
@@ -156,7 +156,7 @@ const calendarPrefs = (): Pref[] => group(tr('Calendar', 'Календарь'), 
 	{
 		id: 'calendarUrl', tab: 'widgets', opens: true, label: tr('Calendars', 'Календари'), kind: 'action',
 		description: tr('iCal links from Google Calendar, .ics files or a whole folder. Several calendars can be shown at once.', 'Ссылки в формате iCal из Google Календаря, файлы .ics или целая папка. Можно подключить несколько календарей сразу.'),
-		text: (c) => (c.calendar.sources.length ? count(c.calendar.sources.length, ['calendar', 'calendars'], ['календарь', 'календаря', 'календарей']) : tr('None', 'Не задан'))
+		text: (c) => (c.calendar.sources.length ? count(c.calendar.sources.length, ['calendar', 'calendars'], ['календарь', 'календаря', 'календарей']) : tr('None', 'Не задан', 'None (calendars)'))
 	}
 ]);
 
@@ -221,7 +221,7 @@ const basePrefs = (): Pref[] => [
 	]),
 
 	// ----- Home screen -----
-	choice('language', 'home', 'Language · Язык', tr('The language of the launcher. "Same as the TV" follows the TV\'s own language.', 'Язык лаунчера. «Как на ТВ» следует языку самого телевизора.'),
+	choice('language', 'home', tr('Language', 'Язык'), tr('The language of the launcher. "Same as the TV" follows the TV\'s own language.', 'Язык лаунчера. «Как на ТВ» следует языку самого телевизора.'),
 		LANG_SETTINGS, (c) => c.language, (c, v) => ({...c, language: v}), langName),
 	{
 		id: 'resetLook', tab: 'home', label: tr('Reset look and clock', 'Сбросить вид и часы'), kind: 'action',

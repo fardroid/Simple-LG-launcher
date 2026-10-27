@@ -5,7 +5,7 @@ import {exec, shellQuote} from '../lib/apps';
 import {normalizeUrl, validSource} from '../lib/calendar';
 import {isWebOS} from '../lib/luna';
 import {INTERNAL_ROOT} from '../lib/wallpaper';
-import {tr} from '../lib/i18n';
+import {fmt, tr} from '../lib/i18n';
 
 /** A text file with one calendar per line (an address, a file or a folder), so nothing has to be typed with the remote. */
 export const CALENDAR_FILE = INTERNAL_ROOT.path + '/calendar.txt';
@@ -44,8 +44,8 @@ export function CalendarSetup ({sources, canReadFiles, onChoose, onClose}: Props
 
 	const rows: SetupRow[] = [{key: 'type', label: tr('Add a link…', 'Добавить ссылку…'), detail: tr('The secret address in iCal format from Google Calendar, typed with the on-screen keyboard', 'Закрытый адрес в формате iCal из Google Календаря. Печатается экранной клавиатурой')}];
 	if (canReadFiles) {
-		rows.push({key: 'folder', label: tr('Add a folder of calendars', 'Добавить папку с календарями'), detail: tr('Every .ics file in ', 'Все файлы .ics из ') + CALENDAR_FOLDER});
-		rows.push({key: 'file', label: tr('Read the list from a file', 'Взять список из файла'), detail: tr('One calendar per line, in ', 'По одному календарю в строке, в файле ') + CALENDAR_FILE});
+		rows.push({key: 'folder', label: tr('Add a folder of calendars', 'Добавить папку с календарями'), detail: fmt(tr('Every .ics file in {0}', 'Все файлы .ics из {0}'), CALENDAR_FOLDER)});
+		rows.push({key: 'file', label: tr('Read the list from a file', 'Взять список из файла'), detail: fmt(tr('One calendar per line, in {0}', 'По одному календарю в строке, в файле {0}'), CALENDAR_FILE)});
 	}
 	if (sources.length) rows.push({key: 'clear', label: tr('Remove all calendars', 'Убрать все календари'), detail: tr('The calendar card leaves the home screen', 'Календарь на главном экране исчезнет')});
 	if (note) rows.push({key: 'info', label: note});
@@ -57,7 +57,7 @@ export function CalendarSetup ({sources, canReadFiles, onChoose, onClose}: Props
 		const src = raw.charAt(0) === '/' ? raw.trim() : normalizeUrl(raw);
 		if (!validSource(src)) { setNote(tr('That does not look like a link. It should start with https://', 'Это не похоже на ссылку. Она должна начинаться с https://')); return false; }
 		if (sources.indexOf(src) !== -1) { setNote(tr('This calendar is already on the list', 'Этот календарь уже подключён')); return false; }
-		if (sources.length >= MAX_SOURCES) { setNote(tr(`No more than ${MAX_SOURCES} calendars`, `Не больше ${MAX_SOURCES} календарей`)); return false; }
+		if (sources.length >= MAX_SOURCES) { setNote(fmt(tr('No more than {0} calendars', 'Не больше {0} календарей'), MAX_SOURCES)); return false; }
 		onChoose(sources.concat(src));
 		return true;
 	};
@@ -69,7 +69,7 @@ export function CalendarSetup ({sources, canReadFiles, onChoose, onClose}: Props
 			(text) => {
 				const lines = text.split('\n').map((l) => l.trim()).filter((l) => l && l.charAt(0) !== '#');
 				const list = lines.map((l) => (l.charAt(0) === '/' ? l : normalizeUrl(l))).filter((l) => validSource(l)).slice(0, MAX_SOURCES);
-				if (!list.length) setNote(tr(`${CALENDAR_FILE} has no links in it, or is empty`, `В файле ${CALENDAR_FILE} нет ссылок или он пуст`));
+				if (!list.length) setNote(fmt(tr('{0} has no links in it, or is empty', 'В файле {0} нет ссылок или он пуст'), CALENDAR_FILE));
 				else onChoose(list);
 			},
 			() => setNote(tr('Could not read the file. This needs a rooted TV with the Homebrew Channel', 'Не удалось прочитать файл. Нужен рутованный ТВ с Homebrew Channel'))
@@ -111,7 +111,7 @@ export function CalendarSetup ({sources, canReadFiles, onChoose, onClose}: Props
 			<div class="settings">
 				<h1 class="settings__title">{tr('Calendars', 'Календари')}</h1>
 				<p class="settings__hint">{typing ? tr('Type the link and press OK · Back cancels', 'Введите ссылку и нажмите OK · Назад отменяет') : tr('OK on a calendar removes it · Back returns to Settings', 'OK на подключённом календаре убирает его · Назад возвращает в настройки')}</p>
-				<div class="picker__path">{sources.length ? tr('Connected: ', 'Подключено: ') + sources.length : tr('No calendars yet', 'Календарей пока нет')}</div>
+				<div class="picker__path">{sources.length ? fmt(tr('Connected: {0}', 'Подключено: {0}'), sources.length) : tr('No calendars yet', 'Календарей пока нет')}</div>
 				<div class="picker">
 					{rows.map((row, i) => {
 						const editing = typing && row.key === 'type' && i === index;

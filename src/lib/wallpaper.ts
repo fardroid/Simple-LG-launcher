@@ -12,7 +12,7 @@ import {WALLPAPER} from '../config/constants';
 import {exec, shellQuote} from './apps';
 import {isWebOS} from './luna';
 import {mapFromPixels} from './plates';
-import {tr} from './i18n';
+import {fmt, tr} from './i18n';
 
 export interface DirEntry {
 	name: string;
@@ -153,7 +153,7 @@ export function parseMounts (output: string): StorageRoot[] {
 		if (!isUsb || !isSafePath(mount) || roots.some((r) => r.path === mount)) continue;
 		roots.push({label: tr('USB drive', 'USB-накопитель'), path: mount});
 	}
-	if (roots.length > 1) roots.forEach((r, i) => { r.label = tr('USB drive ', 'USB-накопитель ') + (i + 1); });
+	if (roots.length > 1) roots.forEach((r, i) => { r.label = fmt(tr('USB drive {0}', 'USB-накопитель {0}'), i + 1); });
 	return roots;
 }
 
@@ -204,7 +204,7 @@ export function readFileChunks (path: string, run: Run = exec): Promise<Uint8Arr
 		const size = parseInt(out.trim(), 10);
 		if (!(size > 0)) throw pictureError('unreadable', tr('The picture cannot be read', 'Не удаётся прочитать картинку'));
 		if (size > WALLPAPER.maxBytes) {
-			throw pictureError('too-large', tr(`The picture is ${(size / 1048576).toFixed(1)} MB; the limit is ${Math.round(WALLPAPER.maxBytes / 1048576)} MB`, `Картинка весит ${(size / 1048576).toFixed(1)} МБ, предел — ${Math.round(WALLPAPER.maxBytes / 1048576)} МБ`));
+			throw pictureError('too-large', fmt(tr('The picture is {0} MB; the limit is {1} MB', 'Картинка весит {0} МБ, предел — {1} МБ'), (size / 1048576).toFixed(1), Math.round(WALLPAPER.maxBytes / 1048576)));
 		}
 		const count = Math.ceil(size / chunk);
 		const parts: Uint8Array[] = new Array(count);
@@ -389,7 +389,7 @@ function decode (url: string): Promise<HTMLImageElement> {
 		img.onload = () => done(() => {
 			const megapixels = Math.round(img.naturalWidth * img.naturalHeight / 1000000);
 			if (img.naturalWidth * img.naturalHeight > WALLPAPER.maxPixels) {
-				reject(pictureError('too-many-pixels', tr(`The picture has ${megapixels} MP; the limit is ${WALLPAPER.maxPixels / 1000000} MP`, `В картинке ${megapixels} Мп, предел — ${WALLPAPER.maxPixels / 1000000} Мп`)));
+				reject(pictureError('too-many-pixels', fmt(tr('The picture has {0} MP; the limit is {1} MP', 'В картинке {0} Мп, предел — {1} Мп'), megapixels, WALLPAPER.maxPixels / 1000000)));
 			} else resolve(img);
 		});
 		img.onerror = () => done(() => reject(pictureError('not-a-picture', tr('The TV could not open the picture. Use JPG or PNG', 'ТВ не смог открыть картинку. Используйте JPG или PNG'))));

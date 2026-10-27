@@ -3,7 +3,7 @@
 
 import {calendarName, expandIcs, type Occurrence} from './ics';
 import {dayTitle, monthName, timeParts, type TimeFormat} from './clock';
-import {count, tr} from './i18n';
+import {count, fmt, tr} from './i18n';
 
 export const CAL_CACHE_KEY = 'customlauncher-calendar-v1';
 /** How far back and forward the card can be moved (days from today). */
@@ -109,7 +109,7 @@ export function eventsOfDay (data: CalendarData | null, dayStart: number, now: n
 		let state: DayEvent['state'] = 'next';
 		if (dayStart < todayStart) state = 'past';
 		else if (dayStart === todayStart) state = (e.end <= now && e.end > e.start) || (e.end === e.start && e.start < now) ? 'past' : e.start <= now ? 'now' : 'next';
-		let note = e.end > e.start && endsToday ? tr('until ', 'до ') + clock(e.end, format) : e.end > e.start ? tr('until tomorrow', 'до следующего дня') : '';
+		let note = e.end > e.start && endsToday ? fmt(tr('until {0}', 'до {0}'), clock(e.end, format)) : e.end > e.start ? tr('until tomorrow', 'до следующего дня') : '';
 		if (state === 'now') note = tr('now', 'сейчас');
 		return {time: startsToday ? clock(e.start, format) : tr('since yesterday', 'с вчера'), note, title: e.title, place: e.place, src: e.src || 0, state};
 	});
@@ -129,7 +129,7 @@ export function relativeDay (offset: number): string {
 	if (offset === -1) return tr('Yesterday', 'Вчера');
 	if (offset === 2) return tr('In 2 days', 'Послезавтра');
 	const words = count(Math.abs(offset), ['day', 'days'], ['день', 'дня', 'дней']);
-	return offset > 0 ? tr('In ', 'Через ') + words : words + tr(' ago', ' назад');
+	return fmt(offset > 0 ? tr('In {0}', 'Через {0}') : tr('{0} ago', '{0} назад'), words);
 }
 
 /** "Saturday, 24 October" for the day `offset` days from today. */

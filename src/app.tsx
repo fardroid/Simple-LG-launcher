@@ -10,7 +10,7 @@ import {cacheApps, cachedApps, listApps, probeRoot, type AppEntry} from './lib/a
 import {lastFailureDetail, rootState, whySuffix} from './lib/failure';
 import {keepKnownIcons, sameApps} from './lib/appcache';
 import type {TimeFormat} from './lib/clock';
-import {count, lang, setLang, tr} from './lib/i18n';
+import {count, fmt, lang, setLang, tr} from './lib/i18n';
 import {listInputs, mockInputs, type InputSource} from './lib/inputs';
 import {launchApp, launchLgHome, launchSystemSettings} from './lib/launch';
 import {isWebOS} from './lib/luna';
@@ -171,7 +171,7 @@ export function App () {
 						const list = keepKnownIcons(fresh, appsRef.current);
 						if (manual) {
 							const added = list.filter((a) => !appsRef.current.some((p) => p.id === a.id)).length;
-							showToast(added > 0 ? tr('Found: ', 'Найдено: ') + count(added, ['new app', 'new apps'], ['новое приложение', 'новых приложения', 'новых приложений']) : tr('The app list is up to date', 'Список приложений актуален'));
+							showToast(added > 0 ? fmt(tr('Found: {0}', 'Найдено: {0}'), count(added, ['new app', 'new apps'], ['новое приложение', 'новых приложения', 'новых приложений'])) : tr('The app list is up to date', 'Список приложений актуален'));
 						}
 						lastLoad.current = Date.now();       // counted only once a full list has been read, so a failed load is tried again
 						haveFull.current = true;
@@ -498,7 +498,7 @@ export function App () {
 		if (config.replaceHome) markAliveSoon(`launcher: opening ${item.key}`, false);
 		launchApp(item.key).catch(() => {
 			if (config.replaceHome) logLine(`launcher: the TV refused to open ${item.key}`);
-			showToast(tr('Could not open ', 'Не удалось открыть ') + item.label, 'error');
+			showToast(fmt(tr('Could not open {0}', 'Не удалось открыть {0}'), item.label), 'error');
 		});
 	}, [showToast, config.replaceHome]);
 
@@ -584,7 +584,7 @@ export function App () {
 	const onChooseCity = useCallback((city: City) => {
 		updateConfig({...config, weather: {...config.weather, city, on: true}});
 		setScreen('settings');
-		showToast(tr('Weather for ', 'Погода для города: ') + city.name);
+		showToast(fmt(tr('Weather for {0}', 'Погода для города: {0}'), city.name));
 	}, [config, showToast]);
 
 	// Hold OK on an app or input: its Move / Hide (/ Uninstall) menu. LG Home and Settings have no menu.
@@ -597,7 +597,7 @@ export function App () {
 	const hideTile = useCallback((tile: {key: string; title: string; app: AppEntry | null}) => {
 		onToggle(tile.app ? TAB.apps : TAB.sources, tile.key);
 		setMenu(null);
-		showToast(tile.title + tr(' hidden. Bring it back in Settings → ', ' скрыто. Вернуть можно в Настройки → ') + (tile.app ? tr('Apps', 'Приложения') : tr('Sources', 'Источники')));
+		showToast(fmt(tr('{0} hidden. Bring it back in Settings → {1}', '{0} скрыто. Вернуть можно в Настройки → {1}'), tile.title, tile.app ? tr('Apps', 'Приложения') : tr('Sources', 'Источники')));
 	}, [onToggle, showToast]);
 
 	// Move to start / left / right on the shared row of apps and inputs; the highlight follows the tile.
@@ -619,9 +619,9 @@ export function App () {
 			setMenu(null);
 			if (result === 'removed') {
 				updateConfig({...config, appIds: config.appIds ? config.appIds.filter((id) => id !== app.id) : null, hiddenIds: config.hiddenIds ? config.hiddenIds.filter((id) => id !== app.id) : config.hiddenIds});
-				showToast(app.title + tr(' uninstalled', ' удалено'));
+				showToast(fmt(tr('{0} uninstalled', '{0} удалено'), app.title));
 			} else {
-				showToast(result === 'still-installed' ? tr(`The TV did not remove ${app.title} (details: ${UNINSTALL_LOG})`, `ТВ не удалил ${app.title} (подробности: ${UNINSTALL_LOG})`) : tr('Could not uninstall the app', 'Не удалось удалить приложение') + (whySuffix() || tr('. The TV did not accept the command', '. ТВ не принял команду')), 'error');
+				showToast(result === 'still-installed' ? fmt(tr('The TV did not remove {0} (details: {1})', 'ТВ не удалил {0} (подробности: {1})'), app.title, UNINSTALL_LOG) : tr('Could not uninstall the app', 'Не удалось удалить приложение') + (whySuffix() || tr('. The TV did not accept the command', '. ТВ не принял команду')), 'error');
 			}
 		}));
 	}, [config, showToast]);
