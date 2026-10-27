@@ -19,7 +19,10 @@ eq([p.lookFor(0).bg, p.lookFor(0.1).bg], ['rgba(255, 255, 255, 0.11)', 'rgba(255
 eq(p.lookFor(1).bg, 'rgba(14, 18, 40, 0.66)', 'a bright background gets a dark plate');
 eq([p.lookFor(0.5).bg, p.lookFor(0.34).bg, p.lookFor(0.35).bg], ['rgba(14, 18, 40, 0.44)', 'rgba(255, 255, 255, 0.11)', 'rgba(14, 18, 40, 0.31)'], 'in between, the dark plate grows stronger with the brightness');
 const looks = p.plateLooks('auto', 'dusk', map, true, true);
-eq([looks.weather.bg.indexOf('14, 18, 40') > 0, looks.calendar.bg], [true, 'rgba(255, 255, 255, 0.11)'], 'auto: each plate follows the picture behind it');
+eq([looks.weather.bg.indexOf('14, 18, 40') > 0, looks.calendar.bg === looks.weather.bg, looks.clock.bg === looks.weather.bg], [true, true, true], 'auto: one plate over a bright part makes all of them dark, the same colour');
+const darkLeft = map.map((v, i) => (i % 16 < 8 ? 0 : v));      // now the left half is dark too: everything is dark
+eq(p.plateLooks('auto', 'dusk', darkLeft, true, true).calendar.bg, 'rgba(255, 255, 255, 0.11)', 'auto: all over dark, all plates light');
+eq(p.plateLooks('auto', 'dusk', map, true, false).calendar.bg, p.plateLooks('auto', 'dusk', map, true, false).clock.bg, 'auto: the same with the calendar off');
 eq(p.plateLooks('light', 'dusk', map, true, true).weather.bg, 'rgba(255, 255, 255, 0.11)', 'light: always the light plate');
 eq(p.plateLooks('dark', 'dusk', map, true, true).calendar.bg, 'rgba(12, 18, 46, 0.55)', 'dark: always the dark plate');
 const black = p.themeMap('black');

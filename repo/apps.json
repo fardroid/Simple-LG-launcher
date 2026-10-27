@@ -23,9 +23,9 @@
         "rootRequired": "optional",
         "ipkUrl": "https://github.com/fardroid/Simple-LG-launcher/releases/download/v1.9.0/tld.my.simplelauncher_1.9.0_all.ipk",
         "ipkHash": {
-          "sha256": "8dca7653b620fbe72df8f389559a5e88ea1b8f93fbdd1bac0ff52767094b61d0"
+          "sha256": "8311ca4e9e1b1228d4dcad55e1d2a42718273f2ece518814f875733a294401cf"
         },
-        "ipkSize": 1371986
+        "ipkSize": 1372028
       }
     }
   ]

@@ -1,6 +1,8 @@
-// The plates behind the clock, the weather and the calendar. In "auto" each plate takes its colour from the brightness of the
-// wallpaper right behind it: a dark plate where the picture is light, a light one where it is dark, so a plate shows against
-// any background. The wallpaper is measured once, when it appears, as a coarse grid of brightness values (16 x 9 cells).
+// The plates behind the clock, the weather and the calendar. In "auto" they take their colour from the brightness of the
+// wallpaper behind them: dark plates on a light picture, light ones on a dark picture, so they show against any background.
+// All of them get the same colour, chosen for the brightest place any of them covers (white text has to read on every one);
+// a light plate next to a dark one looks like a mistake. The wallpaper is measured once, when it appears, as a coarse grid of
+// brightness values (16 x 9 cells).
 
 import {THEMES, type ThemeName} from '../theme/tokens';
 
@@ -118,11 +120,10 @@ export function plateLooks (mode: PlateMode, theme: ThemeName, map: number[] | n
 		return {clock: glass(dark, r.clock), weather: glass(dark, r.weather), calendar: glass(dark, r.calendar)};
 	}
 	const m = map || themeMap(theme);
-	return {
-		clock: glass(lookFor(regionBrightness(m, r.clock)), r.clock),
-		weather: glass(lookFor(regionBrightness(m, r.weather)), r.weather),
-		calendar: glass(lookFor(regionBrightness(m, r.calendar)), r.calendar)
-	};
+	// only the plates on screen count (a missing card has a rect of no height)
+	const shown = [r.clock, r.weather, r.calendar].filter((rect, i) => (i === 0 || rect[3] > 0) && (i !== 2 || hasCalendar));
+	const look = lookFor(Math.max(...shown.map((rect) => regionBrightness(m, rect))));
+	return {clock: glass(look, r.clock), weather: glass(look, r.weather), calendar: glass(look, r.calendar)};
 }
 
 /** The CSS variables a plate sets on its card (see .card in global.css); the glass picture itself is shown by <Frost>. */

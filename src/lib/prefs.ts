@@ -175,7 +175,7 @@ const basePrefs = (): Pref[] => [
 	...group(tr('Cards', 'Карточки'), [
 		range('cardSize', 'look', tr('Text size', 'Размер текста'), tr('All the text on the weather and calendar cards.', 'Весь текст на карточках погоды и календаря.'),
 			'cardSize', (c) => c.cardSize, (c, v) => ({...c, cardSize: v}), (v) => `${v}%`),
-		choice('plates', 'look', tr('Card colour', 'Цвет карточек'), tr('Auto: each card turns light or dark depending on the picture behind it, so the text stays readable.', 'Авто: каждая карточка становится светлой или тёмной в зависимости от картинки за ней, чтобы текст хорошо читался.'),
+		choice('plates', 'look', tr('Card colour', 'Цвет карточек'), tr('Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.', 'Авто: все карточки вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждой.'),
 			PLATE_MODES, (c) => c.plates, (c, v) => ({...c, plates: v}), plateText),
 		only((c) => c.wallpaper.mode !== 'gradient', toggle('glass', 'look', tr('Frosted glass', 'Матовое стекло'), tr('The cards blur the picture behind them.', 'Карточки размывают картинку под собой.'),
 			(c) => c.glass, (c, v) => ({...c, glass: v}))),
