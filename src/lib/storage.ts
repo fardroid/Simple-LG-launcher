@@ -14,7 +14,7 @@ import type {LangSetting} from './i18n';
 export type WallpaperMode = 'gradient' | 'image' | 'folder';
 export type ClockFormat = 'tv' | '12h' | '24h';
 export type {ClockColor};
-export type ClockWeight = 200 | 300 | 400;
+export type ClockWeight = 200 | 300 | 400 | 500 | 600;
 export type {PlateMode};
 
 /** Numeric settings: the values they can take (OK steps through them, ← → nudge them). */
@@ -243,7 +243,7 @@ export function parseConfig (raw: string | null): UserConfig {
 			clockFormat: parsed.clockFormat === 'tv' || parsed.clockFormat === '12h' ? parsed.clockFormat : '24h',
 			clock: {
 				size: ranged(c.size, 'clockSize'),
-				weight: c.weight === 300 || c.weight === 400 ? c.weight : 200,
+				weight: c.weight === 300 || c.weight === 400 || c.weight === 500 || c.weight === 600 ? c.weight : 200,
 				font: CLOCK_FONT_IDS.indexOf(c.font as ClockFont) !== -1 ? (c.font as ClockFont) : 'inter',
 				color: CLOCK_COLOR_IDS.indexOf(c.color as ClockColor) !== -1 ? (c.color as ClockColor) : 'white',
 				opacity: ranged(c.opacity, 'clockOpacity'),

@@ -8,7 +8,7 @@ import {moveItem} from '../lib/order';
 import {LAYOUT} from '../theme/tokens';
 import {tr} from '../lib/i18n';
 
-export type SectionIcon = 'apps' | 'inputs' | 'look' | 'clock' | 'weather' | 'calendar' | 'wallpaper' | 'home' | 'general';
+export type SectionIcon = 'apps' | 'inputs' | 'look' | 'widgets' | 'wallpaper' | 'home';
 
 export interface SettingsTab {
 	id: string;
@@ -53,12 +53,9 @@ const ICONS: Record<SectionIcon, {color: string; path: string}> = {
 	apps: {color: '#0A84FF', path: 'M4.5 4.5h5v5h-5z M14.5 4.5h5v5h-5z M4.5 14.5h5v5h-5z M14.5 14.5h5v5h-5z'},
 	inputs: {color: '#30B0C7', path: 'M4 8h16v5l-3 3H7l-3-3z M8 11.5h8 M12 16v4'},
 	look: {color: '#5E5CE6', path: 'M12 3.5a8.5 8.5 0 1 0 0 17c1 0 1.6-.7 1.6-1.5s-.6-1.3-.6-2.1c0-.9.7-1.6 1.6-1.6h2a3.9 3.9 0 0 0 3.9-3.9c0-4.4-3.8-7.9-8.5-7.9z M7.8 11.5h.01 M10.2 7.6h.01 M14.6 7.8h.01'},
-	clock: {color: '#FF9F0A', path: 'M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17z M12 7.5v4.8l3.2 2'},
-	weather: {color: '#32ADE6', path: 'M7.5 18.5h9.5a3.8 3.8 0 0 0 .3-7.6 5.2 5.2 0 0 0-10 1.2 3.2 3.2 0 0 0 .2 6.4z'},
-	calendar: {color: '#FF453A', path: 'M4.5 6h15v13.5h-15z M4.5 10h15 M8.5 3.5v4 M15.5 3.5v4'},
+	widgets: {color: '#FF9F0A', path: 'M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17z M12 7.5v4.8l3.2 2'},
 	wallpaper: {color: '#BF5AF2', path: 'M4 5h16v14H4z M4 16l4.5-4.5 4 4 3-3 4.5 4.5 M15.5 9h.01'},
-	home: {color: '#30D158', path: 'M4.5 11l7.5-6.5 7.5 6.5v8.5h-15z M10 19.5v-5h4v5'},
-	general: {color: '#8E8E93', path: 'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z M12 2.8v2.6 M12 18.6v2.6 M2.8 12h2.6 M18.6 12h2.6 M5.5 5.5l1.8 1.8 M16.7 16.7l1.8 1.8 M5.5 18.5l1.8-1.8 M16.7 7.3l1.8-1.8'}
+	home: {color: '#30D158', path: 'M4.5 11l7.5-6.5 7.5 6.5v8.5h-15z M10 19.5v-5h4v5'}
 };
 
 const COLUMNS = LAYOUT.gridColumns;
@@ -220,7 +217,8 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 	const footer = focusedOption ? (focusedOption.disabled || focusedOption.description) : '';
 
 	return (
-		<div class="screen screen--settings">
+		// under a picker it is not drawn (it stays mounted to keep its place): the picker has the screen to itself
+		<div class={`screen screen--settings${active ? '' : ' screen--away'}`}>
 			<div class="set">
 				<nav class="set__nav">
 					<h1 class="set__heading">{tr('Settings', 'Настройки')}</h1>

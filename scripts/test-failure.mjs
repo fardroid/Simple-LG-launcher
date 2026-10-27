@@ -31,14 +31,15 @@ f.noteExec();
 eq([f.rootState(), f.lastFailure(), f.whySuffix()], ['yes', null, ''], 'a good call clears it');
 
 // rows
-const rowsOf = (info) => p.optionsFor('home', f.DEFAULT_CONFIG, info);
+// the rows about how the launcher opens (Home screen also has the language, the reset and About)
+const rowsOf = (info) => p.optionsFor('home', f.DEFAULT_CONFIG, info).filter((o) => o.id === 'homeStatus' || o.id === 'replaceHome');
 eq(rowsOf().filter((o) => o.disabled).length, 0, 'nothing is greyed out when nothing is known');
 eq(rowsOf({homeHook: null, root: 'yes'}).filter((o) => o.disabled).length, 0, 'nothing is greyed out on a rooted TV');
 f.noteExec(new Error('Service does not exist: org.webosbrew.hbchannel.service'));
 const grey = rowsOf({homeHook: null, root: 'no', rootDetail: 'Service does not exist'});
 eq(grey.filter((o) => o.disabled).map((o) => o.id).sort(), p.ROOT_OPTIONS.slice().sort(), 'every row that needs root is greyed out without it');
 eq(grey.find((o) => o.id === 'replaceHome').disabled.indexOf('Нужен рутованный ТВ') === 0 && grey.find((o) => o.id === 'replaceHome').disabled.indexOf('ответ ТВ: Service does not exist') > 0, true, 'the reason says what the TV said');
-eq(p.optionsFor('general', f.DEFAULT_CONFIG, {root: 'no'}).some((o) => o.id === 'resetLook' && !o.disabled), true, 'Reset look and clock stays usable without root');
+eq(p.optionsFor('home', f.DEFAULT_CONFIG, {root: 'no'}).some((o) => o.id === 'resetLook' && !o.disabled), true, 'Reset look and clock stays usable without root');
 eq(p.disabledReason('theme', {root: 'no'}), null, 'a look setting is never greyed out');
 eq(p.optionsFor('look', f.DEFAULT_CONFIG, {root: 'no'}).filter((o) => o.disabled).length, 0, 'Appearance has no greyed rows');
 

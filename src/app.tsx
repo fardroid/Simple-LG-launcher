@@ -19,7 +19,7 @@ import {closeLgHome, takeoverActive} from './lib/system';
 import {applyHomeHook, getHookStatus, hookMessage, installHomeHook, logLine, markAliveSoon, reapplyHomeHook, removeHomeHook, stockHome} from './lib/homehook';
 import {applyPref, disabledReason, findPref, optionsFor, resetLook, type Press, type SystemInfo} from './lib/prefs';
 import {hasStoredConfig, loadConfig, parseConfig, saveConfig, toggleId, DEFAULT_WALLPAPER, type UserConfig} from './lib/storage';
-import {AS_HOME, forHome, readConfigFile, saveConfigFile} from './lib/ashome';
+import {AS_HOME, forHome, isKeepAlive, readConfigFile, saveConfigFile} from './lib/ashome';
 import {applyTheme} from './theme/tokens';
 import {useTimeFormat} from './hooks/useTimeFormat';
 import {AppMenu} from './components/AppMenu';
@@ -29,6 +29,7 @@ import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {moveKey, movesFor, orderTiles, orderUpdate, reslot, type MoveAction} from './lib/tileorder';
 import {APP_ID, TIMING, WALLPAPER} from './config/constants';
 import {WEATHER_ENABLED} from './config/features';
+import {fontFamily} from './lib/clockfont';
 import {fetchWeather} from './lib/weathernet';
 import {fetchCalendars} from './lib/calendarload';
 import {CAL_FRESH_MS, calendarIsFresh, readCalendarCache, usableCalendar, writeCalendarCache, type CalendarData} from './lib/calendar';
@@ -39,7 +40,7 @@ import {FRESH_MS, isFresh, readWeatherCache, usableCached, weatherView, writeWea
 
 type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl';
 
-const TAB = {apps: 'apps', sources: 'sources', look: 'look', clock: 'clock', weather: 'weather', calendar: 'calendar', wallpaper: 'wallpaper', home: 'home', general: 'general'} as const;
+const TAB = {apps: 'apps', sources: 'sources', look: 'look', widgets: 'widgets', wallpaper: 'wallpaper', home: 'home'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings', system: 'system-settings'} as const;
 
 /** The three tiles that always end the row. */
@@ -229,6 +230,10 @@ export function App () {
 		const poll = window.setInterval(() => sync('check'), 1000);
 		// Home pressed while the launcher is already in front: the TV relaunches it without hiding it first.
 		const onRelaunch = () => {
+			// Running as the TV's Home, the TV relaunches it now and then with {"keepAlive": true} only to keep it loaded:
+			// that is not the Home key, so whatever is open (Settings) stays open
+			const ps = (window as unknown as {PalmSystem?: {launchParams?: string}}).PalmSystem;
+			if (isKeepAlive(ps && ps.launchParams)) return;
 			setScreen('home'); setMenu(null); setWakes((n) => n + 1);
 			// Home pressed while in front: the launcher never became hidden, so tell the helper it is here
 			// (otherwise its check could think the launcher failed to show and open it again and again)
@@ -454,17 +459,16 @@ export function App () {
 	const homeItems: TileModel[] = useMemo(() => orderedTiles.concat(AS_HOME ? miscTiles().filter((t) => t.key !== MISC.lgHome) : miscTiles()), [orderedTiles, language]);
 
 	const timeFormat: TimeFormat = config.clockFormat === 'tv' ? tvFormat : config.clockFormat;
+	// the font chosen in Settings → Widgets is the one of the weather and calendar cards too (the clock sets its own)
+	useEffect(() => { document.documentElement.style.setProperty('--widget-font', fontFamily(config.clock.font)); }, [config.clock.font]);
 
 	const tabs: SettingsTab[] = useMemo(() => [
 		{id: TAB.apps, icon: 'apps', label: tr('Apps', 'Приложения'), arrange: tr('Arrange', 'Порядок'), refresh: true, items: apps.map(appTile), shown: shownApps.map(appTile)},
 		{id: TAB.sources, icon: 'inputs', label: tr('Inputs', 'Входы'), arrange: tr('Arrange', 'Порядок'), items: inputs.map(inputTile), shown: shownInputs.map(inputTile)},
 		{id: TAB.look, icon: 'look', label: tr('Appearance', 'Оформление'), arrange: '', items: [], shown: [], options: optionsFor('look', config)},
-		{id: TAB.clock, icon: 'clock', label: tr('Clock', 'Часы'), arrange: '', items: [], shown: [], options: optionsFor('clock', config)},
-		...(WEATHER_ENABLED ? [{id: TAB.weather, icon: 'weather', label: tr('Weather', 'Погода'), arrange: '', items: [], shown: [], options: optionsFor('weather', config)}] : []),
-		{id: TAB.calendar, icon: 'calendar', label: tr('Calendar', 'Календарь'), arrange: '', items: [], shown: [], options: optionsFor('calendar', config)},
+		{id: TAB.widgets, icon: 'widgets', label: tr('Widgets', 'Виджеты'), arrange: '', items: [], shown: [], options: optionsFor('widgets', config)},
 		{id: TAB.wallpaper, icon: 'wallpaper', label: tr('Wallpaper', 'Обои'), arrange: '', items: [], shown: [], options: optionsFor('wallpaper', config)},
-		{id: TAB.home, icon: 'home', label: tr('Home screen', 'Главный экран'), arrange: '', items: [], shown: [], options: optionsFor('home', config, systemInfo)},
-		{id: TAB.general, icon: 'general', label: tr('General', 'Общие'), arrange: '', items: [], shown: [], options: optionsFor('general', config)}
+		{id: TAB.home, icon: 'home', label: tr('Home screen', 'Главный экран'), arrange: '', items: [], shown: [], options: optionsFor('home', config, systemInfo)}
 	] as SettingsTab[], [apps, inputs, shownApps, shownInputs, config, systemInfo, language]);
 
 	const boardY = boardTop({iconScale: config.iconScale, bottomMargin: config.bottomMargin, showLabels: config.showLabels, rows: 1}, homeItems.length);

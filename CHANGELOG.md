@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0
+
+- **Widgets.** The clock, the weather and the calendar are set up in one section, Settings → Widgets. Its first row, *Font*, now sets the font of all three: the clock, the date, and the weather and calendar cards.
+- *Weight* goes the other way too: thin, light, regular, medium and bold.
+- The language, "Reset look and clock" and About moved to Home screen; the General section is gone.
+- Settings no longer closes by itself. Running in LG Home's place, the TV now and then relaunches its Home app with `{"keepAlive": true}` only to keep it loaded; the launcher took that for the Home key and went back to its home screen.
+- The wallpaper, city and calendar pickers have the look of Settings: one rounded group of rows on the dimmed wallpaper, with Settings hidden behind them. The text typed into the city or calendar link field is dark on its light row (it was white on white).
+- The focused tile on the left of the Apps and Inputs grids is no longer cut off.
+- `wallpapers/`: thirteen wallpapers drawn for the launcher, to copy to the TV.
+
 ## 1.8.0
 
 - **New Settings.** The sections are listed on the left, each with its own colour, and the chosen one opens on the right in rounded groups. The focused row is a light pill, and its explanation sits at the foot of the screen. ↑ ↓ pick a section, → or OK open it, Back goes back. The pickers (wallpaper, city, calendars) and the app menu share the look.

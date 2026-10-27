@@ -23,7 +23,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Frosted glass.** The cards blur the wallpaper behind them. Each card checks how bright the picture is right behind it and goes light or dark, so the text stays readable on any photo.
 - **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is.
 - **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour.
-- **English or Russian.** It follows the TV's language by default. Settings → General → Language changes it.
+- **English or Russian.** It follows the TV's language by default. Settings → Home screen → Language changes it.
 
 ## What you need
 
@@ -70,7 +70,7 @@ Things to know:
 
 ## Calendars
 
-In Google Calendar on a computer, open Settings, choose the calendar, and copy **Secret address in iCal format**. Then on the TV, open Settings → Calendar → Calendars → *Add a link*.
+In Google Calendar on a computer, open Settings, choose the calendar, and copy **Secret address in iCal format**. Then on the TV, open Settings → Widgets → Calendars → *Add a link*.
 
 Typing a long link with the remote is no fun. You can put the links in a file on the TV instead, one per line, and choose *Read the list from a file*:
 
@@ -88,9 +88,11 @@ The secret address gives read access to that calendar to anyone who has it. It i
 
 Settings → Wallpaper → Picture opens a folder browser for USB drives and the TV's storage (`/media/developer`). OK on a picture sets it, and *Play this folder as a slideshow* plays the whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
 
+The [`wallpapers`](wallpapers) folder has thirteen to start with: soft gradients, dunes, auroras and a sea at dawn, all drawn for this launcher and free to use. To put them on the TV:
+
 ```bash
 ssh root@<tv-ip> mkdir -p /media/developer/wallpapers
-scp -O *.jpg root@<tv-ip>:/media/developer/wallpapers/
+scp -O wallpapers/*.jpg root@<tv-ip>:/media/developer/wallpapers/
 ```
 
 ## Privacy

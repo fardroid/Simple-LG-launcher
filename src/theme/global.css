@@ -21,6 +21,14 @@
 @font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/roboto-mono-latin-400.woff2') format('woff2'); }
 @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/cormorant-garamond-latin-300.woff2') format('woff2'); }
 @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/cormorant-garamond-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/poppins-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/poppins-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/oswald-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/oswald-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/roboto-mono-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/roboto-mono-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/cormorant-garamond-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/cormorant-garamond-latin-600.woff2') format('woff2'); }
 
 /* Cyrillic letters for the same families (Russian text); Poppins has none, so it falls back to the TV's font for them. */
 @font-face { font-family: 'Inter Variable'; font-style: normal; font-weight: 100 900; font-display: block; src: url('../assets/inter-cyrillic-wght.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
@@ -32,6 +40,12 @@
 @font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/roboto-mono-cyrillic-400.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
 @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-300.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
 @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-400.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/oswald-cyrillic-500.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/oswald-cyrillic-600.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/roboto-mono-cyrillic-500.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/roboto-mono-cyrillic-600.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 500; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-500.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 600; font-display: block; src: url('../assets/cormorant-garamond-cyrillic-600.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
 
 * { box-sizing: border-box; }
 
@@ -62,7 +76,6 @@ html, body {
 }
 /* Settings and the picker dim the wallpaper so text stays easy to read. */
 .screen--settings { background: var(--color-overlay); }
-.screen--picker { background: var(--color-picker-bg); }
 /* Home stays mounted (to remember its position) but is not drawn while Settings is open. */
 .screen--away { visibility: hidden; }
 
@@ -157,6 +170,7 @@ html, body {
 
 .card {
 	position: relative;
+	font-family: var(--widget-font, inherit);
 	box-sizing: border-box;
 	border-radius: 36px;
 	/* The plate is built in .frost (below): the blurred wallpaper, its colour (--pb, chosen per plate from the wallpaper behind it) and the rim.
@@ -574,8 +588,8 @@ html, body {
 .grid__viewport {
 	overflow: hidden;
 	height: 720px;
-	padding: 16px 8px;
-	margin-left: -8px;
+	/* room for a focused tile, which grows past its square (and its ring and shadow further still) */
+	padding: 20px 24px;
 }
 /* Flex-wrap instead of CSS grid: older webOS web views (Chrome 53) have no grid. Nine tiles
    (plus their right-hand gaps) fill one line, so the tenth wraps, as the grid did. */
@@ -680,17 +694,34 @@ html, body {
 .switch--on, .orow--focused .switch--on { background: #30D158; }
 .switch--on .switch__knob { transform: translateX(32px); }
 
-/* ---------- wallpaper picker ---------- */
+/* ---------- the pickers (wallpaper, city, calendars) ----------
+   The same look as Settings: a sheet in the middle, the place as a small heading over one rounded group of rows. */
 
+.screen--picker { background: rgba(8, 9, 14, 0.86); }
+.screen--picker .settings { left: 50%; right: auto; width: 1240px; margin-left: -620px; top: 84px; }
 .picker__path {
-	margin: 28px 0 18px;
-	font-size: var(--font-tile-label);
-	color: var(--color-text-secondary);
+	margin: 34px 0 12px 26px;
+	font-size: 19px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-.picker { width: 1300px; }
+.picker { padding: 6px; border-radius: 28px; background: rgba(255, 255, 255, 0.075); }
+.picker .picker__row { position: relative; margin-bottom: 0; background: transparent; }
+/* hairlines between the rows, hidden around the focused one */
+.picker .picker__row + .picker__row:before {
+	content: '';
+	position: absolute;
+	left: 92px; right: 24px; top: 0;
+	height: 1px;
+	background: rgba(255, 255, 255, 0.09);
+}
+.picker .picker__row--focused:before, .picker .picker__row--focused + .picker__row:before { opacity: 0; }
+.picker .picker__row--focused { background: #F2F2F7; }
 .picker__status { padding: 40px 8px; font-size: var(--font-option-label); color: var(--color-text-secondary); }
 .picker__status--error { color: var(--color-danger); }
 .picker__row {
@@ -708,6 +739,7 @@ html, body {
 .picker__row--focused .picker__label { color: #111216; }
 .picker__row--focused .picker__detail { color: #3C3F47; }
 .picker__row--info { background: transparent; box-shadow: none; opacity: 0.8; }
+.picker .picker__row--info .picker__label { white-space: normal; font-size: 23px; color: var(--color-text-secondary); }
 .picker__icon {
 	flex: 0 0 auto;
 	width: 40px; height: 40px;
@@ -776,6 +808,10 @@ html, body {
 	-webkit-user-select: text;
 	user-select: text;
 }
+/* the field sits on the light pill of the focused row: dark text, like the other focused rows */
+.picker__row--focused .picker__input { color: #111216; caret-color: #111216; }
+.picker__row--focused .picker__input::placeholder { color: #8A8D96; }
+.picker__row--focused .picker__input::-webkit-input-placeholder { color: #8A8D96; }
 
 /* ---------- toast ---------- */
 
