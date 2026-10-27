@@ -4,6 +4,7 @@
 
 - **Widgets.** The clock, the weather and the calendar are set up in one section, Settings → Widgets. Its first row, *Font*, now sets the font of all three: the clock, the date, and the weather and calendar cards.
 - *Weight* goes the other way too: thin, light, regular, medium and bold.
+- **The cards change colour together.** With *Card colour: Auto*, the clock, weather and calendar plates are all light or all dark. Which one depends on the brightest part of the picture behind any of them, so the text stays readable on each. Before, each plate picked its own, and a light one next to a dark one looked like a mistake.
 - The language, "Reset look and clock" and About moved to Home screen; the General section is gone.
 - Settings no longer closes by itself. Running in LG Home's place, the TV now and then relaunches its Home app with `{"keepAlive": true}` only to keep it loaded; the launcher took that for the Home key and went back to its home screen.
 - The wallpaper, city and calendar pickers have the look of Settings: one rounded group of rows on the dimmed wallpaper, with Settings hidden behind them. The text typed into the city or calendar link field is dark on its light row (it was white on white).
