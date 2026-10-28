@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.4
+
+- **Official way: the TV wakes up straight into the launcher**, without LG Home first and without the guard of 1.9.3. The TV's start-up opens LG Home by name only while LG's *start with Home* is on; otherwise it opens the last input. So this way now switches *start with Home* off and names the launcher as the last input (`lastInputApp`, `physicalLastInputApp`; the idea is from [openhome-webos](https://github.com/devic021/openhome-webos)). Opening an HDMI input names that input again, so the launcher names itself once more when it comes to the front and a few seconds after it goes to the back (`defaulthome.sh point`). The three settings as they were are kept and put back when the official way is switched off.
+- The wake-up guard (`tools/wakeguard.py`) is gone. A TV updated from 1.9.3 has it stopped and removed the first time the launcher loads.
+
 ## 1.9.3
 
 - **Official way: waking the TV.** The TV's start-up opens LG Home by name when it wakes from standby, whatever app is Home, and the Home key does nothing over it. A small guard (`tools/wakeguard.py`, started with the official way and at every full start) opens the launcher when the TV wakes up with LG Home in front. An app the TV woke up into (a console on HDMI, an app button on the remote) is left alone. LG's "start with Home" is left as it is.
