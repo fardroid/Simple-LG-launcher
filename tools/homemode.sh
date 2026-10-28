@@ -79,7 +79,11 @@ restore () {
 set_mode () {
 	want=$1
 	was=$(mode)
-	[ "$was" = "$want" ] && { echo "ok $want"; return 0; }
+	if [ "$was" = "$want" ]; then
+		# chosen again: the official way sets itself up again, which also brings the wake-up guard of a newer launcher
+		[ "$want" = default ] && sh "$HERE/defaulthome.sh" enable >/dev/null 2>&1
+		echo "ok $want"; return 0
+	fi
 	log "switching from $was to $want"
 	if ! all_off; then echo "failed $want: $was could not be switched off (now: $(mode))"; return 1; fi
 	case "$want" in

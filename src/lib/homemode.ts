@@ -38,6 +38,16 @@ export function parseResult (out: string): {ok: boolean; mode: string; why: stri
 	return match ? {ok: match[1] === 'ok', mode: match[2], why: match[3] || ''} : null;
 }
 
+/** While the official way is on, its copies on the TV are brought up to this version's and its wake-up guard started
+ *  (tools/defaulthome.sh refresh). Run once each time the launcher starts, so an update needs nothing more: the copies
+ *  outlive the app, and an older version's lacked the guard. Nothing happens when the official way is off. */
+export const REFRESH_COMMAND = `sh '${TOOLS}/defaulthome.sh' refresh; true`;
+
+export function refreshDefaultHome (): Promise<string> {
+	if (!isWebOS()) return Promise.resolve('off');
+	return exec(REFRESH_COMMAND, 15000);
+}
+
 export function readHomeMode (): Promise<HomeModeInfo | null> {
 	if (!isWebOS()) return Promise.resolve({mode: 'none', canDefault: true, release: ''});
 	return exec(STATUS_COMMAND, 10000).then(parseModeStatus, () => null);

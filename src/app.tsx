@@ -8,7 +8,7 @@ import {detectOled, knownOled} from './lib/panel';
 import {applySplashMode, noteSplashMode} from './lib/splash';
 import {readWallpaperCache, readWallpaperLook, wallpaperCacheId} from './lib/wallpaper';
 import {reloadIfUpdated} from './lib/update';
-import {readHomeMode, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
+import {readHomeMode, refreshDefaultHome, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
 import {Toast, type ToastMessage} from './components/Toast';
 import {Wallpaper} from './components/Wallpaper';
 import type {TileModel} from './components/Tile';
@@ -298,6 +298,20 @@ export function App () {
 		return undefined;
 	}, [screen]);
 
+	// Once each time the launcher is loaded (not on every Home press): with the official way on, its scripts on the TV are brought
+	// up to this version's and its wake-up guard is started (lib/homemode.ts). The Homebrew service may not be up yet just after
+	// the TV starts: then it is tried again a little later.
+	useEffect(() => {
+		if (!config.useHomebrew || !isWebOS()) return undefined;
+		let timer = 0;
+		const attempt = (n: number) => refreshDefaultHome().then(
+			(out) => { if (/updated|started/.test(out)) logLine(`launcher: official way refreshed (${out.trim()})`); },
+			() => { if (n < 3) timer = window.setTimeout(() => attempt(n + 1), [10000, 30000, 90000][n]); }
+		);
+		timer = window.setTimeout(() => attempt(0), TIMING.backgroundWorkMs);
+		return () => window.clearTimeout(timer);
+	}, []);
+
 	// Shortly after we come to the front (not at the very first moment, while the TV is still switching
 	// apps): make sure the hand-over helper is running (if it is switched on), and end LG's home app to
 	// free memory. If we are pushed to the back again within seconds, LG Home has come back in front of
@@ -352,7 +366,7 @@ export function App () {
 		if (!wxCity) return undefined;
 		const city = wxCity;
 		const allowShell = config.useHomebrew && isWebOS();
-		const backoff = [120000, 600000, 1800000];
+		const backoff = TIMING.retryMs;
 		let cancelled = false;
 		let timer = 0;
 		let failures = 0;
@@ -380,7 +394,10 @@ export function App () {
 			? Math.max(0, FRESH_MS - (now - known.at))
 			: (usableCached(known, city.lat, city.lon, now) ? TIMING.backgroundWorkMs : 1500);
 		timer = window.setTimeout(run, wait);
-		return () => { cancelled = true; window.clearTimeout(timer); };
+		// the network back (after a start, or a dropped Wi-Fi) while waiting to try again: try now
+		const onOnline = () => { if (failures > 0) { window.clearTimeout(timer); timer = window.setTimeout(run, 2000); } };
+		window.addEventListener('online', onOnline);
+		return () => { cancelled = true; window.clearTimeout(timer); window.removeEventListener('online', onOnline); };
 	}, [wxCity !== null, wxLat, wxLon, wakes, config.useHomebrew, showToast]);
 
 	const weatherAt = useMemo(() => {
@@ -397,7 +414,7 @@ export function App () {
 	useEffect(() => {
 		if (!calKey) return undefined;
 		const allowShell = config.useHomebrew && isWebOS();
-		const backoff = [120000, 600000, 1800000];
+		const backoff = TIMING.retryMs;
 		let cancelled = false;
 		let timer = 0;
 		let failures = 0;
@@ -428,7 +445,9 @@ export function App () {
 			? Math.max(0, CAL_FRESH_MS - (now - known.at))
 			: (usableCalendar(known, calKey, now) ? TIMING.backgroundWorkMs : 1500);
 		timer = window.setTimeout(run, wait);
-		return () => { cancelled = true; window.clearTimeout(timer); };
+		const onOnline = () => { if (failures > 0) { window.clearTimeout(timer); timer = window.setTimeout(run, 2000); } };
+		window.addEventListener('online', onOnline);
+		return () => { cancelled = true; window.clearTimeout(timer); window.removeEventListener('online', onOnline); };
 	}, [calKey, wakes, config.useHomebrew, showToast]);
 
 	const calendarCard = useMemo(() => {

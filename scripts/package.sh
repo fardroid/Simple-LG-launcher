@@ -9,7 +9,7 @@ mkdir -p dist/licenses
 cp LICENSE dist/licenses/LICENSE.txt
 # The scripts that switch how the launcher replaces LG Home (Settings → Home screen → How the launcher opens) run from here.
 mkdir -p dist/tools
-cp tools/homemode.sh tools/defaulthome.sh tools/takeover.sh dist/tools/
+cp tools/homemode.sh tools/defaulthome.sh tools/wakeguard.py tools/takeover.sh dist/tools/
 mkdir -p build
 rm -f build/*.ipk
 npx ares-package dist --no-minify -o build
