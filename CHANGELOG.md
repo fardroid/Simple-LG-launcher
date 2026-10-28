@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.3
+
+- **Official way: waking the TV.** The TV's start-up opens LG Home by name when it wakes from standby, whatever app is Home, and the Home key does nothing over it. A small guard (`tools/wakeguard.py`, started with the official way and at every full start) opens the launcher when the TV wakes up with LG Home in front. An app the TV woke up into (a console on HDMI, an app button on the remote) is left alone. LG's "start with Home" is left as it is.
+- **Updating keeps the official way up to date.** Its scripts are copied out of the app (so they can give LG Home back if the app is uninstalled), and those copies did not change with an update. Each time the launcher is loaded it now refreshes them from the installed version and starts the guard (`defaulthome.sh refresh`; nothing happens when the official way is off). TVs updated from 1.9.2 get the guard this way, without switching anything.
+- The weather and the calendar try again 15 s, 30 s and 1 minute after a failed fetch (it was 2 minutes), and at once when the TV's network comes back: right after the TV starts, they waited with empty cards.
+
 ## 1.9.2
 
 - **Polish.** Thanks to [DriftEngineer](https://github.com/DriftEngineer), who translated it ([pull request #4](https://github.com/fardroid/Simple-LG-launcher/pull/4))! It comes with its own plural rule (1 zdjęcie, 3 zdjęcia, 5 zdjęć, 22 zdjęcia, but 21 zdjęć, not like Russian). The texts added in 1.9.2 were translated here; corrections are welcome.

@@ -42,7 +42,10 @@ export const TIMING = {
 	longPressMs: 600,       // OK held this long enters/leaves re-order mode
 	/** Everything that is not needed to show the home screen (re-reading the app list, the helper check,
 	 *  closing LG Home) waits this long after the launcher appears, so the screen comes up first. */
-	backgroundWorkMs: 5000
+	backgroundWorkMs: 5000,
+	// a widget that could not fetch tries again after these waits (the last one repeats). Short at first: right after the TV
+	// starts, its network and the Homebrew Channel's service take a while to come up
+	retryMs: [15000, 30000, 60000, 120000, 600000, 1800000]
 } as const;
 
 /** localStorage key for the user's selections. Bump the suffix on breaking changes. */

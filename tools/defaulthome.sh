@@ -9,9 +9,15 @@
 #   sh defaulthome.sh disable   LG Home becomes Home again
 #   sh defaulthome.sh status
 #   sh defaulthome.sh check     what the boot link runs: LG Home back if the launcher is no longer installed
+#   sh defaulthome.sh refresh   what the launcher runs once each time it starts: while this is on, the copies of this script and
+#                               of wakeguard.py are brought up to the installed launcher's (after an update) and the guard started
 #
 # Before uninstalling the launcher, run disable: the TV's Home must never name an app that is not there.
 # The boot link is a safety net for when that was forgotten.
+#
+# Waking from standby is the one way in that does not ask for the Home app: the TV's start-up opens LG Home by name (with LG's
+# "start with Home" on), and LG Home reopens the app the TV was switched off on. When that was the launcher, LG Home would stay on
+# the screen; wakeguard.py, started here and by the boot link, opens the launcher then. It stops by itself when this is disabled.
 
 DIR=/media/developer/launcher-defaulthome
 FLAG=$DIR/enabled
@@ -24,6 +30,7 @@ HOOK=/media/developer/launcher-homehook
 HOOK_LINK=/var/lib/webosbrew/init.d/48-launcher-homehook
 TAKEOVER_FLAG=/media/developer/launcher-takeover/enabled
 LOG=/tmp/launcher-homehook.log
+GUARD_PID=/tmp/launcher-wakeguard.pid
 AM=luna://com.webos.service.applicationmanager
 SETTINGS=luna://com.webos.settingsservice
 
@@ -62,6 +69,30 @@ open_home () {
 	return 1
 }
 
+guard_on () {
+	pid=$(cat "$GUARD_PID" 2>/dev/null)
+	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+# The wake-up guard, in the background (it keeps a single copy running itself). $1: "boot" at a full start.
+start_guard () {
+	[ -f "$DIR/wakeguard.py" ] || return 1
+	guard_on && return 0
+	# its own session, deaf to hang-ups: it outlives the shell that started it (an ssh session, the launcher's command)
+	if command -v setsid >/dev/null 2>&1; then
+		( setsid nohup python3 "$DIR/wakeguard.py" $1 </dev/null >/dev/null 2>&1 & )
+	else
+		( nohup python3 "$DIR/wakeguard.py" $1 </dev/null >/dev/null 2>&1 & )
+	fi
+}
+
+stop_guard () {
+	pid=$(cat "$GUARD_PID" 2>/dev/null)
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+	pkill -f '[l]auncher-defaulthome/wakeguard.py' 2>/dev/null
+	rm -f "$GUARD_PID"
+}
+
 helper_on () {
 	[ -L "$HOOK_LINK" ] && return 0
 	pid=$(cat /tmp/launcher-homehook-watch.pid 2>/dev/null)
@@ -71,6 +102,7 @@ helper_on () {
 give_back () {
 	set_home "$LG_HOME" || log "setDefaultApp for LG Home was not accepted"
 	rm -f "$FLAG" "$LINK"
+	stop_guard
 	[ "$(current)" = "$LG_HOME" ] && log "LG Home is the TV's Home again" || log "the TV's Home is now: $(current) (expected $LG_HOME)"
 }
 
@@ -90,13 +122,17 @@ case "$1" in
 			log "the TV did not keep the launcher as Home"; give_back; exit 1
 		fi
 		touch "$FLAG"
-		cp -f "$0" "$DIR/defaulthome.sh" 2>/dev/null && chmod +x "$DIR/defaulthome.sh"
+		here=$(cd "$(dirname "$0")" && pwd)
+		[ "$here" = "$DIR" ] || cp -f "$0" "$DIR/defaulthome.sh" 2>/dev/null
+		chmod +x "$DIR/defaulthome.sh" 2>/dev/null
+		[ "$here" = "$DIR" ] || cp -f "$here/wakeguard.py" "$DIR/wakeguard.py" 2>/dev/null
 		printf '#!/bin/sh\n# Gives LG Home back at start-up if the launcher was uninstalled. Remove with: sh %s disable\nsh %s check >/dev/null 2>&1 &\n' "$DIR/defaulthome.sh" "$DIR/defaulthome.sh" > "$LINK"
 		chmod +x "$LINK"
 		# waking up opens Home only with LG's "start with Home" on
 		luna-send -n 1 "$SETTINGS/setSystemSettings" '{"category":"general","settings":{"homeAutoLaunch":"on"}}' >/dev/null 2>&1
 		if open_home "$APP_ID"; then
 			log "the launcher is the TV's Home (was $was)"
+			stop_guard; start_guard || log "wakeguard.py is missing: waking up may show LG Home"
 		else
 			log "Home did not open the launcher: LG Home put back"; give_back; exit 1
 		fi
@@ -110,7 +146,20 @@ case "$1" in
 		i=0; until readable || [ "$i" -ge 60 ]; do sleep 1; i=$((i + 1)); done
 		if [ ! -f "$LAUNCHER/appinfo.json" ] || ! has_home_category "$APP_ID"; then
 			log "the launcher is gone or has no home category: LG Home put back"; give_back
+		else
+			# the installed launcher may bring a newer guard
+			[ -f "$LAUNCHER/tools/wakeguard.py" ] && cp -f "$LAUNCHER/tools/wakeguard.py" "$DIR/wakeguard.py" 2>/dev/null
+			start_guard boot
 		fi
+		;;
+	refresh)
+		[ -f "$FLAG" ] || { echo "off"; exit 0; }
+		here=$(cd "$(dirname "$0")" && pwd)
+		if [ "$here" != "$DIR" ]; then
+			cmp -s "$0" "$DIR/defaulthome.sh" || { cp -f "$0" "$DIR/defaulthome.sh" && chmod +x "$DIR/defaulthome.sh" && log "updated its copy from the installed launcher"; }
+			cmp -s "$here/wakeguard.py" "$DIR/wakeguard.py" || { cp -f "$here/wakeguard.py" "$DIR/wakeguard.py" && stop_guard; }
+		fi
+		guard_on && echo "ok" || { start_guard && echo "started"; }
 		;;
 	status)
 		echo "enabled: $([ -f "$FLAG" ] && echo yes || echo no)"
@@ -118,6 +167,7 @@ case "$1" in
 		echo "launcher has home category: $(has_home_category "$APP_ID" && echo yes || echo no)"
 		echo "LG Home has home category: $(has_home_category "$LG_HOME" && echo yes || echo no)"
 		echo "boot link: $([ -e "$LINK" ] && echo yes || echo no)"
+		echo "wake-up guard running: $(guard_on && echo yes || echo no)"
 		echo "takeover.sh on: $([ -f "$TAKEOVER_FLAG" ] && echo yes || echo no)"
 		echo "helper on: $(helper_on && echo yes || echo no)"
 		;;
