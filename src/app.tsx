@@ -305,7 +305,7 @@ export function App () {
 		if (!config.useHomebrew || !isWebOS()) return undefined;
 		let timer = 0;
 		const attempt = (n: number) => refreshDefaultHome().then(
-			(out) => { if (/updated|started/.test(out)) logLine(`launcher: official way refreshed (${out.trim()})`); },
+			(out) => { if (/started/.test(out)) logLine('launcher: official way refreshed, wake-up guard started'); },
 			() => { if (n < 3) timer = window.setTimeout(() => attempt(n + 1), [10000, 30000, 90000][n]); }
 		);
 		timer = window.setTimeout(() => attempt(0), TIMING.backgroundWorkMs);
