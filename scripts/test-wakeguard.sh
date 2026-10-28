@@ -20,23 +20,22 @@ esac
 EOF
 chmod +x "$T/luna-send"
 
-run () {    # last app, app in front -> what the log says
-	echo "{\"appId\":\"$1\"}" > "$T/last"; echo "$2" > "$T/front"; rm -f "$T/log" "$T/calls" "$T/pid"
+run () {    # app in front -> what the log says
+	echo "$1" > "$T/front"; rm -f "$T/log" "$T/calls" "$T/pid"
 	LUNA_SEND="$T/luna-send" LAST="$T/last" LOG="$T/log" PIDFILE="$T/pid" FLAG="$T/no-flag" python3 "$G" boot
 	sed -n 's/^[0-9:]* wakeguard: //p' "$T/log" | grep -v '^started\|^the official way is off' | head -n 1
 }
 
-check "switched off on the launcher, LG Home in front: the launcher is opened" "$(run tld.my.simplelauncher com.webos.app.home)" "start-up: the launcher is open"
-check "switched off on LG Home: the launcher too" "$(run com.webos.app.home com.webos.app.home)" "start-up: the launcher is open"
-check "switched off on YouTube: left to LG Home, which reopens it" "$(run youtube.leanback.v4 com.webos.app.home)" "start-up: switched off on youtube.leanback.v4, LG Home reopens it"
-check "and nothing is launched" "$(cat "$T/calls" 2>/dev/null | grep -c launchDefaultApp)" "0"
-check "another app already in front (a console on HDMI): left alone" "$(run tld.my.simplelauncher com.webos.app.hdmi2)" "start-up: com.webos.app.hdmi2 is in front, left alone"
+check "LG Home in front after waking: the launcher is opened" "$(run com.webos.app.home)" "start-up: the launcher is open"
+check "the launcher already in front: nothing to do" "$(run tld.my.simplelauncher)" ""
+check "and Home is not asked for" "$(cat "$T/calls" 2>/dev/null | grep -c launchDefaultApp)" "0"
+check "another app in front (a console on HDMI, an app button on the remote): left alone" "$(run com.webos.app.hdmi2)" "start-up: com.webos.app.hdmi2 is in front, left alone"
 touch "$T/stuck"
-check "the launcher does not come: asked three times, then said so" "$(run tld.my.simplelauncher com.webos.app.home)" "start-up: the launcher did not open"
+check "the launcher does not come: asked three times, then said so" "$(run com.webos.app.home)" "start-up: the launcher did not open"
 check "three asks" "$(grep -c launchDefaultApp "$T/calls")" "3"
 rm -f "$T/stuck"
 echo $$ > "$T/pid"
-check "a second copy does not start while one runs" "$(echo '{"appId":"tld.my.simplelauncher"}' > "$T/last"; echo com.webos.app.home > "$T/front"; rm -f "$T/log"; LUNA_SEND="$T/luna-send" LAST="$T/last" LOG="$T/log" PIDFILE="$T/pid" FLAG="$T/no-flag" python3 "$G" boot; [ -f "$T/log" ] && echo ran || echo quiet)" "quiet"
+check "a second copy does not start while one runs" "$(echo com.webos.app.home > "$T/front"; rm -f "$T/log"; LUNA_SEND="$T/luna-send" LAST="$T/last" LOG="$T/log" PIDFILE="$T/pid" FLAG="$T/no-flag" python3 "$G" boot; [ -f "$T/log" ] && echo ran || echo quiet)" "quiet"
 
 rm -rf "$T"
 [ "$fail" = 0 ] && echo "
