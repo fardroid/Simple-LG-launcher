@@ -25,7 +25,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour. The TV shows the same picture for the moment the launcher takes to start (or the logo, or black).
 - **Pixel shift for OLED.** Everything moves a few whole pixels once a minute, so nothing stays on the same pixels for hours. On by itself when the TV's model name says OLED.
 - **Sharp text.** The TV draws apps at 1080p and scales them up to 4K, so text on half pixels comes out soft. The launcher keeps its text on whole pixels.
-- **Thirteen languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Polish (by [DriftEngineer](https://github.com/DriftEngineer)), Chinese (Simplified), Japanese and Korean. It follows the TV's language by default (English when the TV speaks another one). Settings → Home screen → Language changes it. The Chinese, Japanese and Korean texts are drawn with the TV's own font.
+- **Thirteen languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Polish, Chinese (Simplified), Japanese and Korean. Thanks to [DriftEngineer](https://github.com/DriftEngineer) for the Polish translation! It follows the TV's language by default (English when the TV speaks another one). Settings → Home screen → Language changes it. The Chinese, Japanese and Korean texts are drawn with the TV's own font.
 
 ## What you need
 
