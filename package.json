@@ -1,6 +1,6 @@
 {
   "name": "simple-lg-launcher",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "private": true,
   "description": "Simple LG launcher: a calm home screen for LG webOS TVs (and Android TV boxes), based on Hearth",
   "type": "module",
