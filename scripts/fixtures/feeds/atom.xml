@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+<title type="text">Example Tech</title>
+<link rel="self" href="https://tech.example/feed.xml"/>
+<updated>2026-10-28T09:00:00Z</updated>
+<entry>
+<title type="html">New rules for e-scooters &amp;amp; bikes from Monday</title>
+<link rel="replies" href="https://tech.example/scooters#comments"/>
+<link rel="alternate" type="text/html" href="https://tech.example/scooters"/>
+<id>tag:tech.example,2026:1</id>
+<published>2026-10-28T07:20:00Z</published>
+<updated>2026-10-28T07:30:00Z</updated>
+<summary type="html">&lt;p&gt;The city sets a speed limit of 20 km/h.&lt;/p&gt;</summary>
+</entry>
+<entry>
+<title>A headline without a date</title>
+<link href="https://tech.example/undated"/>
+<id>tag:tech.example,2026:2</id>
+<content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml">Body <em>text</em>.</div></content>
+</entry>
+</feed>
