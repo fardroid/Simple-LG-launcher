@@ -100,14 +100,16 @@ export function modeText (mode: HomeMode): ModeText {
 	switch (mode) {
 		case 'default': return {
 			name: tr('Official: the TV opens the launcher', 'Штатно: ТВ сам открывает лаунчер'),
-			how: tr('webOS lets you choose which app is Home, as a computer lets you choose the default browser. The launcher is chosen.', 'webOS позволяет выбрать, какое приложение будет домашним, как на компьютере выбирают браузер по умолчанию. Выбирается лаунчер.'),
+			how: tr('webOS lets you choose which app is Home, as a computer lets you choose the default browser: the launcher is chosen. Waking from standby does not ask for it, so the TV is also set to wake up into its last input, which is the launcher, and to keep the launcher loaded in standby.', 'webOS позволяет выбрать домашнее приложение, как на компьютере выбирают браузер по умолчанию: выбирается лаунчер. При выходе из сна ТВ этот выбор не спрашивает, поэтому ТВ ещё настраивается просыпаться в последний вход, которым становится лаунчер, и не выгружать лаунчер во сне.'),
 			pros: [
-				tr('The TV\'s own setting: no LG file is replaced or mounted', 'Собственная настройка ТВ: ни один файл LG не подменяется'),
-				tr('Works from the moment the TV is switched on, also after a full restart', 'Работает с момента включения, в том числе после полной перезагрузки'),
+				tr('The Home button and waking up open the launcher; after standby it is back in about a second', 'Кнопка Home и выход из сна открывают лаунчер; после сна он появляется примерно через секунду'),
+				tr('LG Home itself is not replaced', 'Сам LG Home не подменяется'),
 				tr('LG Home is still there, on its own tile', 'LG Home остаётся доступен со своей плитки')
 			],
 			cons: [
 				tr('Only on newer TVs (webOS 25 and later) that let you choose', 'Только на новых ТВ (webOS 25 и новее), где такой выбор есть'),
+				tr('After a full restart the launcher shows up about a minute after switching on, after a short black screen', 'После полной перезагрузки лаунчер появляется примерно через минуту после включения, после короткого чёрного экрана'),
+				tr('Changes two TV settings: opening LG Home at power-on (off) and the last input (the launcher); both are put back when this is switched off', 'Меняет две настройки ТВ: открытие LG Home при включении (выкл.) и последний вход (лаунчер); при выключении способа обе возвращаются'),
 				tr('Uninstalled while this is on, the Home button opens nothing until the TV is fully restarted; then LG Home is back by itself', 'Если удалить лаунчер, не выключив этот способ, кнопка Home ничего не откроет до полной перезагрузки ТВ; после неё LG Home вернётся сам')
 			]
 		};

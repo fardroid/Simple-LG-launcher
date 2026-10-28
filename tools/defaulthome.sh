@@ -163,18 +163,20 @@ keepalive_apply () {
 	[ "$1" = restart ] || return 0
 	systemctl restart sam 2>/dev/null || { log "could not restart the app manager"; return 1; }
 	i=0; until luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q returnValue || [ "$i" -ge 20 ]; do sleep 1; i=$((i + 1)); done
-	# A restarted SAM brings LG Home up again a few seconds later: once it has, Home (the launcher) is opened over it.
+	[ -f "$FLAG" ] || return 0
+	# The launcher is opened at once (it starts while SAM settles). A restarted SAM brings LG Home up a few seconds later:
+	# for 15 s, when LG Home comes in front of it, the launcher is opened again.
+	luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1
 	i=0
-	while [ "$i" -lt 12 ]; do
+	while [ "$i" -lt 15 ]; do
+		sleep 1; i=$((i + 1))
 		app=$(luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 		case "$app" in
-			"$LG_HOME") break ;;
+			"$LG_HOME") luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1 ;;
 			''|"$APP_ID") ;;
 			*) return 0 ;;          # another app (an input that woke the TV): left alone
 		esac
-		sleep 1; i=$((i + 1))
 	done
-	[ -f "$FLAG" ] && open_home "$APP_ID"
 	return 0
 }
 
