@@ -12,12 +12,14 @@ import {uk} from './locales/uk';
 import {zh} from './locales/zh';
 import {ja} from './locales/ja';
 import {ko} from './locales/ko';
+import {pl} from './locales/pl';
 
-export type Lang = 'en' | 'ru' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'tr' | 'uk' | 'zh' | 'ja' | 'ko';
+export type Lang = 'en' | 'ru' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'tr' | 'uk' | 'zh' | 'ja' | 'ko' | 'pl';
 export type LangSetting = 'auto' | Lang;
 
-/** How a language counts: 'one' = no plural forms, 'slavic' = 1 / 2-4 / 5+, 'fr' = 0 and 1 are singular, 'en' = only 1 is. */
-type PluralRule = 'none' | 'slavic' | 'fr' | 'en';
+/** How a language counts: 'one' = no plural forms, 'slavic' = 1 / 2-4 / 5+ (21 like 1), 'pl' = the same but only 1 itself is singular
+ *  (21 dni), 'fr' = 0 and 1 are singular, 'en' = only 1 is. */
+type PluralRule = 'none' | 'slavic' | 'pl' | 'fr' | 'en';
 
 interface LangInfo {
 	/** The name of the language in itself (so it can be found whatever the screen shows). */
@@ -39,12 +41,13 @@ export const LANG_INFO: Record<Lang, LangInfo> = {
 	uk: {name: 'Українська', tag: 'uk', rule: 'slavic'},
 	zh: {name: '简体中文', tag: 'zh-CN', rule: 'none'},
 	ja: {name: '日本語', tag: 'ja', rule: 'none'},
-	ko: {name: '한국어', tag: 'ko', rule: 'none'}
+	ko: {name: '한국어', tag: 'ko', rule: 'none'},
+	pl: {name: 'Polski', tag: 'pl', rule: 'pl'}
 };
 
-export const LANG_SETTINGS: readonly LangSetting[] = ['auto', 'en', 'ru', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'uk', 'zh', 'ja', 'ko'];
+export const LANG_SETTINGS: readonly LangSetting[] = ['auto', 'en', 'ru', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'uk', 'zh', 'ja', 'ko', 'pl'];
 
-const DICTIONARIES: Partial<Record<Lang, Record<string, string>>> = {es, fr, de, it, pt, tr: trTR, uk, zh, ja, ko};
+const DICTIONARIES: Partial<Record<Lang, Record<string, string>>> = {es, fr, de, it, pt, tr: trTR, uk, zh, ja, ko, pl};
 
 /** The launcher's language for a language tag such as "pt-BR" or "zh-Hans-CN" (English when it has none). */
 export function fromTag (tag: string): Lang {
@@ -110,6 +113,10 @@ export function formIndex (rule: PluralRule, n: number): number {
 	if (rule === 'slavic') {
 		const a = x % 100, b = a % 10;
 		return a > 10 && a < 20 ? 2 : b > 1 && b < 5 ? 1 : b === 1 ? 0 : 2;
+	}
+	if (rule === 'pl') {
+		const a = x % 100, b = a % 10;
+		return x === 1 ? 0 : b > 1 && b < 5 && (a < 12 || a > 14) ? 1 : 2;
 	}
 	if (rule === 'fr') return x < 2 ? 0 : 1;
 	return x === 1 ? 0 : 1;

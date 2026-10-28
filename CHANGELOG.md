@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.9.2 (not yet tried on a TV)
+## 1.9.2
 
+- **Polish**, translated by [DriftEngineer](https://github.com/DriftEngineer) (pull request #4), with its own plural rule (1 zdjęcie, 3 zdjęcia, 5 zdjęć, 22 zdjęcia, but 21 zdjęć, not like Russian). The texts added in 1.9.2 were translated here; corrections are welcome.
 - **How the launcher opens**, chosen on the TV: Settings → Home screen → *How the launcher opens* lists four ways, each with how it works, its pros and its cons. OK twice switches; the way that is on is switched off and checked first, and a way that does not take is undone (`tools/homemode.sh`, packaged in the app's `tools/` folder).
   - *Official*: webOS's own choice of Home app (`appCategory: ["home"]` and `setDefaultApp`, `tools/defaulthome.sh`; the method of Lumen's docs/native-home.md). Nothing mounted, and it lasts across a full restart. A boot link gives LG Home back if the launcher has been uninstalled.
   - *Swap*: `tools/takeover.sh`, as before. *Helper*: the Home key helper (version 18 stands down while the official way is on). *Off*.
