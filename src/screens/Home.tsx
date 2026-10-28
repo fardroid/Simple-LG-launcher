@@ -12,6 +12,7 @@ import {clampPosition, initialPosition, movePosition, rowOffsets, splitRows, typ
 import type {ClockConfig} from '../lib/storage';
 import type {WeatherView} from '../lib/weather';
 import type {PlateLooks} from '../lib/plates';
+import {shiftAt} from '../lib/pixelshift';
 import {CAL_AHEAD_DAYS, CAL_BACK_DAYS, dayOffsetOfMonth, monthOffsetOfDay, type CalendarData} from '../lib/calendar';
 import {FONT, LAYOUT} from '../theme/tokens';
 
@@ -22,10 +23,14 @@ export interface Appearance {
 	sideMargin: number;
 	bottomMargin: number;
 	showLabels: boolean;
+	/** only the selected app's name */
+	labelsSelectedOnly?: boolean;
 	/** 1 or 2 rows of apps (Settings offers one row only: two leave no room for the cards) */
 	rows: number;
 	/** the soft shadow under the clock and the cards */
 	shadows: boolean;
+	/** move everything a few pixels once a minute (lib/pixelshift.ts) */
+	pixelShift?: boolean;
 	clock: ClockConfig;
 }
 
@@ -62,6 +67,7 @@ interface Props {
  *  Down goes back to the apps. Back goes to the first tile. */
 export function Home ({items, timeFormat, appearance, active, paused, onActivate, onLongPress, wake, focus, weatherAt = null, cardSize = 100, calendar = null, plates, boardTop = 40}: Props) {
 	const now = useClock(paused);
+	const shift = appearance.pixelShift ? shiftAt(now) : null;
 	const [position, setPosition] = useState<RowsPosition>(initialPosition);
 	const sizes = splitRows(items.length, appearance.rows);
 	const offsets = rowOffsets(sizes);
@@ -196,10 +202,10 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 		`--layout-tile-radius:${Math.round(LAYOUT.tileRadius * scale)}px`,
 		`--font-tile-label:${Math.min(30, Math.max(16, Math.round(FONT.tileLabel * scale)))}px`
 	].join(';');
-	const classes = ['rows', !appearance.showLabels && 'rows--no-labels', sizes.length > 1 && 'rows--multi'].filter(Boolean).join(' ');
+	const classes = ['rows', !appearance.showLabels && 'rows--no-labels', appearance.showLabels && appearance.labelsSelectedOnly && 'rows--focus-labels', sizes.length > 1 && 'rows--multi'].filter(Boolean).join(' ');
 
 	return (
-		<div class={`screen${active ? '' : ' screen--away'}`}>
+		<div class={`screen${active ? '' : ' screen--away'}${shift ? ' screen--shift' : ''}`} style={shift ? `--shift-x:${shift.x}px;--shift-y:${shift.y}px` : undefined}>
 			<div class={`board${appearance.shadows ? '' : ' board--flat'}`} style={{top: `${boardTop}px`}}>
 				<div class="board__left">
 					<Clock now={now} format={timeFormat} config={appearance.clock} plate={plates && plates.clock} />

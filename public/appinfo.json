@@ -1,6 +1,6 @@
 {
   "id": "tld.my.simplelauncher",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "vendor": "tld.my.simplelauncher",
   "type": "web",
   "main": "index.html",
@@ -13,8 +13,8 @@
   "resolution": "1920x1080",
   "disableBackHistoryAPI": true,
   "transparent": false,
-  "splashBackground": "splash.png",
+  "splashBackground": "splash-wallpaper.jpg",
   "requiredMemory": 20,
   "supportGIP": true,
-  "noSplashOnLaunch": true
+  "appCategory": ["home"]
 }

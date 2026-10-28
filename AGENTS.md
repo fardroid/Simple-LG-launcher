@@ -98,4 +98,16 @@ Tell the person what was done, what is left for them on the TV (the city for the
 
 ## Updating later
 
-`git pull`, then steps 3 and 4 again. The takeover links to the installed app, so it needs nothing more.
+`git pull`, then steps 3 and 4 again (ask before step 4, as the first time). The takeover links to the installed app, so it needs nothing more.
+
+The TV keeps the launcher loaded in memory, and with the takeover on, also its copy behind the Home button (it runs as `com.webos.app.home`). A copy that stays loaded goes on showing the old version, so after an update close both: that is enough, the TV does not need a restart. `npm run install:tv` does it itself. After installing another way (the Homebrew Channel, `ares-install`), close them yourself:
+
+```bash
+ssh root@TV "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"com.webos.app.home\"}'; luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"tld.my.simplelauncher\"}'"
+```
+
+The next Home press loads the new version. (From 1.9.2 on, a copy left loaded also reloads itself the next time it goes to the background: it compares its build with `assets/version.txt`.)
+
+Then press Home and check the version at the bottom of Settings → Home screen (the "Simple LG launcher" row).
+
+Over SSH, `luna-send` to the app manager prints nothing unless ssh has a terminal: use `ssh -tt` when you need to read its answer.

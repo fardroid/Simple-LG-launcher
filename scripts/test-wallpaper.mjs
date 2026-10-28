@@ -75,8 +75,15 @@ eq(w.readWallpaperCache(w.wallpaperCacheId('image', '/tmp/usb/other.jpg')), null
 eq(w.readWallpaperCache(w.wallpaperCacheId('folder', '/tmp/usb/a.jpg')), null, 'mode is part of the key');
 mem['customlauncher-wallpaper-data-v1'] = 'javascript:alert(1)';
 eq(w.readWallpaperCache(id), null, 'a cache entry that is not an image is ignored');
+w.writeWallpaperLook(id, {map: [1, 2], frost: 'data:image/jpeg;base64,BB'});
+eq(w.readWallpaperLook(id), {map: [1, 2], frost: 'data:image/jpeg;base64,BB'}, 'the glass is kept with the cached picture');
+eq(w.readWallpaperLook(w.wallpaperCacheId('image', '/tmp/usb/other.jpg')), null, 'another choice does not get the old glass');
+mem['customlauncher-wallpaper-look-v1'] = '{broken';
+eq(w.readWallpaperLook(id), null, 'a broken saved look is ignored');
+w.writeWallpaperLook(id, {map: null, frost: null});
 w.clearWallpaperCache();
 eq(w.readWallpaperCache(id), null, 'clear empties the cache');
+eq(w.readWallpaperLook(id), null, 'and forgets the glass');
 globalThis.localStorage = {getItem: () => null, setItem: () => { throw new Error('quota'); }, removeItem: () => {}};
 eq(w.writeWallpaperCache(id, 'data:image/jpeg;base64,AAAA'), false, 'a full storage reports failure instead of throwing');
 // Every photo once per round, including reopening between every displayed photo.

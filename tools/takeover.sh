@@ -73,7 +73,8 @@ stop_lg_home () {
 stage () {
 	[ -f "$LAUNCHER/appinfo.json" ] || { log "the launcher is not installed"; return 1; }
 	mkdir -p "$STAGE"
-	# everything of the launcher's, linked, so an update of the launcher reaches the Home copy at its next start
+	# everything of the launcher's, linked, so an update of the launcher reaches the Home copy at its next start (and the
+	# start-up picture the launcher writes, splash-wallpaper.jpg, is the one the TV shows when it starts Home)
 	for f in "$LAUNCHER"/*; do
 		name=$(basename "$f")
 		[ "$name" = appinfo.json ] && continue
@@ -93,7 +94,7 @@ stage () {
   "bgColor": "#000000",
   "resolution": "1920x1080",
   "visible": false,
-  "noSplashOnLaunch": true,
+  "splashBackground": "splash-wallpaper.jpg",
   "disableBackHistoryAPI": true,
   "appCategory": ["home"]
 }
