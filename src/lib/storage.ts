@@ -2,6 +2,7 @@
 // (theme, sizes, margins), the clock, the wallpaper, and a few options. Persisted in
 // localStorage (private to this app on the TV).
 
+import type {SplashMode} from './splash';
 import {STORAGE_KEY, WALLPAPER} from '../config/constants';
 import type {ThemeName} from '../theme/tokens';
 import {CLOCK_FONT_IDS, type ClockFont} from './clockfont';
@@ -13,6 +14,7 @@ import {LANG_SETTINGS, type LangSetting} from './i18n';
 
 export type WallpaperMode = 'gradient' | 'image' | 'folder';
 export type ClockFormat = 'tv' | '12h' | '24h';
+export type PixelShift = 'auto' | 'on' | 'off';
 export type {ClockColor};
 export type ClockWeight = 200 | 300 | 400 | 500 | 600;
 export type {PlateMode};
@@ -26,7 +28,8 @@ export const RANGES = {
 	clockOpacity: {min: 10,  max: 100, step: 10, def: 100},   // % (how solid the clock, date and weather are)
 	// text sizes, % of the standard size (the standard is what looks right on a 43" TV)
 	dateSize:     {min: 60,  max: 160, step: 5,  def: 100},
-	cardSize:     {min: 60,  max: 160, step: 5,  def: 100}    // the weather and calendar cards (one size for both)
+	cardSize:     {min: 60,  max: 160, step: 5,  def: 100},   // the weather and calendar cards (one size for both)
+	frost:        {min: 30,  max: 100, step: 10, def: 100}    // % of the frosted glass's full blur
 } as const;
 
 export type RangeName = keyof typeof RANGES;
@@ -103,6 +106,10 @@ export interface UserConfig {
 	iconScale: number;
 	/** show each app's name under its icon on the home row */
 	showLabels: boolean;
+	/** with names shown: only the selected app's name (the room for the names is kept, so nothing moves) */
+	labelsSelectedOnly: boolean;
+	/** the picture the TV shows while the launcher starts (lib/splash.ts) */
+	splash: SplashMode;
 	/** apps in one row or two */
 	rows: 1 | 2;
 	sideMargin: number;
@@ -113,8 +120,13 @@ export interface UserConfig {
 	plates: PlateMode;
 	/** frosted glass: the cards show a blurred copy of the wallpaper under their colour (only with a wallpaper picture) */
 	glass: boolean;
+	/** how frosted the glass is: % of its full blur (see frostOf in lib/wallpaper.ts) */
+	frost: number;
 	/** the soft shadow under the clock and the cards */
 	shadows: boolean;
+	/** OLED care: the clock, the cards and the apps move a few pixels once a minute, so no pixel shows the same thing for hours.
+	 *  auto: on when the TV's model is an OLED (lib/panel.ts) */
+	pixelShift: PixelShift;
 	/** 'tv' follows the TV's own 12/24-hour setting */
 	clockFormat: ClockFormat;
 	clock: ClockConfig;
@@ -166,13 +178,17 @@ export const DEFAULT_CONFIG: UserConfig = {
 	theme: 'dusk',
 	iconScale: RANGES.iconScale.def,
 	showLabels: true,
+	labelsSelectedOnly: false,
+	splash: 'wallpaper',
 	rows: 1,
 	sideMargin: RANGES.sideMargin.def,
 	bottomMargin: RANGES.bottomMargin.def,
 	cardSize: RANGES.cardSize.def,
 	plates: 'auto',
 	glass: true,
+	frost: RANGES.frost.def,
 	shadows: true,
+	pixelShift: 'auto',
 	clockFormat: '24h',
 	clock: DEFAULT_CLOCK,
 	weather: DEFAULT_WEATHER,
@@ -233,13 +249,17 @@ export function parseConfig (raw: string | null): UserConfig {
 			theme: parsed.theme === 'grey' || parsed.theme === 'black' ? parsed.theme : 'dusk',
 			iconScale: ranged(parsed.iconScale, 'iconScale'),
 			showLabels: parsed.showLabels !== false,
+			labelsSelectedOnly: parsed.labelsSelectedOnly === true,
+			splash: parsed.splash === 'logo' || parsed.splash === 'black' ? parsed.splash : 'wallpaper',
 			rows: parsed.rows === 2 ? 2 : 1,
 			sideMargin: ranged(parsed.sideMargin, 'sideMargin'),
 			bottomMargin: ranged(parsed.bottomMargin, 'bottomMargin'),
 			cardSize: ranged(parsed.cardSize, 'cardSize'),
 			plates: parsed.plates === 'light' || parsed.plates === 'dark' ? parsed.plates : 'auto',
 			glass: parsed.glass !== false,
+			frost: ranged(parsed.frost, 'frost'),
 			shadows: parsed.shadows !== false,
+			pixelShift: parsed.pixelShift === 'on' || parsed.pixelShift === 'off' ? parsed.pixelShift : 'auto',
 			clockFormat: parsed.clockFormat === 'tv' || parsed.clockFormat === '12h' ? parsed.clockFormat : '24h',
 			clock: {
 				size: ranged(c.size, 'clockSize'),

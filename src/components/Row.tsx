@@ -86,7 +86,7 @@ export function Row ({label, items, focused, selected, emptyText, onSelect, onAc
 					: <div
 						ref={track}
 						class={`row__track${fits ? ' row__track--centered' : ''}${last.current.fast ? ' row__track--fast' : ''}`}
-						style={{transform: `translate3d(${-offset}px, 0, 0)`}}
+						style={{transform: `translate3d(${-Math.round(offset)}px, 0, 0)`}}
 						onMouseMove={moved}
 						onMouseLeave={() => { if (onPointer) onPointer(null); }}
 						onWheel={(event) => { if (onWheelStep && event.deltaY !== 0) onWheelStep(event.deltaY > 0 ? 1 : -1); }}
@@ -97,7 +97,7 @@ export function Row ({label, items, focused, selected, emptyText, onSelect, onAc
 								model={item}
 								focused={(ring === undefined ? focused : ring) && i === selected}
 								dockNear={magnify ? true : Math.abs(i - selected) <= DOCK.length + 1}
-								dockTransform={magnify ? `translate3d(${shift[i].toFixed(1)}px, 0, 0) scale(${(1 + extra[i] / tileSize).toFixed(3)})` : undefined}
+								dockTransform={magnify ? `translate3d(${Math.round(shift[i])}px, 0, 0) scale(${(1 + extra[i] / tileSize).toFixed(3)})` : undefined}
 								onHover={onPointer ? undefined : () => onSelect(i)}
 								onActivate={() => onActivate(i)}
 							/>

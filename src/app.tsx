@@ -3,6 +3,12 @@ import {Home, type Appearance} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
 import {Picker, type WallpaperChoice} from './screens/Picker';
 import {CityPicker} from './screens/CityPicker';
+import {HomeMethod} from './screens/HomeMethod';
+import {detectOled, knownOled} from './lib/panel';
+import {applySplashMode, noteSplashMode} from './lib/splash';
+import {readWallpaperCache, readWallpaperLook, wallpaperCacheId} from './lib/wallpaper';
+import {reloadIfUpdated} from './lib/update';
+import {readHomeMode, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
 import {Toast, type ToastMessage} from './components/Toast';
 import {Wallpaper} from './components/Wallpaper';
 import type {TileModel} from './components/Tile';
@@ -38,7 +44,7 @@ import {plateLooks} from './lib/plates';
 import {boardTop} from './lib/boardlayout';
 import {FRESH_MS, isFresh, readWeatherCache, usableCached, weatherView, writeWeatherCache, type City, type WeatherData} from './lib/weather';
 
-type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl';
+type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl' | 'homeMethod';
 
 const TAB = {apps: 'apps', sources: 'sources', look: 'look', widgets: 'widgets', wallpaper: 'wallpaper', home: 'home'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings', system: 'system-settings'} as const;
@@ -83,8 +89,10 @@ export function App () {
 	const [weather, setWeather] = useState<WeatherData | null>(() => (WEATHER_ENABLED ? readWeatherCache() : null));
 	const weatherRef = useRef(weather);
 	weatherRef.current = weather;
-	const [wallpaperFrost, setWallpaperFrost] = useState<string | null>(null);      // the blurred wallpaper for the frosted glass of the plates
-	const [wallpaperMap, setWallpaperMap] = useState<number[] | null>(null);       // brightness of the wallpaper picture (null: the theme's own background)
+	// the look saved with the cached picture, so the plates open with their glass instead of waiting for the wallpaper to start
+	const [savedLook] = useState(() => readWallpaperLook(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path), config.frost));
+	const [wallpaperFrost, setWallpaperFrost] = useState<string | null>(savedLook ? savedLook.frost : null);      // the blurred wallpaper for the frosted glass of the plates
+	const [wallpaperMap, setWallpaperMap] = useState<number[] | null>(savedLook ? savedLook.map : null);       // brightness of the wallpaper picture (null: the theme's own background)
 	const [calendar, setCalendar] = useState<CalendarData | null>(readCalendarCache);
 	const calendarRef = useRef(calendar);
 	calendarRef.current = calendar;
@@ -224,12 +232,15 @@ export function App () {
 				return hidden;
 			});
 			if (hidden) { setScreen('home'); setMenu(null); }
+			// updated while loaded: the new version is loaded in the background, or at the latest when the launcher shows again
+			if (why === 'event') reloadIfUpdated();
 		};
 		const onVisibility = () => sync('event');
 		document.addEventListener('visibilitychange', onVisibility);
 		const poll = window.setInterval(() => sync('check'), 1000);
 		// Home pressed while the launcher is already in front: the TV relaunches it without hiding it first.
 		const onRelaunch = () => {
+			reloadIfUpdated();
 			// Running as the TV's Home, the TV relaunches it now and then with {"keepAlive": true} only to keep it loaded:
 			// that is not the Home key, so whatever is open (Settings) stays open
 			const ps = (window as unknown as {PalmSystem?: {launchParams?: string}}).PalmSystem;
@@ -280,7 +291,7 @@ export function App () {
 				const rootDetail = lastFailureDetail();
 				if (!live) return undefined;
 				if (root === 'no') { setSystemInfo({homeHook: null, takeover: AS_HOME ? true : null, root, rootDetail}); return undefined; }
-				return Promise.all([getHookStatus(), AS_HOME ? Promise.resolve(true) : takeoverActive()]).then(([homeHook, takeover]) => { if (live) setSystemInfo({homeHook, takeover, root, rootDetail}); });
+				return Promise.all([getHookStatus(), AS_HOME ? Promise.resolve(true) : takeoverActive(), readHomeMode()]).then(([homeHook, takeover, homeMode]) => { if (live) setSystemInfo({homeHook, takeover, homeMode, root, rootDetail}); });
 			});
 			return () => { live = false; };
 		}
@@ -477,9 +488,24 @@ export function App () {
 		[config.plates, config.theme, wallpaperMap, weatherAt !== null, calendarCard !== null, config.glass, wallpaperFrost, boardY]
 	);
 
+	// The start-up picture: noted while drawing (so the wallpaper's first save already follows it), applied when it changes
+	noteSplashMode(config.splash);
+	useEffect(() => {
+		const timer = window.setTimeout(() => applySplashMode(config.splash, readWallpaperCache(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path))), TIMING.backgroundWorkMs);
+		return () => window.clearTimeout(timer);
+	}, [config.splash]);
+
+	// Pixel shift on Auto follows the screen: on for an OLED model (asked once, a few seconds after the start)
+	const [oled, setOled] = useState<boolean | null>(knownOled);
+	useEffect(() => {
+		if (oled !== null || config.pixelShift !== 'auto') return undefined;
+		const timer = window.setTimeout(() => detectOled().then(setOled), TIMING.backgroundWorkMs);
+		return () => window.clearTimeout(timer);
+	}, [config.pixelShift]);
+
 	const appearance: Appearance = useMemo(
-		() => ({iconScale: config.iconScale, sideMargin: config.sideMargin, bottomMargin: config.bottomMargin, showLabels: config.showLabels, rows: 1, shadows: config.shadows, clock: config.clock}),
-		[config.iconScale, config.sideMargin, config.bottomMargin, config.showLabels, config.shadows, config.clock]
+		() => ({iconScale: config.iconScale, sideMargin: config.sideMargin, bottomMargin: config.bottomMargin, showLabels: config.showLabels, labelsSelectedOnly: config.labelsSelectedOnly, rows: 1, shadows: config.shadows, pixelShift: config.pixelShift === 'on' || (config.pixelShift === 'auto' && oled === true), clock: config.clock}),
+		[config.iconScale, config.sideMargin, config.bottomMargin, config.showLabels, config.labelsSelectedOnly, config.shadows, config.pixelShift, oled, config.clock]
 	);
 
 	// ----- actions -----
@@ -533,29 +559,40 @@ export function App () {
 			if (optionId === 'wallpaper') setScreen('picker');
 			else if (optionId === 'weatherCity') setScreen('cities');
 			else if (optionId === 'calendarUrl') setScreen('calendarUrl');
+			else if (optionId === 'homeMethod') setScreen('homeMethod');
 			else if (optionId === 'resetLook') { updateConfig(resetLook(config)); showToast(tr('Look and clock reset', 'Вид и часы сброшены')); }
-			else if (optionId === 'replaceHome') {
-				const refresh = () => getHookStatus().then((homeHook) => setSystemInfo((previous) => ({...previous, homeHook})));
-				if (systemInfo.homeHook && systemInfo.homeHook.running) {
-					removeHomeHook().then(() => {
-						updateConfig({...config, replaceHome: false});
-						refresh();
-						showToast(tr('Off. LG Home opens as usual', 'Выключено. LG Home открывается как обычно'));
-					});
-				} else {
-					showToast(tr('Setting up…', 'Настройка…'));
-					installHomeHook(true).then(({result, detail}) => {
-						if (result === 'applied') updateConfig({...config, replaceHome: true, hookBoot: true});
-						refresh();
-						showToast(hookMessage(result, detail), result === 'applied' ? 'info' : 'error');
-					});
-				}
-			}
 			return;
 		}
 		const next = applyPref(config, optionId, press);
 		if (next !== config) updateConfig(next);
 	}, [config, showToast, systemInfo]);
+
+	// Settings → Home screen → How the launcher opens. Every way but the helper is switched on the TV by tools/homemode.sh,
+	// which first switches off whatever is on; the helper is installed by the launcher after that has switched everything off.
+	const [modeBusy, setModeBusy] = useState<HomeMode | null>(null);
+	const onPickHomeMode = useCallback((mode: HomeMode) => {
+		setModeBusy(mode);
+		const name = modeText(mode).name;
+		const refresh = () => Promise.all([readHomeMode(), getHookStatus(), takeoverActive()]).then(([homeMode, homeHook, takeover]) => setSystemInfo((previous) => ({...previous, homeMode, homeHook, takeover})));
+		const done = (ok: boolean, why: string) => {
+			setModeBusy(null);
+			refresh();
+			showToast(ok ? fmt(tr('Done: {0}', 'Готово: {0}'), name) : fmt(tr('Could not switch: {0}', 'Не удалось переключить: {0}'), why), ok ? 'info' : 'error');
+		};
+		switchHomeMode(mode === 'helper' ? 'none' : mode).then(({ok, why}) => {
+			if (!ok || mode !== 'helper') {
+				// once another way is on, the helper setting must not bring the helper back at the next start (a failed switch
+				// leaves the way that was on, so the setting stays as it was)
+				if (ok && config.replaceHome) updateConfig({...config, replaceHome: false});
+				done(ok, why);
+				return;
+			}
+			installHomeHook(true).then(({result, detail}) => {
+				if (result === 'applied') updateConfig({...config, replaceHome: true, hookBoot: true});
+				done(result === 'applied', hookMessage(result, detail));
+			});
+		});
+	}, [config, showToast]);
 
 	const onRefresh = useCallback(() => {
 		manualLoad.current = true;
@@ -632,13 +669,14 @@ export function App () {
 
 	return (
 		<>
-			{wallpaperOn && <Wallpaper config={config.wallpaper} onProblem={(text) => showToast(text, 'error')} onTone={(map, frost) => { setWallpaperMap(map); setWallpaperFrost(frost); }} />}
+			{wallpaperOn && <Wallpaper config={config.wallpaper} onProblem={(text) => showToast(text, 'error')} onTone={(map, frost) => { setWallpaperMap(map); setWallpaperFrost(frost); }} frost={config.frost} />}
 			{/* Home stays mounted under the other screens so it keeps its focus position. */}
 			<Home items={homeItems} timeFormat={timeFormat} appearance={appearance} active={screen === 'home' && !menu} paused={asleep} onActivate={onActivate} onLongPress={onLongPress} wake={wakes} focus={focus} weatherAt={weatherAt} cardSize={config.cardSize} calendar={calendarCard} plates={plates} boardTop={boardY} />
 			{menu && <AppMenu title={menu.title} moves={menuMoves} hideDetail={menu.app ? tr('Bring it back in Settings → Apps', 'Вернуть можно в Настройки → Приложения') : tr('Bring it back in Settings → Sources', 'Вернуть можно в Настройки → Источники')} showUninstall={!!menu.app} blockedReason={menuBlocked} onMove={(action) => moveTile(menu.key, action)} onHide={() => hideTile(menu)} onUninstall={() => { if (menu.app) removeApp(menu.app); }} onClose={() => setMenu(null)} />}
 			{/* Settings stays mounted under the picker so it keeps its tab. */}
 			{screen !== 'home' && <Settings tabs={tabs} active={screen === 'settings'} onToggle={onToggle} onReorder={onReorder} onOption={onOption} onRefresh={onRefresh} onAdjust={onAdjust} onClose={() => setScreen('home')} />}
 			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} />}
+			{screen === 'homeMethod' && <HomeMethod info={systemInfo.homeMode || null} busy={modeBusy} onPick={onPickHomeMode} onClose={() => setScreen('settings')} />}
 			{screen === 'calendarUrl' && <CalendarSetup sources={config.calendar.sources} canReadFiles={config.useHomebrew && isWebOS()} onChoose={onChooseCalendars} onClose={() => setScreen('settings')} />}
 			{WEATHER_ENABLED && screen === 'cities' && <CityPicker allowShell={config.useHomebrew && isWebOS()} onChoose={onChooseCity} onClose={() => setScreen('settings')} />}
 			<Toast message={toast} />

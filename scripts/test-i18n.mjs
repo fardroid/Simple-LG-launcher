@@ -46,11 +46,13 @@ for (const code of others) {
 }
 
 // language detection
-eq(['pt-BR', 'zh-Hans-CN', 'ja-JP', 'ar', '', 'ru_RU', 'UK'].map(i.fromTag), ['pt', 'zh', 'ja', 'en', 'en', 'ru', 'uk'], 'a TV language tag picks the launcher language');
+eq(['pt-BR', 'zh-Hans-CN', 'ja-JP', 'ar', '', 'ru_RU', 'UK', 'pl-PL'].map(i.fromTag), ['pt', 'zh', 'ja', 'en', 'en', 'ru', 'uk', 'pl'], 'a TV language tag picks the launcher language');
 
 // plurals
 i.setLang('ru'); eq([1, 2, 5, 21].map((n) => i.count(n, ['day', 'days'], ['день', 'дня', 'дней'])), ['1 день', '2 дня', '5 дней', '21 день'], 'Russian plurals');
 i.setLang('uk'); eq([1, 3, 11, 22].map((n) => i.count(n, ['day', 'days'], ['', '', ''])), ['1 день', '3 дні', '11 днів', '22 дні'], 'Ukrainian plurals');
+i.setLang('pl'); eq([1, 2, 5, 12, 21, 22].map((n) => i.count(n, ['day', 'days'], ['', '', ''])), ['1 dzień', '2 dni', '5 dni', '12 dni', '21 dni', '22 dni'], 'Polish plurals: 21 is not singular');
+i.setLang('pl'); eq([1, 3, 5, 13, 22, 25].map((n) => i.count(n, ['picture', 'pictures'], ['', '', ''])), ['1 zdjęcie', '3 zdjęcia', '5 zdjęć', '13 zdjęć', '22 zdjęcia', '25 zdjęć'], 'Polish plurals: 2-4 except 12-14');
 i.setLang('de'); eq([1, 2].map((n) => i.count(n, ['day', 'days'], ['', '', ''])), ['1 Tag', '2 Tage'], 'German plurals');
 i.setLang('fr'); eq([0, 1, 2].map((n) => i.count(n, ['day', 'days'], ['', '', ''])), ['0 jour', '1 jour', '2 jours'], 'French: 0 and 1 are singular');
 i.setLang('ja'); eq(i.count(3, ['day', 'days'], ['', '', '']), '3日', 'Japanese has no plural and no space');

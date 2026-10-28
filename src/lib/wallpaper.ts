@@ -8,6 +8,7 @@
 //     uses for icons), put back together in memory as a Blob, and shown from a blob: URL.
 //     Chunks are small because the shell service caps how much one call may print.
 
+import {wallpaperCleared, wallpaperSaved} from './splash';
 import {WALLPAPER} from '../config/constants';
 import {exec, shellQuote} from './apps';
 import {isWebOS} from './luna';
@@ -256,13 +257,14 @@ export function isOversized (width: number, height: number): boolean {
 
 /** Resolves with the picture to show, or rejects with a PictureError whose message says what
  *  went wrong. */
-export function loadPicture (path: string): Promise<LoadedPicture> {
+/** `frost`: how frosted the glass is, % of its full blur (Settings → Appearance → Frost). */
+export function loadPicture (path: string, frost: number = 100): Promise<LoadedPicture> {
 	if (!isSafePath(path)) return Promise.reject(pictureError('bad-path', tr('This file name cannot be used', 'Это имя файла нельзя использовать')));
 	const source: Promise<string> = isWebOS()
 		? readFileChunks(path).then((parts) => URL.createObjectURL(new Blob(parts as unknown as BlobPart[], {type: mimeType(path)})))
 		: Promise.resolve(fileUrl(path));        // desktop preview: file:// works there
 	return source.then((url) => decode(url).then(
-		(img) => prepare(url, img),
+		(img) => prepare(url, img, frost),
 		(error: Error) => { releasePicture(url); throw error; }
 	));
 }
@@ -273,7 +275,7 @@ export function releasePicture (url: string): void {
 
 /** Draws the picture at screen size for the startup cache, and, when it is huge, shows that
  *  smaller copy instead of the original. */
-function prepare (url: string, img: HTMLImageElement): Promise<LoadedPicture> {
+function prepare (url: string, img: HTMLImageElement, strength: number): Promise<LoadedPicture> {
 	const size = coverSize(img.naturalWidth, img.naturalHeight);
 	let canvas: HTMLCanvasElement | null = null;
 	let snapshot: (() => string | null) | null = null;
@@ -292,7 +294,7 @@ function prepare (url: string, img: HTMLImageElement): Promise<LoadedPicture> {
 		canvas = null;
 		snapshot = null;
 	}
-	const frost = frostOf(canvas || img);
+	const frost = frostOf(canvas || img, strength);
 	if (!canvas || !isOversized(img.naturalWidth, img.naturalHeight)) return Promise.resolve({url, snapshot, map, frost});
 	const shrunk = canvas;
 	return new Promise<LoadedPicture>((resolve) => {
@@ -320,8 +322,9 @@ function measure (source: HTMLCanvasElement | HTMLImageElement): number[] | null
 /** The frosted glass: the picture cropped to 16:9 the way the wallpaper layer shows it (cover, centred), drawn at 480 x 270, blurred (and nothing else: the colours are the picture's own),
  *  and the shade of .wallpaper__scrim laid over it, so the glass matches what is behind the plate.
  *  Edges are padded first so the blur does not fade to nothing at the border of the screen. A 480 x 270 JPEG is a few KB, and the
- *  plates stretch it over the whole screen (blurred, so nobody sees the pixels). */
-export function frostOf (source: HTMLCanvasElement | HTMLImageElement): string | null {
+ *  plates stretch it over the whole screen (blurred, so nobody sees the pixels). `strength`: % of the full blur (50 to 100). */
+export function frostOf (source: HTMLCanvasElement | HTMLImageElement, strength: number = 100): string | null {
+	const k = Math.max(0.3, Math.min(1, strength / 100));
 	try {
 		const sw = source instanceof HTMLImageElement ? source.naturalWidth : source.width;
 		const sh = source instanceof HTMLImageElement ? source.naturalHeight : source.height;
@@ -343,16 +346,16 @@ export function frostOf (source: HTMLCanvasElement | HTMLImageElement): string |
 		pc.drawImage(source, sx, sy, cropW, cropH, pad, pad, W, H);                      // the picture itself
 		oc.imageSmoothingQuality = 'high';
 		if (typeof oc.filter === 'string') {
-			oc.filter = 'blur(7px)';
+			oc.filter = `blur(${(7 * k).toFixed(1)}px)`;
 			oc.drawImage(padded, -pad, -pad);
 			oc.filter = 'none';
 		} else {                                                                           // no canvas filters: shrink and enlarge, which blurs as well
 			const tiny = document.createElement('canvas');
-			tiny.width = 60;
-			tiny.height = 34;
+			tiny.width = Math.round(60 / k);             // less blur: a less tiny copy
+			tiny.height = Math.round(34 / k);
 			const tc = tiny.getContext('2d');
 			if (!tc) return null;
-			tc.drawImage(padded, 0, 0, 60, 34);
+			tc.drawImage(padded, 0, 0, tiny.width, tiny.height);
 			oc.drawImage(tiny, 0, 0, W, H);
 		}
 		const shade = oc.createLinearGradient(0, 0, 0, H);
@@ -367,10 +370,10 @@ export function frostOf (source: HTMLCanvasElement | HTMLImageElement): string |
 }
 
 /** The brightness grid and the frosted glass of a saved copy of a picture (a data URL), for when the launcher starts from the cache. */
-export function measureDataUrl (url: string): Promise<{map: number[] | null; frost: string | null}> {
+export function measureDataUrl (url: string, frost: number = 100): Promise<WallpaperLook> {
 	return new Promise((resolve) => {
 		const img = new Image();
-		img.onload = () => resolve({map: measure(img), frost: frostOf(img)});
+		img.onload = () => resolve({map: measure(img), frost: frostOf(img, frost)});
 		img.onerror = () => resolve({map: null, frost: null});
 		img.src = url;
 	});
@@ -401,6 +404,10 @@ function decode (url: string): Promise<HTMLImageElement> {
 
 const CACHE_ID_KEY = 'customlauncher-wallpaper-id-v1';
 const CACHE_DATA_KEY = 'customlauncher-wallpaper-data-v1';
+const CACHE_LOOK_KEY = 'customlauncher-wallpaper-look-v1';
+
+/** What the plates need from the cached picture: its brightness grid and its frosted glass (see frostOf). */
+export interface WallpaperLook {map: number[] | null; frost: string | null}
 
 export function wallpaperCacheId (mode: string, path: string): string {
 	return `${mode}|${path}`;
@@ -419,12 +426,28 @@ export function writeWallpaperCache (id: string, data: string): boolean {
 	try {
 		localStorage.setItem(CACHE_DATA_KEY, data);
 		localStorage.setItem(CACHE_ID_KEY, id);
-		return true;
 	} catch { return false; }      // quota exceeded: the next start just loads the picture normally
+	wallpaperSaved(data);          // the TV can show the same picture while the launcher starts (lib/splash.ts)
+	return true;
+}
+
+/** The look of the cached picture, kept next to it so the glass appears together with the picture at start
+ *  (working it out again from the picture takes a moment, and the plates would show the bare wallpaper meanwhile). */
+export function readWallpaperLook (id: string, strength: number = 100): WallpaperLook | null {
+	try {
+		const look = JSON.parse(localStorage.getItem(CACHE_LOOK_KEY) || 'null');
+		if (!look || look.id !== id || (look.strength || 100) !== strength) return null;
+		return {map: Array.isArray(look.map) ? look.map : null, frost: typeof look.frost === 'string' ? look.frost : null};
+	} catch { return null; }
+}
+
+export function writeWallpaperLook (id: string, look: WallpaperLook, strength: number = 100): void {
+	try { localStorage.setItem(CACHE_LOOK_KEY, JSON.stringify({id, strength, map: look.map, frost: look.frost})); } catch { /* the look is worked out again */ }
 }
 
 export function clearWallpaperCache (): void {
-	try { localStorage.removeItem(CACHE_ID_KEY); localStorage.removeItem(CACHE_DATA_KEY); } catch { /* ignore */ }
+	try { localStorage.removeItem(CACHE_ID_KEY); localStorage.removeItem(CACHE_DATA_KEY); localStorage.removeItem(CACHE_LOOK_KEY); } catch { /* ignore */ }
+	wallpaperCleared();
 }
 
 // ---------- sample data, so the layout can be developed in a desktop browser ----------

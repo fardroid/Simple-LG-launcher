@@ -1,5 +1,6 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'preact/hooks';
 import {LAYOUT} from '../theme/tokens';
+import {useSnapWidths} from '../hooks/useSnapWidths';
 
 export interface OptionItem {
 	id: string;
@@ -55,6 +56,8 @@ export function OptionList ({options, focused, selected, onSelect, onActivate}: 
 	const [height, setHeight] = useState(FALLBACK_HEIGHT);
 	const [shift, setShift] = useState(0);
 	const shiftRef = useRef(0);
+	useSnapWidths(trackRef, '.orow__text');      // the arrow after the text, then the value against the right edge
+	useSnapWidths(trackRef, '.orow__value');
 
 	// The window reaches from the top of the list to the space kept for the description.
 	useLayoutEffect(() => {

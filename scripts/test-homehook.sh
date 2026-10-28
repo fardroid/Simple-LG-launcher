@@ -2,6 +2,8 @@
 # Tests for src/homehook/*.sh using fake folders, a fake luna-send and a fake clock.   Run: npm test
 S="$(cd "$(dirname "$0")/../src/homehook" && pwd)"
 T="$(mktemp -d)"; fail=0
+# GNU timeout is not on macOS: there, perl's alarm stops the command the same way
+run_timeout () { if command -v timeout >/dev/null 2>&1; then timeout "$@"; else secs=$1; shift; perl -e 'alarm shift; exec @ARGV' "$secs" "$@"; fi; }
 check () { if [ "$2" = "$3" ]; then echo "ok   $1"; else echo "FAIL $1 (got '$2', wanted '$3')"; fail=1; fi; }
 mkdir -p "$T/hook" "$T/launcher"
 echo '{}' > "$T/launcher/appinfo.json"
@@ -20,6 +22,10 @@ echo "$$" > "$T/pid"
 check "apply recognises a watcher that is already running" "$(runapply)" "applied"
 check "and says so in the log" "$(grep -c 'already running' "$T/log")" "1"
 rm -f "$T/pid"
+mv "$T/launcher/appinfo.json" "$T/launcher/x"; touch "$T/defaulthome"
+check "apply stands down while the launcher is the TV's default Home app" "$(DEFAULTHOME="$T/defaulthome" runapply)" "applied"
+check "and says so in the log" "$(grep -c "default Home app: the helper is not started" "$T/log")" "1"
+mv "$T/launcher/x" "$T/launcher/appinfo.json"; rm -f "$T/defaulthome"
 check "stock.sh reports itself done" "$(DRY_RUN=1 ALLOW="$T/allow" sh "$S/stock.sh")" "stock"
 check "stock.sh asks the watcher to stand down" "$([ -f "$T/allow" ] && echo yes)" "yes"
 rm -f "$T/allow"
@@ -128,7 +134,7 @@ exit 0
 Q
 chmod +x "$T/quiet.sh"
 echo "$$" > "$T/pid"
-timeout 10 env LUNA_SEND="$T/quiet.sh" PIDFILE="$T/pid" LOG="$T/log" LAUNCHER="$T/launcher" ALLOW="$T/allow" sh "$S/watch.sh"
+run_timeout 10 env LUNA_SEND="$T/quiet.sh" PIDFILE="$T/pid" LOG="$T/log" LAUNCHER="$T/launcher" ALLOW="$T/allow" sh "$S/watch.sh"
 check "a second watcher exits at once when one is already running" "$(grep -c 'another watcher is already running' "$T/log")" "1"
 check "and leaves the first one's pid file alone" "$(cat "$T/pid")" "$$"
 

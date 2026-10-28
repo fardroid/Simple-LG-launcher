@@ -147,6 +147,10 @@ html, body {
 	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 2px 24px rgba(0, 0, 0, 0.5);
 }
 .clock__day { font-weight: 500; opacity: 1; }
+/* the digits centred by what the font really draws (Clock.tsx): moved without changing the card's size */
+.clock__time, .clock__date { position: relative; top: var(--clock-shift, 0px); }
+/* marks the time's baseline, for centring the digits (Clock.tsx) */
+.clock__base { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
 
 /* ---------- board: the cards ---------- */
 
@@ -162,6 +166,7 @@ html, body {
 	align-items: stretch;
 	z-index: 1;
 }
+.screen--shift .board, .screen--shift .rows { transform: translate(var(--shift-x), var(--shift-y)); }
 .board__left { flex: 0 0 880px; display: flex; flex-direction: column; min-width: 0; }
 .board__left + .cal { margin-left: 40px; }
 .board__left > .weather { margin-top: 40px; }
@@ -173,7 +178,7 @@ html, body {
 	font-family: var(--widget-font, inherit);
 	box-sizing: border-box;
 	border-radius: 36px;
-	/* The plate is built in .frost (below): the blurred wallpaper, its colour (--pb, chosen per plate from the wallpaper behind it) and the rim.
+	/* The plate is built in .frost (below): the blurred wallpaper, its colour (chosen per plate from the wallpaper behind it) and the rim.
 	   There is no live backdrop blur, which would make the TV redraw the card whenever a tile moves behind it. The soft shadow lifts it off any background. */
 	background: none;
 	box-shadow: 0 34px 70px rgba(0, 0, 0, 0.45);
@@ -185,23 +190,22 @@ html, body {
 
 /* Frosted glass. .frost lies under everything else in the card (the focus layer is above it): two layers hold the blurred wallpaper
    (16:9, stretched over the whole screen and shifted by the card's own place, --fx and --fy, so it lines up with the picture behind), and
-   they cross-fade like the wallpaper does (same length and curve as .wallpaper__layer: keep in sync). ::after is the plate's colour and its
-   rim: a bright edge on top and a faint one all round. */
+   they cross-fade like the wallpaper does (same length and curve as .wallpaper__layer: keep in sync). The plate's colour is drawn in the same
+   layers, over the glass, so it changes in the same fade (see Frost.tsx). ::after is the rim: a bright edge on top and a faint one all round. */
 .frost { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -2; border-radius: inherit; overflow: hidden; pointer-events: none; }
 .frost__layer {
 	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
 	background-repeat: no-repeat;
-	background-size: 1920px 1080px;
-	background-position: calc(-1 * var(--fx, 0px)) calc(-1 * var(--fy, 0px));
+	/* the plate's colour over the whole plate, then the glass picture lined up with the wallpaper */
+	background-size: 100% 100%, 1920px 1080px;
+	background-position: 0 0, calc(-1 * var(--fx, 0px)) calc(-1 * var(--fy, 0px));
 	opacity: 0;
 	transition: opacity 1400ms ease-in-out;
 }
 .frost__layer--on { opacity: 1; }
 .frost::after {
-	content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: inherit;
-	background: var(--pb, rgba(255, 255, 255, 0.11));
+	content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 2; border-radius: inherit;     /* above both layers (Frost.tsx stacks them 0 and 1) */
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
-	transition: background-color 1400ms ease-in-out;
 }
 
 /* Settings → Look → "Card shadows" off */
@@ -255,7 +259,7 @@ html, body {
 /* Focus on a card: a layer over the plate that only fades in (opacity is all the TV has to animate: no shadow or size change) */
 .weather::before, .cal::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
 .weather--focus::before, .cal--focus::before { opacity: 1; }
-/* and a small growth: transform only (no will-change, so the text is drawn sharp at the final size; the shadow is not touched) */
+/* The focused card grows by 1.02, text and all (the text is a little soft while it is grown: the growth matters more here) */
 .weather--focus, .cal--focus { transform: scale(1.02); }
 
 .cal {
@@ -406,10 +410,9 @@ html, body {
 	z-index: 1;
 }
 /* On the home row the whole tile is magnified instead (see Row.tsx), so the frame itself stays put. */
-/* The selected app grows a little, its name with it. The whole tile is scaled, always about the icon's bottom edge (.tile's transform-origin,
-   the same whether selected or not, so growing and shrinking is one movement), so the icon grows upwards and the name downwards. */
-.row--dock .tile--focused .tile__frame { transform: none; }
-.row--dock .tile--focused { transform: scale(var(--motion-focus-scale)); }
+/* The selected app's icon grows upwards from its bottom edge. Its name is not scaled: scaled text sits on fractional pixels and
+   looks soft through the TV's 2x scale-up of its 1080p picture, so the name stays sharp at its own size. */
+.row--dock .tile__frame { transform-origin: 50% 100%; }
 /* no outlines on the home row: a tile has a soft shadow, and the selected one gets a glow (its ring layer, which fades with opacity only) */
 .row--dock .tile__box { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4); }
 .row--dock .tile__ring { box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45); }
@@ -517,8 +520,8 @@ html, body {
 	top: var(--layout-header-top);
 	bottom: 60px;
 }
-.settings__title { margin: 0; font-size: 46px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
-.settings__hint { margin: 10px 0 0; font-size: 21px; color: var(--color-text-muted); }
+.settings__title { margin: 0; font-size: 46px; line-height: 56px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
+.settings__hint { margin: 10px 0 0; font-size: 21px; line-height: 28px; color: var(--color-text-muted); }
 
 .set { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; flex-direction: row; }
 .set__nav {
@@ -526,7 +529,7 @@ html, body {
 	padding: 84px 36px 60px 96px;
 	background: rgba(255, 255, 255, 0.035);
 }
-.set__heading { margin: 0 0 34px 20px; font-size: 46px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
+.set__heading { margin: 0 0 34px 20px; font-size: 46px; line-height: 56px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
 
 .navitem {
 	display: flex;
@@ -541,7 +544,7 @@ html, body {
 	transition: background var(--motion-focus-ms) ease-out, color var(--motion-focus-ms) ease-out, transform var(--motion-focus-ms) ease-out;
 }
 .navitem--current { background: rgba(255, 255, 255, 0.09); color: var(--color-text-primary); }
-.navitem--focused { background: #F2F2F7; color: #111216; transform: scale(1.02); }
+.navitem--focused { background: #F2F2F7; color: #111216; }
 .navitem--locked { opacity: 0.35; }
 .navitem__icon {
 	flex: 0 0 auto;
@@ -553,19 +556,19 @@ html, body {
 	border-radius: 12px;
 }
 .navitem__icon svg { width: 28px; height: 28px; fill: none; stroke: #FFFFFF; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.navitem__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.navitem__label { line-height: 34px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .set__main { position: relative; flex: 1 1 auto; min-width: 0; padding: 84px 120px 0 64px; }
-.set__title { margin: 0; font-size: 46px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
-.set__hint { margin: 10px 0 30px; font-size: 21px; color: var(--color-text-muted); }
-.set__empty { font-size: 24px; color: var(--color-text-secondary); }
+.set__title { margin: 0; font-size: 46px; line-height: 56px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-text-primary); }
+.set__hint { margin: 10px 0 30px; font-size: 21px; line-height: 28px; color: var(--color-text-muted); }
+.set__empty { font-size: 24px; line-height: 32px; color: var(--color-text-secondary); }
 .set__footer {
 	position: absolute;
 	left: 88px; right: 140px; bottom: 56px;
 	margin: 0;
 	min-height: 64px;
 	font-size: 22px;
-	line-height: 1.45;
+	line-height: 32px;
 	color: var(--color-text-secondary);
 }
 .set__footer--warn { color: var(--color-danger); }
@@ -578,12 +581,13 @@ html, body {
 	border-radius: 999px;
 	background: rgba(255, 255, 255, 0.09);
 	font-size: 23px;
+	line-height: 30px;
 	font-weight: 500;
 	color: var(--color-text-primary);
 	transition: background var(--motion-focus-ms) ease-out, color var(--motion-focus-ms) ease-out, transform var(--motion-focus-ms) ease-out;
 }
 .pill--active { background: rgba(48, 209, 88, 0.28); }
-.pill--focused { background: #F2F2F7; color: #111216; transform: scale(1.04); }
+.pill--focused { background: #F2F2F7; color: #111216; }
 
 .grid__viewport {
 	overflow: hidden;
@@ -622,6 +626,9 @@ html, body {
 .rows--multi .row + .row { margin-top: 14px; }
 /* Look → Show app names: off */
 .rows--no-labels .tile__label { display: none; }
+/* only the selected app's name: the others keep their room (nothing moves) and fade out */
+.rows--focus-labels .tile__label { opacity: 0; transition: opacity var(--motion-focus-ms) ease-out; }
+.rows--focus-labels .tile--focused .tile__label { opacity: 1; }
 
 /* ---------- option rows ---------- */
 
@@ -635,6 +642,7 @@ html, body {
 .ogroup__title {
 	margin: 0 0 12px 26px;
 	font-size: 19px;
+	line-height: 24px;
 	font-weight: 600;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -661,9 +669,9 @@ html, body {
 	background: rgba(255, 255, 255, 0.09);
 }
 .orow--focused:before, .orow--focused + .orow:before { opacity: 0; }
-.orow--focused { background: #F2F2F7; transform: scale(1.01); }
-.orow__label { flex: 1 1 auto; min-width: 0; margin-right: 30px; font-size: 27px; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.orow__value { flex: 0 0 auto; display: flex; flex-direction: row; align-items: center; max-width: 560px; font-size: 25px; color: var(--color-text-secondary); }
+.orow--focused { background: #F2F2F7; }
+.orow__label { flex: 1 1 auto; min-width: 0; margin-right: 30px; font-size: 27px; line-height: 34px; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.orow__value { flex: 0 0 auto; display: flex; flex-direction: row; align-items: center; max-width: 560px; font-size: 25px; line-height: 32px; color: var(--color-text-secondary); }
 .orow__text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .orow__step { display: inline-block; width: 30px; text-align: center; font-size: 34px; line-height: 1; opacity: 0; }
 .orow__go { display: inline-block; margin-left: 14px; font-size: 34px; line-height: 1; opacity: 0.5; }
@@ -702,6 +710,7 @@ html, body {
 .picker__path {
 	margin: 34px 0 12px 26px;
 	font-size: 19px;
+	line-height: 24px;
 	font-weight: 600;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -722,7 +731,7 @@ html, body {
 }
 .picker .picker__row--focused:before, .picker .picker__row--focused + .picker__row:before { opacity: 0; }
 .picker .picker__row--focused { background: #F2F2F7; }
-.picker__status { padding: 40px 8px; font-size: var(--font-option-label); color: var(--color-text-secondary); }
+.picker__status { padding: 40px 8px; font-size: var(--font-option-label); line-height: 34px; color: var(--color-text-secondary); }
 .picker__status--error { color: var(--color-danger); }
 .picker__row {
 	display: flex;
@@ -735,11 +744,11 @@ html, body {
 	background: rgba(255, 255, 255, 0.075);
 	transition: background var(--motion-focus-ms) ease-out, transform var(--motion-focus-ms) ease-out;
 }
-.picker__row--focused { background: #F2F2F7; transform: scale(1.01); }
+.picker__row--focused { background: #F2F2F7; }
 .picker__row--focused .picker__label { color: #111216; }
 .picker__row--focused .picker__detail { color: #3C3F47; }
 .picker__row--info { background: transparent; box-shadow: none; opacity: 0.8; }
-.picker .picker__row--info .picker__label { white-space: normal; font-size: 23px; color: var(--color-text-secondary); }
+.picker .picker__row--info .picker__label { white-space: normal; font-size: 23px; line-height: 30px; color: var(--color-text-secondary); }
 .picker__icon {
 	flex: 0 0 auto;
 	width: 40px; height: 40px;
@@ -754,6 +763,7 @@ html, body {
 .picker__text { flex: 1 1 auto; min-width: 0; }
 .picker__label {
 	font-size: var(--font-option-label);
+	line-height: 34px;
 	color: var(--color-text-primary);
 	white-space: nowrap;
 	overflow: hidden;
@@ -762,6 +772,7 @@ html, body {
 .picker__detail {
 	margin-top: 4px;
 	font-size: var(--font-option-description);
+	line-height: 26px;
 	color: var(--color-text-secondary);
 	white-space: nowrap;
 	overflow: hidden;
@@ -770,13 +781,12 @@ html, body {
 
 /* ---------- the menu that opens when OK is held on an app ---------- */
 
-.screen--dialog { background: rgba(0, 0, 0, 0.72); }
+.screen--dialog { background: rgba(0, 0, 0, 0.72); display: flex; align-items: center; justify-content: center; }
+/* centred by flex, not translate(-50%): half of an odd height would put all its text on half pixels */
 .dialog {
-	position: absolute;
-	left: 50%; top: 50%;
+	position: relative;
 	width: 900px;
 	padding: 40px 44px 32px;
-	transform: translate(-50%, -50%);
 	border-radius: 36px;
 	background: #1C1C20;
 	box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
@@ -784,13 +794,14 @@ html, body {
 .dialog__title {
 	margin: 0 0 8px;
 	font-size: 40px;
+	line-height: 48px;
 	font-weight: 600;
 	color: var(--color-text-primary);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-.dialog__text { margin: 0 0 22px; font-size: var(--font-option-description); color: var(--color-text-secondary); }
+.dialog__text { margin: 0 0 22px; font-size: var(--font-option-description); line-height: 28px; color: var(--color-text-secondary); }
 .dialog .picker__row { margin-top: 8px; margin-bottom: 0; }
 .picker__row--disabled { opacity: 0.5; }
 
@@ -805,6 +816,7 @@ html, body {
 	color: var(--color-text-primary);
 	font-family: inherit;
 	font-size: var(--font-option-label);
+	line-height: 34px;
 	-webkit-user-select: text;
 	user-select: text;
 }
@@ -818,14 +830,17 @@ html, body {
 .toast {
 	position: absolute;
 	z-index: 5;
-	left: 50%;
+	left: 0; right: 0;
 	top: 72px;
-	transform: translateX(-50%);
+	margin: 0 auto;
+	width: -webkit-fit-content;
+	width: fit-content;          /* centred by margins, not translateX(-50%), which can land the text on half pixels */
 	padding: 14px 28px;
 	border-radius: 999px;
 	background: var(--color-tile-bg-focus);
 	box-shadow: 0 0 0 1px var(--color-tile-border);
 	font-size: var(--font-toast);
+	line-height: 30px;
 	color: var(--color-text-secondary);
 	white-space: nowrap;
 	pointer-events: none;
@@ -837,3 +852,30 @@ html, body {
 	-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
 	mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
 }
+
+/* ---------- Settings → Home screen → How the launcher opens ----------
+   The four ways on the left; how the focused one works, its pros and cons on the right. */
+.screen--picker .homemethod { width: 1600px; margin-left: -800px; }
+.homemethod__body { display: flex; flex-direction: row; align-items: flex-start; margin-top: 40px; }
+.homemethod__list.picker { flex: 0 0 760px; }
+.homemethod .picker__row { height: 96px; }
+.homemethod__tick { flex: 0 0 40px; height: 40px; margin-right: 24px; }
+.homemethod__tick svg { width: 40px; height: 40px; fill: none; stroke: #30D158; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.picker__row--focused .homemethod__tick svg { stroke: #1F8A3B; }
+.homemethod__panel {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin-left: 40px;
+	padding: 34px 40px 30px;
+	border-radius: 28px;
+	background: rgba(255, 255, 255, 0.075);
+}
+.homemethod__how { margin: 0 0 24px; font-size: 25px; line-height: 36px; color: var(--color-text-primary); }
+ul.homemethod__list { margin: 0 0 18px; padding: 0; list-style: none; }
+ul.homemethod__list li { position: relative; padding-left: 40px; margin-bottom: 12px; font-size: 22px; line-height: 31px; color: var(--color-text-secondary); }
+ul.homemethod__list li:before { position: absolute; left: 4px; top: 0; font-size: 26px; line-height: 31px; font-weight: 700; }
+.homemethod__list--pro li:before { content: '+'; color: #30D158; }
+.homemethod__list--con li:before { content: '\2212'; color: #FF9F0A; }
+.homemethod__note { margin: 0 0 18px; font-size: 21px; line-height: 28px; color: #FF9F0A; }
+.homemethod__action { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.09); font-size: 22px; line-height: 28px; font-weight: 600; color: var(--color-text-muted); }
+.homemethod__action--armed { color: var(--color-text-primary); }

@@ -23,14 +23,25 @@ function classicScriptTag (): Plugin {
 	};
 }
 
+/** Writes assets/version.txt: this build's id, which the bundle also carries (__BUILD_ID__). A launcher that stayed loaded through
+ *  an update reads the file and loads itself again when the id differs (src/lib/update.ts). */
+const BUILD_ID = `${Date.now()}`;
+function buildIdFile (): Plugin {
+	return {
+		name: 'build-id-file',
+		apply: 'build',
+		generateBundle () { this.emitFile({type: 'asset', fileName: 'assets/version.txt', source: BUILD_ID}); }
+	};
+}
+
 // HEARTH_WEATHER=0 builds without the weather widget (the code is removed from the bundle).
 const env = (globalThis as unknown as {process?: {env: Record<string, string | undefined>}}).process;
 const WEATHER = !(env && env.env.HEARTH_WEATHER === '0');
 
 export default defineConfig({
-	define: {__WEATHER__: JSON.stringify(WEATHER)},
+	define: {__WEATHER__: JSON.stringify(WEATHER), __BUILD_ID__: JSON.stringify(BUILD_ID)},
 	base: './',            // the app is loaded from a local file path on the TV
-	plugins: [preact(), classicScriptTag()],
+	plugins: [preact(), classicScriptTag(), buildIdFile()],
 	build: {
 		target: BROWSER_TARGET,
 		outDir: 'dist',

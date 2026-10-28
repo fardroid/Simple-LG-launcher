@@ -1,9 +1,10 @@
 import {useEffect, useRef} from 'preact/hooks';
 import {WALLPAPER} from '../config/constants';
 import type {WallpaperConfig} from '../lib/storage';
+import type {WallpaperLook} from '../lib/wallpaper';
 import {
-	clearWallpaperCache, listImages, loadPicture, measureDataUrl, readWallpaperCache, releasePicture, createShuffleOrder,
-	wallpaperCacheId, writeWallpaperCache
+	clearWallpaperCache, listImages, loadPicture, measureDataUrl, readWallpaperCache, readWallpaperLook, releasePicture, createShuffleOrder,
+	wallpaperCacheId, writeWallpaperCache, writeWallpaperLook
 } from '../lib/wallpaper';
 import {tr} from '../lib/i18n';
 
@@ -13,6 +14,8 @@ interface Props {
 	onProblem: (text: string) => void;
 	/** the brightness grid of the picture now on screen, and its blurred copy for the glass (null: no picture, the theme's own background shows) */
 	onTone?: (map: number[] | null, frost: string | null) => void;
+	/** how frosted the glass is, % of its full blur */
+	frost?: number;
 }
 
 /** Full-screen background: the default (black, or the calm gradient) with a picture or
@@ -26,13 +29,16 @@ interface Props {
  *
  *  The slideshow pauses while the launcher is in the background. The picture from the copy appears at once
  *  (no fade); only a change from one slideshow picture to the next cross-fades. */
-export function Wallpaper ({config, onProblem, onTone}: Props) {
+export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 	const layerA = useRef<HTMLDivElement>(null);
 	const layerB = useRef<HTMLDivElement>(null);
 	const report = useRef(onProblem);
 	report.current = onProblem;
 	const tone = useRef(onTone);
 	tone.current = onTone;
+	const strength = useRef(frost);
+	strength.current = frost;
+	const refrost = useRef<((frost: number) => void) | null>(null);    // works the glass out again for the picture on screen
 
 	useEffect(() => {
 		const layers = [layerA.current as HTMLDivElement, layerB.current as HTMLDivElement];
@@ -52,13 +58,18 @@ export function Wallpaper ({config, onProblem, onTone}: Props) {
 		let unsaved = false;                   // the copy isn't in the cache yet
 		let cacheKnown = false;                // the cache already holds a picture for this choice
 		let shownAt = Date.now();              // when the picture on screen appeared
+		let look: WallpaperLook | null = null; // the brightness grid and glass of the picture on screen
 
 		const stopTimer = () => { window.clearTimeout(timer); timer = 0; };
 
 		const saveCache = () => {
 			if (!unsaved || !snapshot) return;
 			const data = snapshot();
-			if (data && writeWallpaperCache(cacheId, data)) { unsaved = false; snapshot = null; }     // saved: the picture's canvas can go
+			if (data && writeWallpaperCache(cacheId, data)) {     // saved: the picture's canvas can go
+				unsaved = false;
+				snapshot = null;
+				if (look) writeWallpaperLook(cacheId, look, strength.current);
+			}
 		};
 
 		const release = (i: number) => {
@@ -137,14 +148,16 @@ export function Wallpaper ({config, onProblem, onTone}: Props) {
 			position = (position + 1) % files.length;
 			const path = order ? order.take() : files[position];
 			if (!path) { fail(tr('There are no pictures in the folder', 'В папке нет картинок')); return; }
-			loadPicture(path).then(
+			loadPicture(path, strength.current).then(
 				(loaded) => {
 					busy = false;
 					if (disposed) { releasePicture(loaded.url); return; }
 					failed = false;
 					if (order) order.shown(path);
-					show(loaded.url);
+					// the glass first: its layer then starts to fade in the same frame as the picture's (Frost sets it up as it renders)
+					look = {map: loaded.map, frost: loaded.frost};
 					if (tone.current) tone.current(loaded.map, loaded.frost);
+					show(loaded.url);
 					snapshot = loaded.snapshot;
 					unsaved = !!loaded.snapshot;
 					if (!cacheKnown) { saveCache(); cacheKnown = !unsaved; }    // the first picture is cached at once
@@ -171,8 +184,15 @@ export function Wallpaper ({config, onProblem, onTone}: Props) {
 
 			const cached = readWallpaperCache(cacheId);
 			if (cached) {                                          // instant: no shell work at all
+				look = readWallpaperLook(cacheId, strength.current);
+				if (look && tone.current) tone.current(look.map, look.frost);     // saved with the picture: the glass comes with it
 				show(cached, true);                                // already known: no fade-in
-				measureDataUrl(cached).then((look) => { if (!disposed && tone.current) tone.current(look.map, look.frost); });
+				if (!look) measureDataUrl(cached, strength.current).then((measured) => {
+					if (disposed) return;
+					look = measured;
+					writeWallpaperLook(cacheId, measured, strength.current);
+					if (tone.current) tone.current(measured.map, measured.frost);
+				});
 				snapshot = () => cached;
 				unsaved = false;
 				cacheKnown = true;
@@ -212,10 +232,22 @@ export function Wallpaper ({config, onProblem, onTone}: Props) {
 			}
 		};
 
+		refrost.current = (value: number) => {
+			const url = front >= 0 ? held[front] : null;
+			if (!url) return;
+			measureDataUrl(url, value).then((measured) => {
+				if (disposed || held[front] !== url) return;
+				look = measured;
+				if (!unsaved) writeWallpaperLook(cacheId, measured, value);    // the cache holds this picture: keep its glass with it
+				if (tone.current) tone.current(measured.map, measured.frost);
+			});
+		};
+
 		start();
 		document.addEventListener('visibilitychange', onVisibility);
 		return () => {
 			disposed = true;
+			refrost.current = null;
 			stopTimer();
 			saveCache();
 			document.removeEventListener('visibilitychange', onVisibility);
@@ -224,6 +256,13 @@ export function Wallpaper ({config, onProblem, onTone}: Props) {
 			release(1);
 		};
 	}, [config.mode, config.path, config.intervalSec, config.shuffle]);
+
+	// another frost setting: the glass of the picture on screen is made again (the picture itself stays)
+	const firstFrost = useRef(true);
+	useEffect(() => {
+		if (firstFrost.current) { firstFrost.current = false; return; }
+		if (refrost.current) refrost.current(frost);
+	}, [frost]);
 
 	return (
 		<div class="wallpaper" aria-hidden="true">

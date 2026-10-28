@@ -6,7 +6,7 @@ import type {OptionItem} from '../components/OptionList';
 import type {ThemeName} from '../theme/tokens';
 import {
 	DEFAULT_CLOCK, INTERVAL_VALUES, RANGES, rangeValues, stepValue,
-	type ClockFormat, type ClockWeight, type RangeName, type UserConfig
+	type ClockFormat, type ClockWeight, type PixelShift, type RangeName, type UserConfig
 } from './storage';
 import {CLOCK_FONT_IDS, fontLabel} from './clockfont';
 import {CLOCK_COLOR_IDS, colorLabel, type ClockColor} from './clockcolor';
@@ -16,6 +16,8 @@ import {WEATHER_ENABLED} from '../config/features';
 import type {TempUnit} from './weather';
 import {lastFailure, type RootState} from './failure';
 import {APP_VERSION} from '../config/constants';
+import type {HomeMode, HomeModeInfo} from './homemode';
+import type {SplashMode} from './splash';
 import {count, fmt, lang, langName, LANG_SETTINGS, tr, type Lang} from './i18n';
 
 export type PrefTab = 'look' | 'widgets' | 'wallpaper' | 'home';
@@ -24,8 +26,10 @@ export type PrefTab = 'look' | 'widgets' | 'wallpaper' | 'home';
 export interface SystemInfo {
 	/** the background helper: running, and whether it starts at boot (null while unknown) */
 	homeHook: {running: boolean; linked: boolean} | null;
-	/** the launcher sits in LG Home's place (tools/takeover.sh); null while unknown */
+	/** the launcher sits in LG Home's place (tools/takeover.sh or tools/defaulthome.sh); null while unknown */
 	takeover?: boolean | null;
+	/** how the launcher replaces LG Home (tools/homemode.sh); null while unknown */
+	homeMode?: HomeModeInfo | null;
 	/** can this TV run commands through the Homebrew Channel (rooted)? */
 	root?: RootState;
 	/** what the TV said when it could not (shown under a greyed-out row) */
@@ -33,7 +37,7 @@ export interface SystemInfo {
 }
 
 /** The options that run shell commands, so they can't work without root. */
-export const ROOT_OPTIONS = ['replaceHome'];
+export const ROOT_OPTIONS = ['replaceHome', 'homeMethod'];
 
 /** Why a row is greyed out, or null when it is usable. */
 export function disabledReason (id: string, info?: SystemInfo): string | null {
@@ -75,8 +79,7 @@ const group = (heading: string, rows: Pref[]): Pref[] => rows.map((p) => ({...p,
 const only = (when: (c: UserConfig, info?: SystemInfo) => boolean, p: Pref): Pref => ({...p, when});
 
 /** "On", "Off", or "Unknown" while it is not known. */
-const onOff = (on: boolean | null): string => on === null ? tr('Unknown', 'Неизвестно') : on ? tr('On', 'Вкл.') : tr('Off', 'Выкл.');
-const yesNo = (yes: boolean | null): string => yes === null ? tr('Unknown', 'Неизвестно') : yes ? tr('Yes', 'Да') : tr('No', 'Нет');
+const modeShort = (mode: HomeMode | null): string => mode === null ? tr('Unknown', 'Неизвестно') : mode === 'default' ? tr('Official', 'Штатно') : mode === 'mount' ? tr('Swap', 'Подмена') : mode === 'helper' ? tr('Helper', 'Помощник') : tr('Off', 'Выкл.');
 
 function toggle (id: string, tab: PrefTab, label: string, description: string, get: (c: UserConfig) => boolean, set: (c: UserConfig, v: boolean) => UserConfig): Pref {
 	return {
@@ -109,6 +112,14 @@ const THEMES: readonly ThemeName[] = ['dusk', 'black', 'grey'];
 const CLOCK_FORMATS: readonly ClockFormat[] = ['24h', '12h', 'tv'];
 const WEIGHTS: readonly ClockWeight[] = [200, 300, 400, 500, 600];
 const UNITS: readonly TempUnit[] = ['c', 'f'];
+const SHIFTS: readonly PixelShift[] = ['auto', 'on', 'off'];
+const SPLASHES: readonly SplashMode[] = ['wallpaper', 'logo', 'black'];
+const splashText = (v: SplashMode): string => v === 'logo' ? tr('Logo', 'Логотип') : v === 'black' ? tr('Black', 'Чёрный экран') : tr('Wallpaper', 'Обои');
+type Labels = 'all' | 'selected' | 'none';
+const LABELS: readonly Labels[] = ['all', 'selected', 'none'];
+const labelsOf = (c: UserConfig): Labels => !c.showLabels ? 'none' : c.labelsSelectedOnly ? 'selected' : 'all';
+const labelsText = (v: Labels): string => v === 'none' ? tr('None', 'Нет') : v === 'selected' ? tr('Selected only', 'Только у выбранной') : tr('All', 'У всех');
+const shiftText = (v: PixelShift): string => v === 'on' ? tr('On', 'Вкл.') : v === 'off' ? tr('Off', 'Выкл.') : tr('Auto', 'Авто');
 
 const plateText = (v: PlateMode): string => v === 'light' ? tr('Light', 'Светлые') : v === 'dark' ? tr('Dark', 'Тёмные') : tr('Auto', 'Авто');
 const themeText = (v: ThemeName): string => v === 'black' ? tr('OLED black', 'Чёрная (OLED)') : v === 'grey' ? tr('Calm blue-grey', 'Серо-голубая') : tr('Evening sky', 'Вечернее небо');
@@ -123,11 +134,13 @@ export function resetLook (c: UserConfig): UserConfig {
 		theme: 'dusk',
 		iconScale: RANGES.iconScale.def,
 		showLabels: true,
+		labelsSelectedOnly: false,
 		sideMargin: RANGES.sideMargin.def,
 		bottomMargin: RANGES.bottomMargin.def,
 		cardSize: RANGES.cardSize.def,
 		plates: 'auto',
 		glass: true,
+		frost: RANGES.frost.def,
 		shadows: true,
 		clockFormat: '24h',
 		clock: {...DEFAULT_CLOCK}
@@ -165,8 +178,8 @@ const basePrefs = (): Pref[] => [
 	...group(tr('App row', 'Ряд приложений'), [
 		range('iconScale', 'look', tr('Icon size', 'Размер значков'), tr('How big the app tiles are.', 'Насколько крупные плитки приложений.'),
 			'iconScale', (c) => c.iconScale, (c, v) => ({...c, iconScale: v}), (v) => `${v}%`),
-		toggle('showLabels', 'look', tr('App names', 'Названия приложений'), tr('A name under each tile. Off leaves only the icons.', 'Подпись под каждой плиткой. Если выключить, останутся только значки.'),
-			(c) => c.showLabels, (c, v) => ({...c, showLabels: v})),
+		choice('showLabels', 'look', tr('App names', 'Названия приложений'), tr('A name under each tile, only under the selected one, or none (only the icons).', 'Подпись под каждой плиткой, только под выбранной или никакой (только значки).'),
+			LABELS, labelsOf, (c, v) => ({...c, showLabels: v !== 'none', labelsSelectedOnly: v === 'selected'}), labelsText),
 		range('sideMargin', 'look', tr('Side margin', 'Поля по бокам'), tr('Space left and right of the row.', 'Отступ слева и справа от ряда.'),
 			'sideMargin', (c) => c.sideMargin, (c, v) => ({...c, sideMargin: v}), (v) => `${v} px`),
 		range('bottomMargin', 'look', tr('Bottom margin', 'Поле снизу'), tr('Space below the row.', 'Отступ под рядом.'),
@@ -179,8 +192,12 @@ const basePrefs = (): Pref[] => [
 			PLATE_MODES, (c) => c.plates, (c, v) => ({...c, plates: v}), plateText),
 		only((c) => c.wallpaper.mode !== 'gradient', toggle('glass', 'look', tr('Frosted glass', 'Матовое стекло'), tr('The cards blur the picture behind them.', 'Карточки размывают картинку под собой.'),
 			(c) => c.glass, (c, v) => ({...c, glass: v}))),
+		only((c) => c.wallpaper.mode !== 'gradient' && c.glass, range('frost', 'look', tr('Frost', 'Матовость'), tr('How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.', 'Насколько стекло размывает картинку под собой: 100% — сильнее всего, на 30% картинка видна чётче всего.'),
+			'frost', (c) => c.frost, (c, v) => ({...c, frost: v}), (v) => `${v}%`)),
 		toggle('shadows', 'look', tr('Shadows', 'Тени'), tr('A soft shadow under the clock and the cards. Without it the TV has a little less to draw.', 'Мягкая тень под часами и карточками. Без неё ТВ рисует экран чуть легче.'),
-			(c) => c.shadows, (c, v) => ({...c, shadows: v}))
+			(c) => c.shadows, (c, v) => ({...c, shadows: v})),
+		choice('pixelShift', 'look', tr('Pixel shift (OLED)', 'Сдвиг пикселей (OLED)'), tr('The clock, the cards and the apps move a few pixels once a minute, so an OLED screen does not keep the same picture on the same pixels for hours. Auto: on when the TV is an OLED (by its model name).', 'Часы, карточки и приложения раз в минуту сдвигаются на несколько пикселей, чтобы OLED-экран часами не держал одно и то же изображение на одних пикселях. Авто: включается, если ТВ — OLED (по названию модели).'),
+			SHIFTS, (c) => c.pixelShift, (c, v) => ({...c, pixelShift: v}), shiftText)
 	]),
 
 	// ----- Widgets: the clock, the weather and the calendar -----
@@ -213,7 +230,9 @@ const basePrefs = (): Pref[] => [
 		only((c) => c.wallpaper.mode === 'folder', choice('interval', 'wallpaper', tr('Change every', 'Менять каждые'), tr('How long each picture stays on screen.', 'Сколько каждая картинка остаётся на экране.'),
 			INTERVAL_VALUES, (c) => c.wallpaper.intervalSec, (c, v) => ({...c, wallpaper: {...c.wallpaper, intervalSec: v}}), intervalText)),
 		only((c) => c.wallpaper.mode === 'folder', toggle('shuffle', 'wallpaper', tr('Shuffle', 'Перемешивать'), tr('Random order. Off: in alphabetical order.', 'Случайный порядок. Если выключено, по алфавиту.'),
-			(c) => c.wallpaper.shuffle, (c, v) => ({...c, wallpaper: {...c.wallpaper, shuffle: v}})))
+			(c) => c.wallpaper.shuffle, (c, v) => ({...c, wallpaper: {...c.wallpaper, shuffle: v}}))),
+		choice('splash', 'wallpaper', tr('Start-up picture', 'Заставка при запуске'), tr('What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher\'s logo or black.', 'Что ТВ показывает на мгновение, пока лаунчер запускается (после того как ТВ выгрузил его из памяти): обои, логотип лаунчера или чёрный экран.'),
+			SPLASHES, (c) => c.splash, (c, v) => ({...c, splash: v}), splashText)
 	]),
 	...group(tr('Colours', 'Цвета'), [
 		choice('theme', 'wallpaper', tr('Colour theme', 'Цветовая тема'), tr('The background when there is no picture, and the colours of these screens. OLED black leaves unused pixels off.', 'Фон, когда картинки нет, и цвета этих экранов. Чёрная тема не зажигает лишние пиксели OLED.'),
@@ -229,15 +248,10 @@ const basePrefs = (): Pref[] => [
 		text: () => ''
 	},
 	...group(tr('Opening the launcher', 'Запуск лаунчера'), [{
-		id: 'homeStatus', tab: 'home', label: tr('In place of LG Home', 'Вместо LG Home'), kind: 'info',
-		description: tr('When the launcher takes LG Home\'s place, the TV itself opens it for the Home button, Back out of the last app and waking up. It is set up from a computer with tools/takeover.sh (see the README); "takeover.sh disable" gives LG Home back.', 'Когда лаунчер стоит на месте LG Home, телевизор сам открывает его по кнопке Home, при выходе из последнего приложения и при включении. Это настраивается с компьютера скриптом tools/takeover.sh (см. README); «takeover.sh disable» возвращает LG Home.'),
-		text: (_c, info) => yesNo(!info || info.takeover === undefined ? null : info.takeover)
-	},
-	only((_c, info) => !info || info.takeover !== true, {
-		id: 'replaceHome', tab: 'home', label: tr('Background helper', 'Фоновый помощник'), kind: 'action',
-		description: tr('The other way, for when the launcher is not in LG Home\'s place: a small program on the TV watches for LG Home and opens the launcher instead, from the moment the TV starts. LG Home can show for a moment first.', 'Другой способ, если лаунчер не стоит на месте LG Home: небольшая программа на ТВ замечает LG Home и открывает вместо него лаунчер, с самого включения ТВ. LG Home может мелькнуть на мгновение.'),
-		text: (_c, info) => onOff(!info || !info.homeHook ? null : info.homeHook.running)
-	})]),
+		id: 'homeMethod', tab: 'home', label: tr('How the launcher opens', 'Как открывается лаунчер'), kind: 'action', opens: true,
+		description: tr('Whether the Home button, Back out of the last app and waking the TV open the launcher, and in which way. Each way with its pros and cons.', 'Открывают ли лаунчер кнопка Home, выход из последнего приложения и включение ТВ, и каким способом. У каждого способа свои плюсы и минусы.'),
+		text: (_c, info) => modeShort(info && info.homeMode ? info.homeMode.mode : null)
+	}]),
 	...group(tr('About', 'О лаунчере'), [{
 		id: 'about', tab: 'home', label: 'Simple LG launcher', kind: 'info',
 		description: tr('Based on Hearth by rudra-avatar. github.com/fardroid/Simple-LG-launcher', 'Основан на Hearth от rudra-avatar. github.com/fardroid/Simple-LG-launcher'),

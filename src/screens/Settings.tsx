@@ -1,9 +1,10 @@
-import {useCallback, useState} from 'preact/hooks';
+import {useCallback, useRef, useState} from 'preact/hooks';
 import {Grid} from '../components/Grid';
 import {OptionList, type OptionItem} from '../components/OptionList';
 import type {TileModel} from '../components/Tile';
 import {useKeys, clamp, type NavKey} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
+import {useSnapWidths} from '../hooks/useSnapWidths';
 import {moveItem} from '../lib/order';
 import {LAYOUT} from '../theme/tokens';
 import {tr} from '../lib/i18n';
@@ -216,6 +217,9 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 	const focusedOption = zone === 'content' && onOptions ? options[optionAt] : undefined;
 	const footer = focusedOption ? (focusedOption.disabled || focusedOption.description) : '';
 
+	const buttonsRef = useRef<HTMLDivElement>(null);
+	useSnapWidths(buttonsRef, '.pill');
+
 	return (
 		// under a picker it is not drawn (it stays mounted to keep its place): the picker has the screen to itself
 		<div class={`screen screen--settings${active ? '' : ' screen--away'}`}>
@@ -243,7 +247,7 @@ export function Settings ({tabs, active, onToggle, onReorder, onOption, onRefres
 					<h2 class="set__title">{current ? current.label : ''}</h2>
 					<p class="set__hint">{hint}</p>
 					{tab && (
-						<div class="set__buttons">
+						<div class="set__buttons" ref={buttonsRef}>
 							{buttons.map((b, i) => (
 								<div
 									key={b}

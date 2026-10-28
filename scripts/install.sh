@@ -27,5 +27,9 @@ echo "Installing $APP_ID..."
 # luna-send needs a tty (-tt) to print anything; the subscription ends when the install does.
 ssh -tt "$TV_HOST" "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"$REMOTE_IPK\",\"subscribe\":true}' | grep -oE '\"state\":\"[^\"]*\"|\"errorText\":\"[^\"]*\"' | uniq; rm -f '$REMOTE_IPK'" | tr -d '\r'
 
+# A launcher that stays loaded keeps the old version: close it, and with the takeover on also its copy behind the Home button
+# (which runs as LG Home), so both load the new one. The TV itself needs no restart.
+ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"$APP_ID\"}' >/dev/null; grep -q ' /usr/palm/applications/com.webos.app.home ' /proc/mounts && luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"com.webos.app.home\"}' >/dev/null && echo 'Closed the old copy behind the Home button'; true" | tr -d '\r'
+
 echo "Launching $APP_ID..."
 ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"$APP_ID\"}'" | tr -d '\r'

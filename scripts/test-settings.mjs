@@ -92,16 +92,18 @@ for (const tab of ['look', 'widgets', 'wallpaper', 'home']) {
   eq(list.length >= 1 && list.length <= 16, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
 }
 const look = p.optionsFor('look', c0);
-eq(look.map((o) => o.valueText), ['100%', undefined, '80 px', '50 px', '100%', 'Авто', undefined], 'Appearance shows current values (switches have no text; no frosted glass without a picture)');
-eq(look.map((o) => o.group), ['Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Карточки', 'Карточки', 'Карточки'], 'Appearance is in two groups');
+eq(look.map((o) => o.valueText), ['100%', 'У всех', '80 px', '50 px', '100%', 'Авто', undefined, 'Авто'], 'Appearance shows current values (switches have no text; no frosted glass without a picture)');
+eq(look.map((o) => o.group), ['Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Ряд приложений', 'Карточки', 'Карточки', 'Карточки', 'Карточки'], 'Appearance is in two groups');
+eq([c0.pixelShift, p.applyPref(c0, 'pixelShift', 'ok').pixelShift, p.applyPref(c0, 'pixelShift', 'left').pixelShift], ['auto', 'on', 'auto'], 'the pixel shift follows the screen by default; OK turns it on for good');
 eq(p.optionsFor('look', {...c0, wallpaper: {...c0.wallpaper, mode: 'image', path: '/a.jpg'}}).some((o) => o.id === 'glass'), true, 'frosted glass appears with a picture');
 eq(look.some((o) => o.id === 'rows'), false, 'no choice of two rows of apps (they leave no room for the cards)');
 eq([p.applyPref(c0, 'shadows', 'ok').shadows, c0.shadows], [false, true], 'the card shadow is on by default and OK turns it off');
-eq(p.applyPref(c0, 'showLabels', 'ok').showLabels, false, 'Show app names switches off');
-eq(p.optionsFor('home', c0).map((o) => o.id).join(','), 'language,resetLook,homeStatus,replaceHome,about', 'Home screen: language, reset, whether the launcher is in LG Home\'s place, the helper, about');
-eq(p.optionsFor('home', c0).map((o) => o.group || '').join(','), ',,Запуск лаунчера,Запуск лаунчера,О лаунчере', 'Home screen: the launch rows and About in their groups');
+const l1 = p.applyPref(c0, 'showLabels', 'ok'), l2 = p.applyPref(l1, 'showLabels', 'ok');
+eq([l1.showLabels, l1.labelsSelectedOnly, l2.showLabels], [true, true, false], 'App names: all, then only the selected one, then none');
+eq(p.optionsFor('home', c0).map((o) => o.id).join(','), 'language,resetLook,homeMethod,about', 'Home screen: language, reset, how the launcher opens, about');
+eq(p.optionsFor('home', c0).map((o) => o.group || '').join(','), ',,Запуск лаунчера,О лаунчере', 'Home screen: the launch rows and About in their groups');
 eq(c0.tileOrder, null, 'a new config has no saved tile order');
-eq(p.optionsFor('home', c0)[3].label, 'Фоновый помощник', 'the helper says what it is');
+eq([p.optionsFor('home', c0)[2].label, p.optionsFor('home', c0)[2].opens], ['Как открывается лаунчер', true], 'how the launcher opens is its own screen');
 // ---- the scrolling window ----
 const H = [128, 128, 128, 128, 128, 100, 100];                 // seven rows, taller than 800 px together
 eq(ow.windowEnd(H, 0), 6, 'at the top, six of the seven rows fit');
@@ -138,8 +140,9 @@ eq(p.resetLook({...c0, clock: {...c0.clock, font: 'serif'}}).clock.font, 'inter'
 
 // widget colour, opacity, ranges, reset row
 const wall = p.optionsFor('wallpaper', c0).map((o) => o.id).join(',');
-eq(wall, 'wallpaper,theme', 'Wallpaper without a slideshow: the picture and the colour theme');
-eq(p.optionsFor('wallpaper', {...c0, wallpaper: {...c0.wallpaper, mode: 'folder', path: '/w/'}}).map((o) => o.id).join(','), 'wallpaper,interval,shuffle,theme', 'a slideshow adds its interval and order');
+eq(wall, 'wallpaper,splash,theme', 'Wallpaper without a slideshow: the picture, the start-up picture and the colour theme');
+eq(p.optionsFor('wallpaper', {...c0, wallpaper: {...c0.wallpaper, mode: 'folder', path: '/w/'}}).map((o) => o.id).join(','), 'wallpaper,interval,shuffle,splash,theme', 'a slideshow adds its interval and order');
+eq([c0.splash, p.applyPref(c0, 'splash', 'ok').splash, p.applyPref(p.applyPref(c0, 'splash', 'ok'), 'splash', 'ok').splash], ['wallpaper', 'logo', 'black'], 'the start-up picture: the wallpaper, then the logo, then black');
 eq(p.optionsFor('widgets', c0).map((o) => o.id).join(','), 'clockFont,clockFormat,clockSize,clockWeight,clockColor,showDate,dateSize,weatherOn,weatherCity,weatherUnit,weatherCityName,calendarOn,calendarUrl', 'Widgets: the font for all of them, then the clock, the date, the weather and the calendar');
 eq(p.applyPref(c0, 'clockWeight', 'right').clock.weight, 300, 'weight steps up from thin');
 eq(p.applyPref({...c0, clock: {...c0.clock, weight: 500}}, 'clockWeight', 'right').clock.weight, 600, 'up to bold');

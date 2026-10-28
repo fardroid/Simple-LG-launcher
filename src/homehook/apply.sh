@@ -25,6 +25,13 @@ if [ -f "${TAKEOVER:-/media/developer/launcher-takeover/enabled}" ]; then
     exit 0
 fi
 
+# The launcher is the TV's chosen Home app (tools/defaulthome.sh): the helper is not needed either.
+if [ -f "${DEFAULTHOME:-/media/developer/launcher-defaulthome/enabled}" ]; then
+    log "the launcher is the TV's default Home app: the helper is not started"
+    echo applied
+    exit 0
+fi
+
 # The launcher must be installed (if it was uninstalled, LG Home is left alone).
 if [ ! -f "$LAUNCHER/appinfo.json" ]; then
     log "launcher not installed: not starting the watcher"
