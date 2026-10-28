@@ -4,7 +4,7 @@
 
 A quieter home screen for LG webOS TVs. You get a clock, the weather, your day from Google Calendar and one row of apps, laid over a wallpaper of your own. No ads, no rows of recommendations, nothing that autoplays.
 
-It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. Hearth already had the hard parts working: the app row, the clock, the settings screens and the plumbing through the Homebrew Channel. This fork adds the calendar, the frosted-glass cards, a seven-day forecast with an hourly curve, a language switch (thirteen languages) and a way to put the launcher in LG Home's place, so the Home button opens it.
+It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. Hearth already had the hard parts working: the app row, the clock, the settings screens and the plumbing through the Homebrew Channel. This fork adds the calendar, the frosted-glass cards, a seven-day forecast with an hourly curve, a language switch (thirteen languages) and ways to make the launcher the TV's Home, so the Home button opens it.
 
 > **The easy way to install it:** give the link to this repository to Claude Code or Codex and ask it to set the launcher up on your TV. [AGENTS.md](AGENTS.md) walks the agent through every step: building, installing, making it the home screen and adding your calendars. It checks with you before it changes anything on the TV. You only need a rooted TV and its IP address.
 
@@ -20,9 +20,11 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Clock and date.** A large clock with the weekday and date next to it. Six typefaces, three weights, any size, 12- or 24-hour.
 - **Weather** from [Open-Meteo](https://open-meteo.com), no account needed. You see the temperature now, what it feels like, the wind, an hourly curve for the day and seven days ahead. The card is not just a picture: press ↑ from the app row to step onto it, then ← → scroll through the days, and the curve redraws for each one. With the Magic Remote you can click a day instead.
 - **Calendar.** Paste the secret iCal address of a Google Calendar (or any `.ics` link). You can add several, and each gets its own colour. Repeating events, exceptions, moved events and all-day events all work. Like the weather, it reacts to the remote: step onto it, ← → scroll back and forth through the days, ↑ opens the whole month with a dot under each busy day. The Magic Remote pointer can click through it too.
-- **Frosted glass.** The cards blur the wallpaper behind them. Each card checks how bright the picture is right behind it and goes light or dark, so the text stays readable on any photo.
-- **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is.
-- **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour.
+- **Frosted glass.** The cards blur the wallpaper behind them, as much as you like (30 to 100%). The cards go light or dark together, depending on how bright the picture behind them is, so the text stays readable on any photo; when the wallpaper changes, the glass and the card colour fade with it.
+- **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is. App names under every tile, only under the selected one, or none.
+- **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour. The TV shows the same picture for the moment the launcher takes to start (or the logo, or black).
+- **Pixel shift for OLED.** Everything moves a few whole pixels once a minute, so nothing stays on the same pixels for hours. On by itself when the TV's model name says OLED.
+- **Sharp text.** The TV draws apps at 1080p and scales them up to 4K, so text on half pixels comes out soft. The launcher keeps its text on whole pixels.
 - **Thirteen languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Polish (by [DriftEngineer](https://github.com/DriftEngineer)), Chinese (Simplified), Japanese and Korean. It follows the TV's language by default (English when the TV speaks another one). Settings → Home screen → Language changes it. The Chinese, Japanese and Korean texts are drawn with the TV's own font.
 
 ## What you need
@@ -30,7 +32,7 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - An LG TV with webOS, **rooted** with the [Homebrew Channel](https://www.webosbrew.org/), with SSH turned on in the Homebrew Channel's settings. Rooting depends on the model and firmware; webosbrew.org keeps track of what works where.
 - A computer on the same network, with Node.js 18 or newer and `ssh`.
 
-I use it every day on an LG 43QNED84A6C (2025, webOS 25, internal release 10.3). Hearth itself has been run on webOS 4 through 8. The app should work on those too. Putting it in LG Home's place (below) has only been tried on webOS 25.
+I use it every day on an LG 43QNED84A6C (2025, webOS 25, internal release 10.3). Hearth itself has been run on webOS 4 through 8. The app should work on those too. Making it the home screen (below) has only been tried on webOS 25.
 
 Without root the launcher still opens like any other app, and the clock and weather work. It can't read the full app list, your USB pictures or a Google calendar link (the TV fetches those through the Homebrew Channel), and it can't replace LG Home. Those settings are greyed out with the reason.
 
@@ -46,25 +48,25 @@ TV_HOST=root@<tv-ip> npm run install:tv   # copies it over SSH, installs and ope
 
 You can put `TV_HOST=root@<tv-ip>` in a `tv.env` file (copy `tv.env.example`) so you don't have to type it each time. If you don't want to use SSH, [webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop) can install the `.ipk` too.
 
+**Updating.** The same commands. The TV keeps the launcher loaded in memory (in the Swap way below, a second copy too, the one behind the Home button), and a copy left loaded keeps showing the old version. `npm run install:tv` closes them, and from 1.9.2 on a copy that was missed reloads itself the next time it goes to the background. No need to restart the TV.
+
 ## Making it the home screen
 
-There are two ways. The first is the one I use.
+On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back.
 
-**1. Put it in LG Home's place** ([tools/takeover.sh](tools/takeover.sh)). The script bind-mounts a small folder over LG Home's app folder. In it are the launcher's files and an `appinfo.json` that carries LG Home's ID. From then on the TV itself opens the launcher for the Home button, for Back out of the last app and on waking up, and keeps it in memory the way it keeps LG Home. Nothing on the read-only system is changed, and `disable` undoes it.
+**1. Official** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button, Back out of the last app and waking up then open the launcher. Nothing of LG's is replaced or mounted, it lasts across a full restart, and LG Home stays on its own tile. Only on TVs that offer the choice (webOS 25 and newer). If you uninstall the launcher while this is on, the Home button opens nothing until a full restart, after which LG Home is back by itself; switch to *Off* first. The method is from [Lumen](https://github.com/ammar027/lumen-webos). From a computer: [tools/defaulthome.sh](tools/defaulthome.sh) `enable | disable | status`.
 
-```bash
-scp -O tools/takeover.sh root@<tv-ip>:/media/developer/
-ssh root@<tv-ip> sh /media/developer/takeover.sh enable    # also: disable, status
-```
+**2. Swap** ([tools/takeover.sh](tools/takeover.sh)). For TVs that can't choose a Home app. A small folder is bind-mounted over LG Home's app folder: in it are links to the launcher's files and an `appinfo.json` with LG Home's ID, so the TV opens the launcher thinking it is LG Home. Nothing on the read-only system is changed (it all lives in memory), and *Off* undoes it. Things to know:
 
-Things to know:
-
-- After a full restart of the TV (not standby), LG Home shows for about 40 seconds, until the Homebrew Channel's start-up scripts run and put the launcher back.
+- After a full restart of the TV (not standby), LG Home shows for about 40 seconds, until the Homebrew Channel's start-up scripts put the launcher back.
 - The launcher needs the Homebrew Channel's root service, and LG Home's permissions don't include it. The script mounts a copy of that permissions file with the service added. In plain words: whatever runs as Home can run commands as root, which the launcher could already do as itself.
-- Updating the launcher needs no extra step: the folder links to the installed app.
 - The method comes from [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma).
 
-**2. The background helper** (Settings → Home screen → *Background helper*). This is lighter: a small script on the TV watches for LG Home and opens the launcher instead, from the moment the TV starts. It doesn't mount anything, but LG Home can show for a moment before the launcher takes over. The switch is only offered while the launcher is not in LG Home's place; Settings → Home screen tells you which way is in use.
+**3. Helper.** A small script on the TV watches for LG Home and opens the launcher over it, from the moment the TV starts. Nothing is mounted or replaced, but LG Home can flash for a moment, and the script keeps running.
+
+**4. Off.** The launcher is an ordinary app with its own tile; Home opens LG Home.
+
+The scripts behind them ship with the app (`tools/` in its folder): `sh tools/homemode.sh status` and `set none | default | mount` do the same from SSH.
 
 **Optional: a lighter TV** ([tools/tv-tweaks.sh](tools/tv-tweaks.sh)). It stops LG Channels and the browser from preloading, which leaves more memory free so the TV unloads the launcher less often. It also turns off LG's promotions, sports alerts, recommendations and Live Plus (the TV recognising what is on screen). It saves the old values first, so `restore` undoes everything. Run it the same way: `sh tv-tweaks.sh apply | restore | status`. The ideas are from [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco.
 
@@ -110,9 +112,10 @@ The code is TypeScript and [Preact](https://preactjs.com), built for Chrome 53 s
 
 ## Credits
 
-- [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar, which this is a fork of. If you'd rather have the original (more fonts, a recent apps panel, a quiet mode, no calendar), go there.
+- [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar, which this is a fork of (and the idea for the pixel shift). If you'd rather have the original (more fonts, a recent apps panel, a quiet mode, no calendar), go there.
 - [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), which Hearth itself grew out of.
-- [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma), for the way to take LG Home's place.
+- [Lumen](https://github.com/ammar027/lumen-webos), for the official way to be the TV's Home app.
+- [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma), for the way to take LG Home's place, and Luma for the start-up picture.
 - [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco, for the TV tweaks.
 - [Open-Meteo](https://open-meteo.com) for the free weather, and the [webOS Homebrew](https://www.webosbrew.org/) project, without which none of this would run.
 
