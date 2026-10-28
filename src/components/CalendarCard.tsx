@@ -7,8 +7,8 @@ import {memoProps} from '../lib/memoprops';
 import {useMemo} from 'preact/hooks';
 import type {TimeFormat} from '../lib/clock';
 
-/** Rows the list can hold at the standard text size, before "and N more" takes the last one. */
-const LIST_HEIGHT = 420;
+/** The room for the list of events: the card's height less its head, the strip and the padding (420 px on a full-height card). */
+const listHeight = (height: number): number => Math.max(90, height - 266);
 /** Monday first. */
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0];
 
@@ -31,6 +31,8 @@ interface Props {
 	size: number;
 	/** the address is set but nothing has been read from it yet */
 	loading: boolean;
+	/** the card's height on the screen, px (shorter with the quote of the day under it) */
+	height?: number;
 	onShift: (days: number) => void;
 	onMonthShift: (months: number) => void;
 }
@@ -38,14 +40,14 @@ interface Props {
 /** The events of one day, with the days around it; Up turns it into the month, with the same two layers cross-fading
  *  (the day view shrinks away, the month grows in). The days and the months move as one continuous strip, with no fading,
  *  so the eye can follow where they went; only the list of events fades. */
-function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, onShift, onMonthShift}: Props) {
+function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, height = 686, onShift, onMonthShift}: Props) {
 	const nowMs = now.getTime();
 	const dayStart = startOfDay(nowMs, offset);
 	const inMonth = mode === 'month';
 	const events = useMemo(() => eventsOfDay(data, dayStart, nowMs, format), [data, dayStart, nowMs, format]);
 	const scale = size / 100;
 	const rowHeight = 24 + 44.5 * scale + 12;
-	const fit = Math.max(3, Math.floor(LIST_HEIGHT / rowHeight));
+	const fit = Math.max(1, Math.floor(listHeight(height) / rowHeight));
 	const shown = events.length > fit ? events.slice(0, fit - 1) : events;
 	const more = events.length - shown.length;
 	const names = data ? data.sources.map((s) => s.name) : [];

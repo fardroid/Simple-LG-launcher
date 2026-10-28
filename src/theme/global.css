@@ -154,22 +154,20 @@ html, body {
 
 /* ---------- board: the cards ---------- */
 
-/* The cards form one group in the middle of the screen, 40 px between them. Both columns end on the same line, because the
-   board has a fixed height and its cards fill it. */
+/* The cards form one group in the middle of the screen, in columns 40 px apart (lib/boardlayout.ts sets where each column stands
+   and how wide it is). All the columns end on the same line, because the board has a fixed height and its cards fill it: the clock
+   and the quote keep their own height, the weather, the calendar and the news take the rest. */
 .board {
 	position: absolute;
 	left: 0; right: 0; top: 40px;
 	height: 686px;
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: stretch;
 	z-index: 1;
 }
 .screen--shift .board, .screen--shift .rows { transform: translate(var(--shift-x), var(--shift-y)); }
-.board__left { flex: 0 0 880px; display: flex; flex-direction: column; min-width: 0; }
-.board__left + .cal { margin-left: 40px; }
-.board__left > .weather { margin-top: 40px; }
+.board__col { position: absolute; top: 0; bottom: 0; display: flex; flex-direction: column; min-width: 0; }
+.board__col > * + * { margin-top: 40px; }
+.board__col > .weather, .board__col > .cal, .board__col > .news { flex: 1 1 auto; min-height: 0; }
+.board__col > .quote { flex: 0 0 auto; }
 
 /* ---------- cards (weather, calendar) ---------- */
 
@@ -211,9 +209,13 @@ html, body {
 /* Settings → Look → "Card shadows" off */
 .board--flat .card { box-shadow: none; }
 
+/* the clock in a column of three: the date on one line under the time */
+.clock--narrow { flex-direction: column; align-items: center; }
+.clock--narrow .clock__date { margin-left: 0; }
+
 /* One type scale for both cards, so they read as one family. --k is the size chosen in Settings (1 = standard).
    --t-hero: the current temperature   --t-title: the date heading   --t1: main text   --t2: secondary text   --t3: small labels */
-.weather, .cal {
+.weather, .cal, .news, .quote {
 	--k: 1;
 	--t-hero: calc(64px * var(--k));
 	--t-title: calc(26px * var(--k));
@@ -257,13 +259,12 @@ html, body {
 .wx-icon--rain, .wx-icon--storm { stroke: #8cc4ff; }
 
 /* Focus on a card: a layer over the plate that only fades in (opacity is all the TV has to animate: no shadow or size change) */
-.weather::before, .cal::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
-.weather--focus::before, .cal--focus::before { opacity: 1; }
+.weather::before, .cal::before, .news::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
+.weather--focus::before, .cal--focus::before, .news--focus::before { opacity: 1; }
 /* The focused card grows by 1.02, text and all (the text is a little soft while it is grown: the growth matters more here) */
-.weather--focus, .cal--focus { transform: scale(1.02); }
+.weather--focus, .cal--focus, .news--focus { transform: scale(1.02); }
 
 .cal {
-	flex: 0 0 600px;
 	min-width: 0;
 	padding: 26px 28px;
 	display: flex;
@@ -879,3 +880,40 @@ ul.homemethod__list li:before { position: absolute; left: 4px; top: 0; font-size
 .homemethod__note { margin: 0 0 18px; font-size: 21px; line-height: 28px; color: #FF9F0A; }
 .homemethod__action { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.09); font-size: 22px; line-height: 28px; font-weight: 600; color: var(--color-text-muted); }
 .homemethod__action--armed { color: var(--color-text-primary); }
+
+/* ---------- news ---------- */
+
+.news { min-width: 0; padding: 22px 26px; display: flex; flex-direction: column; }
+.news__head { display: flex; flex-direction: row; align-items: baseline; height: calc(44px * var(--k)); flex: 0 0 auto; }
+.news__title { flex: 1 1 auto; font-size: var(--t-title); font-weight: 500; line-height: 1.2; }
+.news__pages { font-size: var(--t2); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.news__list { flex: 1 1 auto; min-height: 0; overflow: hidden; margin-top: 10px; animation: cal-fade 260ms ease-out; }
+/* one headline: its outlet and age, then two lines (see headlinesPerPage in lib/feeds.ts, which counts on these sizes) */
+.news__item { box-sizing: border-box; padding: 16px 14px 14px; border-radius: 18px; border-top: 1.5px solid rgba(255, 255, 255, 0.1); cursor: pointer; white-space: normal; transition: background 70ms ease-out; }
+.news__item:first-child, .news__item--sel, .news__item--sel + .news__item { border-top-color: transparent; }
+.news__item--sel { background: rgba(255, 255, 255, 0.16); }
+.news__meta { font-size: var(--t3); line-height: 1.35; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news__headline { font-size: var(--t1); font-weight: 500; line-height: 1.3; margin-top: 6px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.news__empty { padding-top: 70px; text-align: center; white-space: normal; font-size: var(--t1); color: var(--color-text-secondary); }
+
+/* ---------- the quote of the day ---------- */
+
+.quote { min-width: 0; padding: 20px 30px; display: flex; flex-direction: column; pointer-events: none; }
+.quote__body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; white-space: normal; }
+.quote__text { font-weight: 300; font-style: italic; line-height: 1.3; white-space: pre-line; }
+.quote__text--clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.quote__text--empty { font-style: normal; font-size: var(--t1); color: var(--color-text-secondary); }
+.quote__by { flex: 0 0 auto; margin-top: 8px; font-size: var(--t2); color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- a headline over the screen ---------- */
+
+.news-detail { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 30; background: rgba(4, 6, 18, 0.72); display: flex; align-items: center; justify-content: center; animation: cal-fade 200ms ease-out; }
+.news-detail__card { width: 1320px; box-sizing: border-box; padding: 48px 56px; border-radius: 36px; background: #161a30; box-shadow: 0 34px 70px rgba(0, 0, 0, 0.55); display: flex; flex-direction: row; align-items: center; color: var(--color-text-primary); font-family: var(--widget-font, inherit); }
+.news-detail__text { flex: 1 1 auto; min-width: 0; }
+.news-detail__meta { font-size: 22px; color: var(--color-text-secondary); }
+.news-detail__title { font-size: 44px; font-weight: 500; line-height: 1.25; margin-top: 14px; }
+.news-detail__summary { font-size: 24px; line-height: 1.45; color: var(--color-text-secondary); margin-top: 22px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; }
+.news-detail__hint { font-size: 20px; color: var(--color-text-muted); margin-top: 30px; }
+.news-detail__qr { flex: 0 0 auto; width: 300px; margin-left: 56px; text-align: center; }
+.news-detail__qr svg { display: block; width: 300px; height: 300px; border-radius: 16px; }
+.news-detail__scan { font-size: 20px; line-height: 1.35; color: var(--color-text-secondary); margin-top: 16px; }

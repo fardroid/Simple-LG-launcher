@@ -4,13 +4,13 @@ import {memoProps} from '../lib/memoprops';
 import type {WeatherView} from '../lib/weather';
 import {WeatherGlyph} from './Glyph';
 
-/** The curve of today's temperature, one point every 3 hours, with a dashed line at the present moment. */
-const W = 816;
+/** The curve of today's temperature, one point every 3 hours, with a dashed line at the present moment. It is drawn at the
+ *  card's own width (816 px inside the wide card), so its text keeps its size in a narrow column. */
 const TOP = 46;
 const BOTTOM = 108;
 const EDGE = 50;
 
-function Curve ({view, now}: {view: WeatherView; now: Date}) {
+function Curve ({view, now, W}: {view: WeatherView; now: Date; W: number}) {
 	const hours = view.hours;
 	if (hours.length < 2) return null;
 	const temps = hours.map((h) => h.tempC);
@@ -63,10 +63,12 @@ interface Props {
 	focused: boolean;
 	/** a day was clicked (index in the forecast) */
 	onPick: (day: number) => void;
+	/** the card's width on the screen, px */
+	width?: number;
 }
 
 /** Weather: now, the chosen day by hours, and the next days. ← → (or a click) choose which day the curve is for. */
-function WeatherCardView ({view, size, now, plate, focused, onPick}: Props) {
+function WeatherCardView ({view, size, now, plate, focused, onPick, width = 880}: Props) {
 	return (
 		<div class={`card weather${focused ? ' weather--focus' : ''}`} style={{'--k': String(size / 100), ...plateVars(plate)}}>
 			<Frost plate={plate} />
@@ -81,7 +83,7 @@ function WeatherCardView ({view, size, now, plate, focused, onPick}: Props) {
 					{view.city && <div class="weather__city">{view.city}</div>}
 				</div>
 			</div>
-			<div class="weather__hours"><Curve view={view} now={now} /></div>
+			<div class="weather__hours"><Curve view={view} now={now} W={width - 64} /></div>
 			<div class="weather__days">
 				{view.days.map((day, i) => (
 					<div key={i} class={`wday${day.today ? ' wday--today' : ''}${day.selected ? ' wday--sel' : ''}`} onClick={() => onPick(i)}>

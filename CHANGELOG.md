@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **News** (Settings → Widgets → News): headlines from Google News for a chosen country (52 editions; in the launcher's language when the country has an edition in it, else in the country's own) and from up to eight RSS or Atom feeds of your own. RSS 2.0, RSS 1.0 and Atom are read, in any encoding the feed declares (windows-1251 too); the feeds are joined newest first, without repeats, and only the last two days are kept. On the card ↑ ↓ choose a headline, ← → turn the pages (they turn by themselves every 20 s while the remote is elsewhere), and OK shows the headline over the screen with its description and a QR code of its link (`qrcode-generator`, MIT). Most sites send no CORS headers, so on a TV the feeds come through the Homebrew Channel: curl or wget saves them to a file, which is read back in pieces.
+- **Quote of the day** (Settings → Widgets): from Wikiquote, in the launcher's language. The editors' quote of the day from the main page where there is one (en, es, pl, zh, ko, tr, pt, uk; the Italian one from its feed); otherwise, and on a day left empty, a quote picked by the date from the page of one of about 400 writers, poets, thinkers and scientists born before 1920 (a Wikidata query, kept for a month). Wikimedia lets the web view read both, so it works without root. The text is set as large as the card allows.
+- **Cards in columns** (`lib/boardlayout.ts`): the clock and the weather, then the calendar or the news, with the quote of the day under the calendar or the news. With both the calendar and the news on, three columns of 560 px; the clock puts the date under the time there and shrinks its digits only when the time would not fit. A card alone in its column takes the whole height (the calendar and the news without the quote, the quote alone). With the news and the quote off, everything stands exactly where it did. ↑ from the app row goes to the column above the selected tile; ↑ from a card with nothing above it goes to the next column on the right (the weather still leads to the calendar).
+- The weather's hourly curve is drawn at the card's own width, and the calendar fits as many events as its height allows.
+
 ## 1.9.2
 
 - **Polish.** Thanks to [DriftEngineer](https://github.com/DriftEngineer), who translated it ([pull request #4](https://github.com/fardroid/Simple-LG-launcher/pull/4))! It comes with its own plural rule (1 zdjęcie, 3 zdjęcia, 5 zdjęć, 22 zdjęcia, but 21 zdjęć, not like Russian). The texts added in 1.9.2 were translated here; corrections are welcome.

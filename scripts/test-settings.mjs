@@ -36,6 +36,12 @@ const g = s.loadConfig();
 eq([g.theme, g.iconScale, g.sideMargin, g.bottomMargin], ['grey', 140, 30, 0], 'out-of-range numbers are clamped and snapped');
 eq([g.clock.size, g.clock.weight, g.clock.color, g.clock.showDate, g.clock.showPeriod], [80, 200, 'white', false, true], 'clock values validated, missing ones default');
 eq([g.wallpaper.mode, g.wallpaper.intervalSec], ['folder', 60], 'bad interval falls back');
+store[KEY] = JSON.stringify({news: {on: true, google: false, country: 'ZZ', feeds: ['feed://site.example/rss', 'javascript:x', 1, 'https://a.example/1', 'https://a.example/2', 'https://a.example/3', 'https://a.example/4', 'https://a.example/5', 'https://a.example/6', 'https://a.example/7', 'https://a.example/8']}, quote: {on: true}});
+const n = s.loadConfig();
+eq([n.news.on, n.news.google, n.news.country, n.news.feeds.length, n.news.feeds[0], n.quote.on], [true, false, '', 8, 'https://site.example/rss', true], 'news: bad addresses and an unknown country dropped, at most 8 feeds; the quote kept');
+store[KEY] = JSON.stringify({news: {on: true, google: false, feeds: []}});
+eq(s.loadConfig().news.on, false, 'news without Google News and without feeds is off');
+eq([s.DEFAULT_CONFIG.news.on, s.DEFAULT_CONFIG.news.google, s.DEFAULT_CONFIG.quote.on], [false, true, false], 'defaults: news and quote off, Google News chosen');
 store[KEY] = '{not json';
 eq(s.loadConfig().theme, 'dusk', 'corrupt storage falls back to defaults');
 store[KEY] = JSON.stringify({wallpaper: {mode: 'folder', path: ''}});
@@ -89,7 +95,7 @@ eq([r.appIds, r.wallpaper.mode], [['a'], 'image'], 'reset keeps apps and wallpap
 // ---- the lists shown in Settings ----
 for (const tab of ['look', 'widgets', 'wallpaper', 'home']) {
   const list = p.optionsFor(tab, c0);
-  eq(list.length >= 1 && list.length <= 16, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
+  eq(list.length >= 1 && list.length <= 20, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
 }
 const look = p.optionsFor('look', c0);
 eq(look.map((o) => o.valueText), ['100%', 'У всех', '80 px', '50 px', '100%', 'Авто', undefined, 'Авто'], 'Appearance shows current values (switches have no text; no frosted glass without a picture)');
@@ -143,7 +149,8 @@ const wall = p.optionsFor('wallpaper', c0).map((o) => o.id).join(',');
 eq(wall, 'wallpaper,splash,theme', 'Wallpaper without a slideshow: the picture, the start-up picture and the colour theme');
 eq(p.optionsFor('wallpaper', {...c0, wallpaper: {...c0.wallpaper, mode: 'folder', path: '/w/'}}).map((o) => o.id).join(','), 'wallpaper,interval,shuffle,splash,theme', 'a slideshow adds its interval and order');
 eq([c0.splash, p.applyPref(c0, 'splash', 'ok').splash, p.applyPref(p.applyPref(c0, 'splash', 'ok'), 'splash', 'ok').splash], ['wallpaper', 'logo', 'black'], 'the start-up picture: the wallpaper, then the logo, then black');
-eq(p.optionsFor('widgets', c0).map((o) => o.id).join(','), 'clockFont,clockFormat,clockSize,clockWeight,clockColor,showDate,dateSize,weatherOn,weatherCity,weatherUnit,weatherCityName,calendarOn,calendarUrl', 'Widgets: the font for all of them, then the clock, the date, the weather and the calendar');
+eq(p.optionsFor('widgets', c0).map((o) => o.id).join(','), 'clockFont,clockFormat,clockSize,clockWeight,clockColor,showDate,dateSize,weatherOn,weatherCity,weatherUnit,weatherCityName,calendarOn,calendarUrl,newsOn,newsGoogle,newsCountry,newsFeeds,quoteOn', 'Widgets: the font for all of them, then the clock, the date, the weather, the calendar, the news and the quote');
+eq(p.optionsFor('widgets', {...c0, news: {...c0.news, google: false}}).map((o) => o.id).indexOf('newsCountry'), -1, 'no country to choose with Google News off');
 eq(p.applyPref(c0, 'clockWeight', 'right').clock.weight, 300, 'weight steps up from thin');
 eq(p.applyPref({...c0, clock: {...c0.clock, weight: 500}}, 'clockWeight', 'right').clock.weight, 600, 'up to bold');
 eq(p.optionsFor('widgets', {...c0, clock: {...c0.clock, showDate: false}}).some((o) => o.id === 'dateSize'), false, 'no date size without a date');

@@ -94,6 +94,11 @@ export function countryOfTag (tag: string): string {
 	return EDITIONS[code] ? code : 'US';
 }
 
+/** The language tag of the TV ("ru-RU"): the country of the news follows it until one is chosen. */
+export function tvLanguageTag (): string {
+	try { return String((navigator.languages && navigator.languages[0]) || navigator.language || ''); } catch { return ''; }
+}
+
 /** The country in use: the chosen one, or the one of the TV's language tag. */
 export function countryOf (chosen: string, tag: string): string {
 	return EDITIONS[chosen] ? chosen : countryOfTag(tag);
@@ -150,7 +155,10 @@ function textOf (raw: string | null): string {
 	let s = raw.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
 	// a feed escapes the HTML of its descriptions: decode once, then read the tags
 	if (/&lt;|&#60;/.test(s) && !/<[a-z]/i.test(s)) s = decodeEntities(s);
-	return htmlToText(s).replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
+	let text = htmlToText(s);
+	// a title of type "html" is escaped twice (&amp;amp;)
+	if (/&(amp|lt|gt|quot|#\d+);/.test(text)) text = decodeEntities(text);
+	return text.replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function linkOf (block: string): string {
