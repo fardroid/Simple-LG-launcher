@@ -23,7 +23,8 @@
 #   sh defaulthome.sh status
 #   sh defaulthome.sh check     what the boot link runs: LG Home back if the launcher is no longer installed
 #   sh defaulthome.sh refresh   what the launcher runs once each time it starts: while this is on, the copy of this script is
-#                               brought up to the installed launcher's (after an update) and the settings are set again
+#                               brought up to the installed launcher's (after an update) and the settings are set again; the
+#                               first time after an update, the app manager is restarted once for keepAliveApps
 #   sh defaulthome.sh point     what the launcher runs when it comes to the front or goes to the back: the launcher as last input
 #   sh defaulthome.sh keepalive what the boot link runs: the launcher in keepAliveApps (see above), and SAM restarted
 #
@@ -48,6 +49,7 @@ KEYS='"homeAutoLaunch","lastInputApp","physicalLastInputApp"'
 LAYERS=/etc/configd/layers
 COPIES=$DIR/configd
 CONFIG=luna://com.webos.service.config
+LOCK=/tmp/launcher-keepalive.lock
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
 
@@ -123,6 +125,12 @@ keepalive_files () {
 }
 
 mounted () { grep -q " $1 " /proc/mounts; }
+
+# Is one of those files not mounted yet?
+keepalive_pending () {
+	for f in $(keepalive_files); do mounted "$f" || return 0; done
+	return 1
+}
 
 # Mounts a copy of each such file with the launcher added. Prints "mounted" when one was not mounted before (SAM must then be
 # restarted to take it), nothing when all were.
@@ -264,10 +272,28 @@ case "$1" in
 		fi
 		old_guard_off
 		keep_settings
-		# not mounted yet (an update, without a restart since): mounted now, taken by SAM at its next start (restarting it here
-		# would close the launcher that has just loaded)
-		[ -n "$(keepalive_mount)" ] && keepalive_apply && log "keepAliveApps ready: in use from the next restart of the TV"
-		wake_into_launcher && echo "ok"
+		wake_into_launcher
+		# not mounted yet (an update, without a restart since): mounted, and SAM restarted once to take them. That closes the
+		# launcher that has just loaded, so it is done in the background, a moment later, and opens the launcher again after it.
+		if keepalive_pending; then
+			( setsid nohup sh "$DIR/defaulthome.sh" keepalive-update </dev/null >/dev/null 2>&1 & )
+		fi
+		echo "ok"
+		;;
+	keepalive-update)
+		[ -f "$FLAG" ] || exit 0
+		# one at a time (the launcher may load twice in a row); a lock older than two minutes is left over
+		if ! mkdir "$LOCK" 2>/dev/null; then
+			[ $(( $(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || echo 0) )) -lt 120 ] && exit 0
+			rmdir "$LOCK" 2>/dev/null; mkdir "$LOCK" 2>/dev/null || exit 0
+		fi
+		sleep 2
+		if keepalive_pending; then
+			keepalive_mount >/dev/null
+			log "keepAliveApps mounted after an update: the app manager is restarted once"
+			keepalive_apply restart
+		fi
+		rmdir "$LOCK" 2>/dev/null
 		;;
 	point)
 		[ -f "$FLAG" ] || exit 0
