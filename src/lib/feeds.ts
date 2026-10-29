@@ -87,11 +87,16 @@ export const EDITIONS: Record<string, {name: string; editions: Edition[]}> = {
 
 export const COUNTRIES: readonly string[] = Object.keys(EDITIONS).sort();
 
-/** The country of a language tag ("pt-BR" → BR) when Google News has it, else the United States. */
+/** The country whose Google News a launcher language stands for, when the TV's own region has no edition in it. */
+export const HOME_COUNTRY: Record<Lang, string> = {
+	en: 'US', ru: 'RU', es: 'ES', fr: 'FR', de: 'DE', it: 'IT', pt: 'PT', tr: 'TR', uk: 'UA', zh: 'CN', ja: 'JP', ko: 'KR', pl: 'PL'
+};
+
+/** The region of a language tag ("pt-BR" → BR) when Google News has it, else ''. */
 export function countryOfTag (tag: string): string {
 	const m = /[-_]([A-Za-z]{2})\b/.exec(String(tag || ''));
 	const code = m ? m[1].toUpperCase() : '';
-	return EDITIONS[code] ? code : 'US';
+	return EDITIONS[code] ? code : '';
 }
 
 /** The language tag of the TV ("ru-RU"): the country of the news follows it until one is chosen. */
@@ -99,9 +104,13 @@ export function tvLanguageTag (): string {
 	try { return String((navigator.languages && navigator.languages[0]) || navigator.language || ''); } catch { return ''; }
 }
 
-/** The country in use: the chosen one, or the one of the TV's language tag. */
-export function countryOf (chosen: string, tag: string): string {
-	return EDITIONS[chosen] ? chosen : countryOfTag(tag);
+/** The country in use: the chosen one; otherwise the TV's region when it has an edition in the launcher's language, else the
+ *  launcher language's own country (a German launcher on a TV set to the United States reads German news). */
+export function countryOf (chosen: string, tag: string, lang: Lang): string {
+	if (EDITIONS[chosen]) return chosen;
+	const region = countryOfTag(tag);
+	if (region && EDITIONS[region].editions.some((e) => e[0] === lang)) return region;
+	return HOME_COUNTRY[lang] || region || 'US';
 }
 
 /** The country's name in the screen's language (the English one where the TV cannot name it). */

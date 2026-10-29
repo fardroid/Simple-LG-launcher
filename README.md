@@ -91,7 +91,7 @@ The secret address gives read access to that calendar to anyone who has it. It i
 
 ## News
 
-Settings → Widgets → News. *Google News* shows the top stories of a country; *Country* picks it (at first, the country of the TV's language). The headlines come in the launcher's language when the country has a Google News edition in it, and in the country's own language when it doesn't. *Your feeds* takes the address of any RSS or Atom feed, typed with the on-screen keyboard (up to eight). You can turn Google News off and keep only your own feeds.
+Settings → Widgets → News. *Google News* shows the top stories of a country; *Country* picks it. At first it is the TV's own country when Google News has an edition there in the launcher's language, otherwise the country of that language (Germany for German, Poland for Polish and so on), so every one of the launcher's thirteen languages gets news in it. The headlines come in the launcher's language when the country has a Google News edition in it, and in the country's own language when it doesn't. *Your feeds* takes the address of any RSS or Atom feed, typed with the on-screen keyboard (up to eight). You can turn Google News off and keep only your own feeds.
 
 Most news sites don't let a web page read their feeds directly, so on a TV the launcher fetches them through the Homebrew Channel, like the calendars: without root, the news card mostly stays empty.
 

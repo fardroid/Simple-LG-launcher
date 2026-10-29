@@ -464,7 +464,7 @@ export const it: Record<string, string> = {
 	'Google News': 'Google News',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': 'Le notizie principali del paese scelto, nella lingua del launcher quando il paese ha un\'edizione in quella lingua.',
 	'Country': 'Paese',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Di quale paese Google News mostra le notizie principali. All\'inizio, il paese della lingua della TV.',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Di quale paese Google News mostra le notizie principali. All\'inizio, il paese della TV o quello della lingua del launcher.',
 	'Your feeds': 'I tuoi feed',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': 'Indirizzi di feed RSS o Atom di qualsiasi sito, mostrati insieme a Google News o al suo posto.',
 	'None (feeds)': 'Nessuno',

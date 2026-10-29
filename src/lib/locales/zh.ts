@@ -464,7 +464,7 @@ export const zh: Record<string, string> = {
 	'Google News': 'Google 新闻',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': '所选国家的头条新闻；如果该国家有启动器语言的版本，则使用该语言。',
 	'Country': '国家',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Google 新闻显示哪个国家的头条。默认是电视语言对应的国家。',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Google 新闻显示哪个国家的头条。默认是电视所在的国家，或启动器语言对应的国家。',
 	'Your feeds': '我的订阅源',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': '任意网站的 RSS 或 Atom 订阅源地址，与 Google 新闻一起显示或代替它显示。',
 	'None (feeds)': '无',

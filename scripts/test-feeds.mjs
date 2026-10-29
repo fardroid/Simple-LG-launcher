@@ -55,8 +55,14 @@ eq(f.googleNewsUrl('UA', 'en'), 'https://news.google.com/rss?hl=uk&gl=UA&ceid=UA
 eq(f.googleNewsUrl('BR', 'pt'), 'https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR%3Apt-419', 'Brazil in Portuguese');
 eq(f.googleNewsUrl('XX', 'en'), 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US%3Aen', 'an unknown country is the United States');
 eq(/^https:\/\/[A-Za-z0-9._\/?=&,%-]+$/.test(f.googleNewsUrl('TW', 'zh')), true, 'the address passes the shell\'s check of safe characters');
-eq([f.countryOfTag('pt-BR'), f.countryOfTag('ru'), f.countryOfTag('en_GB'), f.countryOfTag('xx-ZZ')], ['BR', 'US', 'GB', 'US'], 'the country of the TV\'s language tag');
-eq([f.countryOf('DE', 'ru-RU'), f.countryOf('', 'ru-RU')], ['DE', 'RU'], 'the chosen country, or the TV\'s');
+eq([f.countryOfTag('pt-BR'), f.countryOfTag('ru'), f.countryOfTag('en_GB'), f.countryOfTag('xx-ZZ')], ['BR', '', 'GB', ''], 'the region of the TV\'s language tag, when Google News has it');
+eq([f.countryOf('DE', 'ru-RU', 'ru'), f.countryOf('', 'ru-RU', 'ru'), f.countryOf('', 'en-CA', 'fr')], ['DE', 'RU', 'CA'], 'the chosen country, or the TV\'s when it has an edition in the launcher\'s language');
+eq([f.countryOf('', 'en-US', 'de'), f.countryOf('', 'pl', 'pl'), f.countryOf('', '', 'ja'), f.countryOf('', 'de-DE', 'uk')], ['DE', 'PL', 'JP', 'UA'], 'otherwise the country of the launcher\'s language (a German launcher on a TV set to the US reads German news)');
+// every language of the launcher has Google News in it
+const langs = ['en', 'ru', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'uk', 'zh', 'ja', 'ko', 'pl'];
+eq(langs.filter((l) => f.editionFor(f.HOME_COUNTRY[l], l)[0] !== l), [], 'each of the 13 launcher languages has a country with a Google News edition in it');
+eq(f.googleNewsUrl(f.countryOf('', '', 'pl'), 'pl'), 'https://news.google.com/rss?hl=pl&gl=PL&ceid=PL%3Apl', 'Polish: the Polish edition');
+eq(f.googleNewsUrl(f.countryOf('', '', 'de'), 'de'), 'https://news.google.com/rss?hl=de&gl=DE&ceid=DE%3Ade', 'German: the German edition');
 eq(f.COUNTRIES.indexOf('AT'), -1, 'countries whose edition gives no headlines are not offered');
 eq(f.countryName('IT', 'xx'), f.countryName('IT', 'xx') ? f.countryName('IT', 'xx') : 'Italy', 'a country has a name');
 

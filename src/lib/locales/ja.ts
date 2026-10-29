@@ -464,7 +464,7 @@ export const ja: Record<string, string> = {
 	'Google News': 'Google ニュース',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': '選んだ国の主要ニュース。その国にランチャーの言語の版があればその言語で表示します。',
 	'Country': '国',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Google ニュースが表示する主要ニュースの国。最初はテレビの言語の国です。',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Google ニュースが表示する主要ニュースの国。最初はテレビの国、またはランチャーの言語の国です。',
 	'Your feeds': '自分のフィード',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': '任意のサイトの RSS または Atom フィードのアドレス。Google ニュースと一緒に、またはその代わりに表示します。',
 	'None (feeds)': 'なし',

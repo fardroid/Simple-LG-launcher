@@ -464,7 +464,7 @@ export const ko: Record<string, string> = {
 	'Google News': 'Google 뉴스',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': '선택한 국가의 주요 뉴스. 해당 국가에 런처 언어 버전이 있으면 그 언어로 표시합니다.',
 	'Country': '국가',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Google 뉴스가 주요 뉴스를 보여 줄 국가. 처음에는 TV 언어의 국가입니다.',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Google 뉴스가 주요 뉴스를 보여 줄 국가. 처음에는 TV의 국가 또는 런처 언어의 국가입니다.',
 	'Your feeds': '내 피드',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': '아무 사이트의 RSS 또는 Atom 피드 주소. Google 뉴스와 함께 또는 대신 표시됩니다.',
 	'None (feeds)': '없음',

@@ -464,7 +464,7 @@ export const tr: Record<string, string> = {
 	'Google News': 'Google Haberler',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': 'Seçilen ülkenin öne çıkan haberleri; ülkenin bu dilde bir sürümü varsa başlatıcının dilinde.',
 	'Country': 'Ülke',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Google Haberler\'in hangi ülkenin öne çıkan haberlerini gösterdiği. Başta TV dilinin ülkesi.',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Google Haberler\'in hangi ülkenin öne çıkan haberlerini gösterdiği. Başta TV\'nin ülkesi ya da başlatıcı dilinin ülkesi.',
 	'Your feeds': 'Kendi kaynaklarınız',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': 'Herhangi bir sitenin RSS veya Atom kaynaklarının adresleri; Google Haberler ile birlikte ya da onun yerine gösterilir.',
 	'None (feeds)': 'Yok',

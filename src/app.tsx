@@ -452,7 +452,7 @@ export function App () {
 	// appears and then every 25 minutes while it is in front. Google News follows the chosen country and the launcher's language.
 	const newsSources = useMemo(() => {
 		if (!config.news.on) return [] as string[];
-		const google = config.news.google ? [googleNewsUrl(countryOf(config.news.country, tvLanguageTag()), language)] : [];
+		const google = config.news.google ? [googleNewsUrl(countryOf(config.news.country, tvLanguageTag(), language), language)] : [];
 		return google.concat(config.news.feeds);
 	}, [config.news, language]);
 	const newsKey = newsSources.join('\n');
@@ -790,7 +790,7 @@ export function App () {
 			{screen === 'homeMethod' && <HomeMethod info={systemInfo.homeMode || null} busy={modeBusy} onPick={onPickHomeMode} onClose={() => setScreen('settings')} />}
 			{screen === 'calendarUrl' && <CalendarSetup sources={config.calendar.sources} canReadFiles={config.useHomebrew && isWebOS()} onChoose={onChooseCalendars} onClose={() => setScreen('settings')} />}
 			{screen === 'feeds' && <FeedsSetup feeds={config.news.feeds} onChoose={onChooseFeeds} onClose={() => setScreen('settings')} />}
-			{screen === 'country' && <CountryPicker current={countryOf(config.news.country, tvLanguageTag())} onChoose={onChooseCountry} onClose={() => setScreen('settings')} />}
+			{screen === 'country' && <CountryPicker current={countryOf(config.news.country, tvLanguageTag(), language)} onChoose={onChooseCountry} onClose={() => setScreen('settings')} />}
 			{WEATHER_ENABLED && screen === 'cities' && <CityPicker allowShell={config.useHomebrew && isWebOS()} onChoose={onChooseCity} onClose={() => setScreen('settings')} />}
 			<Toast message={toast} />
 		</>

@@ -39,6 +39,13 @@ eq([...ru, ...de, ...fr].every((t) => t.length >= 25 && t.length <= 220 && !/htt
 eq(q.skippedSection('Überprüft / Gedichte'), false, '"Überprüft" (checked) is not "über" (about)');
 eq([q.skippedSection('Citations le concernant / Sainte-Beuve'), q.skippedSection('孔子に関する引用'), q.skippedSection('See also')], [true, true, true], 'about-the-author and link sections are skipped at any depth');
 
+// every language of the launcher: the editors' quote where there is one, else picked by the date (with saved pages to test on)
+const langs = ['en', 'ru', 'es', 'fr', 'de', 'it', 'pt', 'tr', 'uk', 'zh', 'ja', 'ko', 'pl'];
+const pickedOnly = langs.filter((l) => !q.DAILY[l]);
+eq(pickedOnly, ['ru', 'fr', 'de', 'ja'], 'ru, fr, de and ja always pick by the date; the other nine have an editors\' quote');
+eq(pickedOnly.filter((l) => !fs.existsSync(F + 'author-' + l + '.html')), [], 'each language that picks by the date has an author\'s page to test on');
+eq(langs.filter((l) => q.DAILY[l] && !q.DAILY[l].feed && !fs.existsSync(F + 'main-' + l + '.html')), [], 'each language with an editors\' quote on its main page has that page to test on');
+
 // cleaning
 eq(q.cleanQuote('„Edel sei der Mensch, // Hülfreich und gut!“ – Vers 1–6', 'de'), 'Edel sei der Mensch,\nHülfreich und gut!', 'quote marks, the source after them and // handled');
 eq(q.cleanQuote('«Texte entre guillemets»', 'fr'), 'Texte entre guillemets', 'French quote marks');

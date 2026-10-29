@@ -182,8 +182,8 @@ const newsPrefs = (): Pref[] => group(tr('News', 'Новости'), [
 		(c) => c.news.google, (c, v) => ({...c, news: {...c.news, google: v, on: c.news.on && (v || c.news.feeds.length > 0)}})),
 	only((c) => c.news.google, {
 		id: 'newsCountry', tab: 'widgets', opens: true, label: tr('Country', 'Страна'), kind: 'action',
-		description: tr('Whose top stories Google News shows. At first, the country of the TV\'s language.', 'Чьи главные новости показывает Google Новости. Сначала — страна языка ТВ.'),
-		text: (c) => countryName(countryOf(c.news.country, tvLanguageTag()), langTag())
+		description: tr('Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.', 'Чьи главные новости показывает Google Новости. Сначала — страна ТВ или страна языка лаунчера.'),
+		text: (c) => countryName(countryOf(c.news.country, tvLanguageTag(), lang()), langTag())
 	}),
 	{
 		id: 'newsFeeds', tab: 'widgets', opens: true, label: tr('Your feeds', 'Свои ленты'), kind: 'action',

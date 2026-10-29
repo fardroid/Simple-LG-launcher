@@ -464,7 +464,7 @@ export const uk: Record<string, string> = {
 	'Google News': 'Google Новини',
 	'The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.': 'Головні новини вибраної країни — мовою лаунчера, якщо в країни є така редакція.',
 	'Country': 'Країна',
-	'Whose top stories Google News shows. At first, the country of the TV\'s language.': 'Чиї головні новини показують Google Новини. Спочатку — країна мови ТВ.',
+	'Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.': 'Чиї головні новини показують Google Новини. Спочатку — країна ТВ або країна мови лаунчера.',
 	'Your feeds': 'Власні стрічки',
 	'Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.': 'Адреси RSS- або Atom-стрічок будь-яких сайтів. Показуються разом із Google Новинами або замість них.',
 	'None (feeds)': 'Немає',
