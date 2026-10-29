@@ -9,10 +9,11 @@ import {CLOCK_FONT_IDS, type ClockFont} from './clockfont';
 import {CLOCK_COLOR_IDS, type ClockColor} from './clockcolor';
 import {validCoords, type City, type TempUnit} from './weather';
 import {validSource} from './calendar';
+import {COUNTRIES, normalizeFeedUrl, validFeedUrl} from './feeds';
 import type {PlateMode} from './plates';
 import {LANG_SETTINGS, type LangSetting} from './i18n';
 
-export type WallpaperMode = 'gradient' | 'image' | 'folder';
+export type WallpaperMode = 'gradient' | 'image' | 'folder' | 'pictures';
 export type ClockFormat = 'tv' | '12h' | '24h';
 export type PixelShift = 'auto' | 'on' | 'off';
 export type {ClockColor};
@@ -72,11 +73,32 @@ export interface CalendarConfig {
 	sources: string[];
 }
 
+export interface NewsConfig {
+	/** show the news card */
+	on: boolean;
+	/** the top stories of Google News for `country` */
+	google: boolean;
+	/** a country code of feeds.ts' EDITIONS; '' = the country of the TV's language */
+	country: string;
+	/** the user's own feeds (RSS or Atom addresses) */
+	feeds: string[];
+}
+
+export interface QuoteConfig {
+	/** show the quote of the day */
+	on: boolean;
+}
+
+export const MAX_FEEDS = 8;
+
 export interface WallpaperConfig {
-	/** gradient: the default background (black or the calm gradient, per theme). image: one picture. folder: a slideshow. */
+	/** gradient: the default background (black or the calm gradient, per theme). image: one picture. folder: a slideshow of a folder.
+	 *  pictures: a slideshow of the pictures ticked in the gallery. */
 	mode: WallpaperMode;
-	/** absolute path of the picture or the folder (empty for the default background) */
+	/** absolute path of the picture or the folder (empty for the default background); with `pictures`, the first of them */
 	path: string;
+	/** the ticked pictures (absolute paths), with `pictures` */
+	paths: string[];
 	/** seconds between pictures in a slideshow */
 	intervalSec: number;
 	/** play the slideshow in random order */
@@ -132,12 +154,15 @@ export interface UserConfig {
 	clock: ClockConfig;
 	weather: WeatherConfig;
 	calendar: CalendarConfig;
+	news: NewsConfig;
+	quote: QuoteConfig;
 	wallpaper: WallpaperConfig;
 }
 
 export const DEFAULT_WALLPAPER: WallpaperConfig = {
 	mode: 'gradient',
 	path: '',
+	paths: [],
 	intervalSec: 60,
 	shuffle: true
 };
@@ -152,6 +177,17 @@ export const DEFAULT_WEATHER: WeatherConfig = {
 export const DEFAULT_CALENDAR: CalendarConfig = {
 	on: false,
 	sources: []
+};
+
+export const DEFAULT_NEWS: NewsConfig = {
+	on: false,
+	google: true,
+	country: '',
+	feeds: []
+};
+
+export const DEFAULT_QUOTE: QuoteConfig = {
+	on: false
 };
 
 export const DEFAULT_CLOCK: ClockConfig = {
@@ -193,6 +229,8 @@ export const DEFAULT_CONFIG: UserConfig = {
 	clock: DEFAULT_CLOCK,
 	weather: DEFAULT_WEATHER,
 	calendar: DEFAULT_CALENDAR,
+	news: DEFAULT_NEWS,
+	quote: DEFAULT_QUOTE,
 	wallpaper: DEFAULT_WALLPAPER
 };
 
@@ -223,17 +261,21 @@ export function loadConfig (): UserConfig {
 export function parseConfig (raw: string | null): UserConfig {
 	try {
 		if (!raw) return {...DEFAULT_CONFIG};
-		const parsed = JSON.parse(raw) as Partial<UserConfig> & {wallpaper?: Partial<WallpaperConfig>; clock?: Partial<ClockConfig>; weather?: Partial<WeatherConfig>; calendar?: Partial<CalendarConfig>};
+		const parsed = JSON.parse(raw) as Partial<UserConfig> & {wallpaper?: Partial<WallpaperConfig>; clock?: Partial<ClockConfig>; weather?: Partial<WeatherConfig>; calendar?: Partial<CalendarConfig>; news?: Partial<NewsConfig>; quote?: Partial<QuoteConfig>};
 		const w: Partial<WallpaperConfig> = parsed.wallpaper || {};
 		const c: Partial<ClockConfig> = parsed.clock || {};
 		const wx: Partial<WeatherConfig> = parsed.weather || {};
 		const cal: Partial<CalendarConfig> = parsed.calendar || {};
+		const nw: Partial<NewsConfig> = parsed.news || {};
+		const feeds = (Array.isArray(nw.feeds) ? nw.feeds : []).filter((x): x is string => typeof x === 'string').map(normalizeFeedUrl).filter(validFeedUrl).slice(0, MAX_FEEDS);
+		const google = nw.google !== false;
 		const legacy = (cal as {url?: unknown}).url;
 		const calSources = (Array.isArray(cal.sources) ? cal.sources : typeof legacy === 'string' ? [legacy] : []).filter((x): x is string => typeof x === 'string' && validSource(x)).slice(0, 8);
 		const wc = wx.city as Partial<City> | null | undefined;
 		const city: City | null = wc && typeof wc.name === 'string' && wc.name && validCoords(wc.lat, wc.lon) ? {name: wc.name.slice(0, 60), lat: wc.lat as number, lon: wc.lon as number, detail: typeof wc.detail === 'string' ? wc.detail.slice(0, 80) : undefined} : null;
-		const mode: WallpaperMode = w.mode === 'image' || w.mode === 'folder' ? w.mode : 'gradient';
-		const path = typeof w.path === 'string' ? w.path : '';
+		const paths = Array.isArray(w.paths) ? w.paths.filter((x): x is string => typeof x === 'string' && x.charAt(0) === '/' && !/[\u0000-\u001f\u007f]/.test(x)).slice(0, WALLPAPER.maxFiles) : [];
+		const mode: WallpaperMode = w.mode === 'image' || w.mode === 'folder' || (w.mode === 'pictures' && paths.length > 0) ? w.mode : 'gradient';
+		const path = mode === 'pictures' ? paths[0] : typeof w.path === 'string' ? w.path : '';
 		const interval = typeof w.intervalSec === 'number' && w.intervalSec >= 5 ? w.intervalSec : DEFAULT_WALLPAPER.intervalSec;
 		return {
 			language: LANG_SETTINGS.find((l) => l === parsed.language) || 'auto',
@@ -281,9 +323,19 @@ export function parseConfig (raw: string | null): UserConfig {
 				on: cal.on === true && calSources.length > 0,
 				sources: calSources
 			},
+			news: {
+				on: nw.on === true && (google || feeds.length > 0),
+				google,
+				country: typeof nw.country === 'string' && COUNTRIES.indexOf(nw.country) !== -1 ? nw.country : '',
+				feeds
+			},
+			quote: {
+				on: !!parsed.quote && parsed.quote.on === true
+			},
 			wallpaper: {
 				mode: path ? mode : 'gradient',
 				path,
+				paths: mode === 'pictures' ? paths : [],
 				intervalSec: interval,
 				shuffle: w.shuffle !== false
 			}

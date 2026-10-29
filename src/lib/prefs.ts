@@ -18,7 +18,8 @@ import {lastFailure, type RootState} from './failure';
 import {APP_VERSION} from '../config/constants';
 import type {HomeMode, HomeModeInfo} from './homemode';
 import type {SplashMode} from './splash';
-import {count, fmt, lang, langName, LANG_SETTINGS, tr, type Lang} from './i18n';
+import {count, fmt, lang, langName, langTag, LANG_SETTINGS, tr, type Lang} from './i18n';
+import {countryName, countryOf, tvLanguageTag} from './feeds';
 
 export type PrefTab = 'look' | 'widgets' | 'wallpaper' | 'home';
 
@@ -173,6 +174,30 @@ const calendarPrefs = (): Pref[] => group(tr('Calendar', 'Календарь'), 
 	}
 ]);
 
+/** The news rows of Widgets. */
+const newsPrefs = (): Pref[] => group(tr('News', 'Новости'), [
+	toggle('newsOn', 'widgets', tr('Show the news', 'Показывать новости'), tr('Headlines on their own card. OK on a headline shows it with a QR code to read it on your phone. The TV reads most news sites through the Homebrew Channel (root).', 'Заголовки на отдельной карточке. OK на заголовке показывает его с QR-кодом, чтобы дочитать на телефоне. Большинство новостных сайтов ТВ читает через Homebrew Channel (нужен рут).'),
+		(c) => c.news.on, (c, v) => ({...c, news: {...c.news, on: v && (c.news.google || c.news.feeds.length > 0)}})),
+	toggle('newsGoogle', 'widgets', tr('Google News', 'Google Новости'), tr('The top stories of the chosen country, in the launcher\'s language when the country has an edition in it.', 'Главные новости выбранной страны — на языке лаунчера, если у страны есть такая редакция.'),
+		(c) => c.news.google, (c, v) => ({...c, news: {...c.news, google: v, on: c.news.on && (v || c.news.feeds.length > 0)}})),
+	only((c) => c.news.google, {
+		id: 'newsCountry', tab: 'widgets', opens: true, label: tr('Country', 'Страна'), kind: 'action',
+		description: tr('Whose top stories Google News shows. At first, the TV\'s country, or the country of the launcher\'s language.', 'Чьи главные новости показывает Google Новости. Сначала — страна ТВ или страна языка лаунчера.'),
+		text: (c) => countryName(countryOf(c.news.country, tvLanguageTag(), lang()), langTag())
+	}),
+	{
+		id: 'newsFeeds', tab: 'widgets', opens: true, label: tr('Your feeds', 'Свои ленты'), kind: 'action',
+		description: tr('Addresses of RSS or Atom feeds of any site, shown together with Google News or instead of it.', 'Адреса RSS- или Atom-лент любых сайтов. Показываются вместе с Google Новостями или вместо них.'),
+		text: (c) => (c.news.feeds.length ? count(c.news.feeds.length, ['feed', 'feeds'], ['лента', 'ленты', 'лент']) : tr('None', 'Нет', 'None (feeds)'))
+	}
+]);
+
+/** The quote rows of Widgets. */
+const quotePrefs = (): Pref[] => group(tr('Quote of the day', 'Фраза дня'), [
+	toggle('quoteOn', 'widgets', tr('Show the quote of the day', 'Показывать фразу дня'), tr('A quote from Wikiquote in the launcher\'s language, a new one every day.', 'Цитата из Викицитатника на языке лаунчера, каждый день новая.'),
+		(c) => c.quote.on, (c, v) => ({...c, quote: {on: v}}))
+]);
+
 const basePrefs = (): Pref[] => [
 	// ----- Appearance -----
 	...group(tr('App row', 'Ряд приложений'), [
@@ -224,12 +249,12 @@ const basePrefs = (): Pref[] => [
 	{
 		id: 'wallpaper', tab: 'wallpaper', opens: true, label: tr('Picture', 'Картинка'), kind: 'action',
 		description: tr('One picture, or a folder of pictures as a slideshow, from a USB drive or the TV\'s storage.', 'Одна картинка или папка с картинками для слайд-шоу, с USB-накопителя или из памяти ТВ.'),
-		text: (c) => c.wallpaper.mode === 'gradient' ? tr('None', 'Нет') : baseName(c.wallpaper.path)
+		text: (c) => c.wallpaper.mode === 'gradient' ? tr('None', 'Нет') : c.wallpaper.mode === 'pictures' ? count(c.wallpaper.paths.length, ['picture', 'pictures'], ['картинка', 'картинки', 'картинок']) : baseName(c.wallpaper.path)
 	},
 	...group(tr('Slideshow', 'Слайд-шоу'), [
-		only((c) => c.wallpaper.mode === 'folder', choice('interval', 'wallpaper', tr('Change every', 'Менять каждые'), tr('How long each picture stays on screen.', 'Сколько каждая картинка остаётся на экране.'),
+		only((c) => c.wallpaper.mode === 'folder' || c.wallpaper.mode === 'pictures', choice('interval', 'wallpaper', tr('Change every', 'Менять каждые'), tr('How long each picture stays on screen.', 'Сколько каждая картинка остаётся на экране.'),
 			INTERVAL_VALUES, (c) => c.wallpaper.intervalSec, (c, v) => ({...c, wallpaper: {...c.wallpaper, intervalSec: v}}), intervalText)),
-		only((c) => c.wallpaper.mode === 'folder', toggle('shuffle', 'wallpaper', tr('Shuffle', 'Перемешивать'), tr('Random order. Off: in alphabetical order.', 'Случайный порядок. Если выключено, по алфавиту.'),
+		only((c) => c.wallpaper.mode === 'folder' || c.wallpaper.mode === 'pictures', toggle('shuffle', 'wallpaper', tr('Shuffle', 'Перемешивать'), tr('Random order. Off: in alphabetical order.', 'Случайный порядок. Если выключено, по алфавиту.'),
 			(c) => c.wallpaper.shuffle, (c, v) => ({...c, wallpaper: {...c.wallpaper, shuffle: v}}))),
 		choice('splash', 'wallpaper', tr('Start-up picture', 'Заставка при запуске'), tr('What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher\'s logo or black.', 'Что ТВ показывает на мгновение, пока лаунчер запускается (после того как ТВ выгрузил его из памяти): обои, логотип лаунчера или чёрный экран.'),
 			SPLASHES, (c) => c.splash, (c, v) => ({...c, splash: v}), splashText)
@@ -263,7 +288,7 @@ let built: {lang: Lang; prefs: Pref[]} | null = null;
 
 /** Every row, worded in the current language. */
 export function prefs (): Pref[] {
-	if (!built || built.lang !== lang()) built = {lang: lang(), prefs: (WEATHER_ENABLED ? basePrefs().concat(weatherPrefs()) : basePrefs()).concat(calendarPrefs())};
+	if (!built || built.lang !== lang()) built = {lang: lang(), prefs: (WEATHER_ENABLED ? basePrefs().concat(weatherPrefs()) : basePrefs()).concat(calendarPrefs(), newsPrefs(), quotePrefs())};
 	return built.prefs;
 }
 

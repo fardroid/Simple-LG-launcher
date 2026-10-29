@@ -11,6 +11,7 @@ is **not** covered by that licence.
 | Component | Licence | Where |
 |---|---|---|
 | [Preact](https://preactjs.com) | MIT, © Jason Miller | compiled into `assets/app.js`; licence text in [public/licenses/preact-MIT.txt](public/licenses/preact-MIT.txt) |
+| [QR Code Generator for JavaScript](https://github.com/kazuhikoarase/qrcode-generator) | MIT, © Kazuhiko Arase | compiled into `assets/app.js` (the QR code of a news headline's link); licence text in [public/licenses/qrcode-generator-MIT.txt](public/licenses/qrcode-generator-MIT.txt) |
 | [Inter](https://rsms.me/inter/) typeface | SIL Open Font License 1.1, © The Inter Project Authors | `src/assets/inter-latin-wght.woff2`; licence text in [public/licenses/Inter-OFL.txt](public/licenses/Inter-OFL.txt) |
 | Poppins typeface | SIL Open Font License 1.1, © The Poppins Project Authors | `src/assets/poppins-latin-*.woff2`; licence text in [public/licenses/Poppins-OFL.txt](public/licenses/Poppins-OFL.txt) |
 | Oswald typeface | SIL Open Font License 1.1, © The Oswald Project Authors | `src/assets/oswald-latin-*.woff2`; licence text in [public/licenses/Oswald-OFL.txt](public/licenses/Oswald-OFL.txt) |

@@ -6,17 +6,19 @@ import {digitsTop, fontFamily} from '../lib/clockfont';
 import {plateVars, type PlateLook} from '../lib/plates';
 import {Frost} from './Frost';
 import {memoProps} from '../lib/memoprops';
+import {narrowClockSize} from '../lib/boardlayout';
 
 /** The clock card: the time (with a small AM/PM beside it in 12-hour mode) and, to its right, the day and date.
- *  Size, thickness, colour and what is shown come from the settings; its place is the top of the left column (see Home). */
-function ClockView ({now, format, config, plate}: {now: Date; format: TimeFormat; config: ClockConfig; plate?: PlateLook}) {
+ *  Size, thickness, colour and what is shown come from the settings; its place is the top of the left column (see Home).
+ *  `narrow`: in a column of three, the date goes under the time on one line, and the digits get smaller if they would not fit. */
+function ClockView ({now, format, config, plate, narrow = false}: {now: Date; format: TimeFormat; config: ClockConfig; plate?: PlateLook; narrow?: boolean}) {
 	const {time, period} = timeParts(now, format);
-	const size = config.size;
+	const size = narrow ? narrowClockSize({size: config.size, showDate: config.showDate, dateSize: config.dateSize, period: !!period}) : config.size;
 	const info = colorInfo(config.color);
 	const style: Record<string, string> = {fontFamily: fontFamily(config.font), '--clock-accent': info.accent};
 	Object.assign(style, plateVars(plate));
 	if (info.gradient) style['--clock-gradient'] = info.gradient; else style.color = info.color as string;
-	const classes = ['card', 'clock', info.gradient && 'clock--gradient', info.dark && 'clock--dark'].filter(Boolean).join(' ');
+	const classes = ['card', 'clock', narrow && 'clock--narrow', info.gradient && 'clock--gradient', info.dark && 'clock--dark'].filter(Boolean).join(' ');
 	const lines = dateLines(now);
 	const dateSize = Math.round(32 * config.dateSize / 100);
 	// Measured again whenever the clock redraws (once a minute), and once the web fonts have loaded:
@@ -62,10 +64,15 @@ function ClockView ({now, format, config, plate}: {now: Date; format: TimeFormat
 					<span class="clock__period" style={{fontSize: `${Math.round(size * 0.27)}px`, marginLeft: `${Math.round(size * 0.12)}px`}}>{period}</span>
 				)}
 			</div>
-			{config.showDate && (
+			{config.showDate && !narrow && (
 				<div class="clock__date" style={{fontSize: `${dateSize}px`, lineHeight: `${Math.round(dateSize * 1.2)}px`, marginLeft: `${Math.round(size * 0.2)}px`, marginTop: `${Math.max(0, digitsTop(config.font, size) - Math.round(dateSize * 0.24))}px`}}>
 					<div class="clock__day">{lines.day}</div>
 					<div>{lines.date}</div>
+				</div>
+			)}
+			{config.showDate && narrow && (
+				<div class="clock__date" style={{fontSize: `${dateSize}px`, lineHeight: `${Math.round(dateSize * 1.2)}px`, marginTop: '8px'}}>
+					<span class="clock__day">{lines.day}</span>, {lines.date}
 				</div>
 			)}
 		</div>

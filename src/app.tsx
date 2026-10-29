@@ -6,7 +6,7 @@ import {CityPicker} from './screens/CityPicker';
 import {HomeMethod} from './screens/HomeMethod';
 import {detectOled, knownOled} from './lib/panel';
 import {applySplashMode, noteSplashMode} from './lib/splash';
-import {readWallpaperCache, readWallpaperLook, wallpaperCacheId} from './lib/wallpaper';
+import {readWallpaperCache, readWallpaperLook, wallpaperCacheId, wallpaperSource} from './lib/wallpaper';
 import {reloadIfUpdated} from './lib/update';
 import {pointWakeAtLauncher, readHomeMode, refreshDefaultHome, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
 import {Toast, type ToastMessage} from './components/Toast';
@@ -40,11 +40,17 @@ import {fetchWeather} from './lib/weathernet';
 import {fetchCalendars} from './lib/calendarload';
 import {CAL_FRESH_MS, calendarIsFresh, readCalendarCache, usableCalendar, writeCalendarCache, type CalendarData} from './lib/calendar';
 import {CalendarSetup} from './screens/CalendarSetup';
-import {plateLooks} from './lib/plates';
-import {boardTop} from './lib/boardlayout';
+import {plateLooks, plateRects} from './lib/plates';
+import {boardLayout, boardTop} from './lib/boardlayout';
+import {countryOf, googleNewsUrl, newsIsFresh, NEWS_FRESH_MS, readNewsCache, tvLanguageTag, usableNews, writeNewsCache, type NewsData} from './lib/feeds';
+import {fetchNews} from './lib/feedsload';
+import {readQuoteCache, shownQuote, todaysQuote, writeQuoteCache, type Quote} from './lib/quote';
+import {fetchQuote} from './lib/quoteload';
+import {FeedsSetup} from './screens/FeedsSetup';
+import {CountryPicker} from './screens/CountryPicker';
 import {FRESH_MS, isFresh, readWeatherCache, usableCached, weatherView, writeWeatherCache, type City, type WeatherData} from './lib/weather';
 
-type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl' | 'homeMethod';
+type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'calendarUrl' | 'homeMethod' | 'feeds' | 'country';
 
 const TAB = {apps: 'apps', sources: 'sources', look: 'look', widgets: 'widgets', wallpaper: 'wallpaper', home: 'home'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings', system: 'system-settings'} as const;
@@ -90,12 +96,18 @@ export function App () {
 	const weatherRef = useRef(weather);
 	weatherRef.current = weather;
 	// the look saved with the cached picture, so the plates open with their glass instead of waiting for the wallpaper to start
-	const [savedLook] = useState(() => readWallpaperLook(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path), config.frost));
+	const [savedLook] = useState(() => readWallpaperLook(wallpaperCacheId(config.wallpaper.mode, wallpaperSource(config.wallpaper)), config.frost));
 	const [wallpaperFrost, setWallpaperFrost] = useState<string | null>(savedLook ? savedLook.frost : null);      // the blurred wallpaper for the frosted glass of the plates
 	const [wallpaperMap, setWallpaperMap] = useState<number[] | null>(savedLook ? savedLook.map : null);       // brightness of the wallpaper picture (null: the theme's own background)
 	const [calendar, setCalendar] = useState<CalendarData | null>(readCalendarCache);
 	const calendarRef = useRef(calendar);
 	calendarRef.current = calendar;
+	const [news, setNews] = useState<NewsData | null>(readNewsCache);
+	const newsRef = useRef(news);
+	newsRef.current = news;
+	const [quote, setQuote] = useState<Quote | null>(readQuoteCache);
+	const quoteRef = useRef(quote);
+	quoteRef.current = quote;
 	const [toast, setToast] = useState<ToastMessage | null>(null);
 	const toastTimer = useRef(0);
 	const closedAt = useRef(0);
@@ -469,6 +481,89 @@ export function App () {
 		return {data: usableCalendar(calendar, calKey, Date.now()), loading: calendarLoading};
 	}, [calKey, calendar, calendarLoading, language]);
 
+	// The news: the same idea as the calendar. The saved copy is drawn at once; the feeds are read a few seconds after the launcher
+	// appears and then every 25 minutes while it is in front. Google News follows the chosen country and the launcher's language.
+	const newsSources = useMemo(() => {
+		if (!config.news.on) return [] as string[];
+		const google = config.news.google ? [googleNewsUrl(countryOf(config.news.country, tvLanguageTag(), language), language)] : [];
+		return google.concat(config.news.feeds);
+	}, [config.news, language]);
+	const newsKey = newsSources.join('\n');
+	const [newsLoading, setNewsLoading] = useState(false);
+	useEffect(() => {
+		if (!newsKey) return undefined;
+		const allowShell = config.useHomebrew && isWebOS();
+		const backoff = [120000, 600000, 1800000];
+		let cancelled = false;
+		let timer = 0;
+		let failures = 0;
+		const run = () => {
+			if (cancelled || document.hidden) return;
+			setNewsLoading(!usableNews(newsRef.current, newsKey));
+			fetchNews(newsSources, newsKey, allowShell).then(
+				(data) => {
+					if (cancelled) return;
+					failures = 0;
+					writeNewsCache(data);
+					setNews(data);
+					setNewsLoading(false);
+					timer = window.setTimeout(run, NEWS_FRESH_MS);
+				},
+				() => {
+					if (cancelled) return;
+					setNewsLoading(false);
+					if (failures === 0 && !usableNews(newsRef.current, newsKey)) showToast(allowShell ? tr('Could not load the news. Check the feeds and the internet. It will try again', 'Не удалось загрузить новости. Проверьте ленты и интернет. Попробую ещё раз') : tr('Could not load the news. Most news sites can only be read through the Homebrew Channel (root)', 'Не удалось загрузить новости. Большинство новостных сайтов можно читать только через Homebrew Channel (нужен рут)'), 'error');
+					timer = window.setTimeout(run, backoff[Math.min(failures, backoff.length - 1)]);
+					failures++;
+				}
+			);
+		};
+		const now = Date.now();
+		const known = newsRef.current;
+		const wait = newsIsFresh(known, newsKey, now) && known
+			? Math.max(0, NEWS_FRESH_MS - (now - known.at))
+			: (usableNews(known, newsKey) ? TIMING.backgroundWorkMs : 1500);
+		timer = window.setTimeout(run, wait);
+		return () => { cancelled = true; window.clearTimeout(timer); };
+	}, [newsKey, wakes, config.useHomebrew, showToast]);
+
+	const newsCard = useMemo(() => {
+		if (!newsKey) return null;
+		const data = usableNews(news, newsKey);
+		return {items: data ? data.items : null, loading: newsLoading};
+	}, [newsKey, news, newsLoading]);
+
+	// The quote of the day: today's is fetched once (yesterday's stays until it is in), in the launcher's language. Wikimedia lets
+	// the web view read it, so this needs no root; the shell is the fallback for TVs that cannot verify the certificate.
+	const quoteOn = config.quote.on;
+	useEffect(() => {
+		if (!quoteOn) return undefined;
+		const allowShell = config.useHomebrew && isWebOS();
+		let cancelled = false;
+		let timer = 0;
+		let failures = 0;
+		const backoff = [120000, 600000, 1800000];
+		const run = () => {
+			if (cancelled || document.hidden) return;
+			const now = Date.now();
+			if (todaysQuote(quoteRef.current, language, now)) {
+				// look again just after midnight
+				const next = new Date(now);
+				next.setHours(24, 1, 0, 0);
+				timer = window.setTimeout(run, next.getTime() - now);
+				return;
+			}
+			fetchQuote(language, allowShell, now).then(
+				(q) => { if (cancelled) return; failures = 0; writeQuoteCache(q); setQuote(q); timer = window.setTimeout(run, 60000); },
+				() => { if (cancelled) return; timer = window.setTimeout(run, backoff[Math.min(failures, backoff.length - 1)]); failures++; }
+			);
+		};
+		timer = window.setTimeout(run, todaysQuote(quoteRef.current, language, Date.now()) ? 1000 : TIMING.backgroundWorkMs);
+		return () => { cancelled = true; window.clearTimeout(timer); };
+	}, [quoteOn, language, wakes, config.useHomebrew]);
+
+	const quoteCard = useMemo(() => (quoteOn ? {quote: shownQuote(quote, language), loading: !shownQuote(quote, language)} : null), [quoteOn, quote, language]);
+
 	// Tell the user once if the safety switch-off fired.
 	useEffect(() => {
 		const onVisibility = () => {
@@ -516,15 +611,19 @@ export function App () {
 	] as SettingsTab[], [apps, inputs, shownApps, shownInputs, config, systemInfo, language]);
 
 	const boardY = boardTop({iconScale: config.iconScale, bottomMargin: config.bottomMargin, showLabels: config.showLabels, rows: 1}, homeItems.length);
+	const layout = useMemo(() => boardLayout({
+		weather: !!weatherAt, calendar: !!calendarCard, news: !!newsCard, quote: !!quoteCard,
+		clock: {size: config.clock.size, showDate: config.clock.showDate, dateSize: config.clock.dateSize, period: timeFormat === '12h' && config.clock.showPeriod}
+	}, boardY), [weatherAt !== null, calendarCard !== null, newsCard !== null, quoteCard !== null, config.clock.size, config.clock.showDate, config.clock.dateSize, config.clock.showPeriod, timeFormat, boardY]);
 	const plates = useMemo(
-		() => plateLooks(config.plates, config.theme, wallpaperMap, !!weatherAt, !!calendarCard, config.glass ? wallpaperFrost : null, boardY),
-		[config.plates, config.theme, wallpaperMap, weatherAt !== null, calendarCard !== null, config.glass, wallpaperFrost, boardY]
+		() => plateLooks(config.plates, config.theme, wallpaperMap, plateRects(layout), config.glass ? wallpaperFrost : null),
+		[config.plates, config.theme, wallpaperMap, layout, config.glass, wallpaperFrost]
 	);
 
 	// The start-up picture: noted while drawing (so the wallpaper's first save already follows it), applied when it changes
 	noteSplashMode(config.splash);
 	useEffect(() => {
-		const timer = window.setTimeout(() => applySplashMode(config.splash, readWallpaperCache(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path))), TIMING.backgroundWorkMs);
+		const timer = window.setTimeout(() => applySplashMode(config.splash, readWallpaperCache(wallpaperCacheId(config.wallpaper.mode, wallpaperSource(config.wallpaper)))), TIMING.backgroundWorkMs);
 		return () => window.clearTimeout(timer);
 	}, [config.splash]);
 
@@ -587,11 +686,14 @@ export function App () {
 		if (blocked) { showToast(blocked, 'error'); return; }
 		if (optionId === 'weatherOn' && !config.weather.city) { showToast(tr('Choose a city first', 'Сначала выберите город')); setScreen('cities'); return; }
 		if (optionId === 'calendarOn' && !config.calendar.sources.length) { showToast(tr('Add a calendar first', 'Сначала подключите календарь')); setScreen('calendarUrl'); return; }
+		if (optionId === 'newsOn' && !config.news.google && !config.news.feeds.length) { showToast(tr('Turn on Google News or add a feed first', 'Сначала включите Google Новости или добавьте ленту')); setScreen('feeds'); return; }
 		if (pref.kind === 'info') return;
 		if (pref.kind === 'action') {
 			if (optionId === 'wallpaper') setScreen('picker');
 			else if (optionId === 'weatherCity') setScreen('cities');
 			else if (optionId === 'calendarUrl') setScreen('calendarUrl');
+			else if (optionId === 'newsFeeds') setScreen('feeds');
+			else if (optionId === 'newsCountry') setScreen('country');
 			else if (optionId === 'homeMethod') setScreen('homeMethod');
 			else if (optionId === 'resetLook') { updateConfig(resetLook(config)); showToast(tr('Look and clock reset', 'Вид и часы сброшены')); }
 			return;
@@ -638,18 +740,27 @@ export function App () {
 
 	const onChooseWallpaper = useCallback((choice: WallpaperChoice) => {
 		const keep = {intervalSec: config.wallpaper.intervalSec, shuffle: config.wallpaper.shuffle};
-		const wallpaper = choice.mode === 'gradient'
-			? {...DEFAULT_WALLPAPER, ...keep}
-			: {mode: choice.mode, path: choice.path, ...keep};
+		const wallpaper = choice.mode === 'gradient' ? {...DEFAULT_WALLPAPER, ...keep}
+			: choice.mode === 'pictures' ? (choice.paths.length === 1 ? {mode: 'image' as const, path: choice.paths[0], paths: [], ...keep} : {mode: 'pictures' as const, path: choice.paths[0], paths: choice.paths, ...keep})
+			: {mode: choice.mode, path: choice.path, paths: [], ...keep};
 		updateConfig({...config, wallpaper});
 		setScreen('settings');
-		showToast(choice.mode === 'gradient' ? tr('Default background restored', 'Фон по умолчанию восстановлен') : choice.mode === 'image' ? tr('Loading the wallpaper…', 'Загружаем обои…') : tr('Starting the slideshow…', 'Запускаем слайд-шоу…'));
+		showToast(choice.mode === 'gradient' ? tr('Default background restored', 'Фон по умолчанию восстановлен') : wallpaper.mode === 'image' ? tr('Loading the wallpaper…', 'Загружаем обои…') : tr('Starting the slideshow…', 'Запускаем слайд-шоу…'));
 	}, [config, showToast]);
 
 	const onChooseCalendars = useCallback((sources: string[]) => {
 		updateConfig({...config, calendar: {...config.calendar, sources, on: sources.length > 0}});
 		showToast(sources.length ? tr('Connecting the calendars…', 'Календари подключаются…') : tr('Calendars removed', 'Календари убраны'));
 	}, [config, showToast]);
+
+	const onChooseFeeds = useCallback((feeds: string[]) => {
+		updateConfig({...config, news: {...config.news, feeds, on: config.news.on && (config.news.google || feeds.length > 0)}});
+	}, [config]);
+
+	const onChooseCountry = useCallback((country: string) => {
+		updateConfig({...config, news: {...config.news, country}});
+		setScreen('settings');
+	}, [config]);
 
 	const onChooseCity = useCallback((city: City) => {
 		updateConfig({...config, weather: {...config.weather, city, on: true}});
@@ -704,13 +815,15 @@ export function App () {
 		<>
 			{wallpaperOn && <Wallpaper config={config.wallpaper} onProblem={(text) => showToast(text, 'error')} onTone={(map, frost) => { setWallpaperMap(map); setWallpaperFrost(frost); }} frost={config.frost} />}
 			{/* Home stays mounted under the other screens so it keeps its focus position. */}
-			<Home items={homeItems} timeFormat={timeFormat} appearance={appearance} active={screen === 'home' && !menu} paused={asleep} onActivate={onActivate} onLongPress={onLongPress} wake={wakes} focus={focus} weatherAt={weatherAt} cardSize={config.cardSize} calendar={calendarCard} plates={plates} boardTop={boardY} />
+			<Home items={homeItems} timeFormat={timeFormat} appearance={appearance} active={screen === 'home' && !menu} paused={asleep} onActivate={onActivate} onLongPress={onLongPress} wake={wakes} focus={focus} weatherAt={weatherAt} cardSize={config.cardSize} calendar={calendarCard} news={newsCard} quote={quoteCard} layout={layout} plates={plates} boardTop={boardY} />
 			{menu && <AppMenu title={menu.title} moves={menuMoves} hideDetail={menu.app ? tr('Bring it back in Settings → Apps', 'Вернуть можно в Настройки → Приложения') : tr('Bring it back in Settings → Sources', 'Вернуть можно в Настройки → Источники')} showUninstall={!!menu.app} blockedReason={menuBlocked} onMove={(action) => moveTile(menu.key, action)} onHide={() => hideTile(menu)} onUninstall={() => { if (menu.app) removeApp(menu.app); }} onClose={() => setMenu(null)} />}
 			{/* Settings stays mounted under the picker so it keeps its tab. */}
 			{screen !== 'home' && <Settings tabs={tabs} active={screen === 'settings'} onToggle={onToggle} onReorder={onReorder} onOption={onOption} onRefresh={onRefresh} onAdjust={onAdjust} onClose={() => setScreen('home')} />}
-			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} />}
+			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} chosen={config.wallpaper.mode === 'pictures' ? config.wallpaper.paths : config.wallpaper.mode === 'image' ? [config.wallpaper.path] : []} />}
 			{screen === 'homeMethod' && <HomeMethod info={systemInfo.homeMode || null} busy={modeBusy} onPick={onPickHomeMode} onClose={() => setScreen('settings')} />}
 			{screen === 'calendarUrl' && <CalendarSetup sources={config.calendar.sources} canReadFiles={config.useHomebrew && isWebOS()} onChoose={onChooseCalendars} onClose={() => setScreen('settings')} />}
+			{screen === 'feeds' && <FeedsSetup feeds={config.news.feeds} onChoose={onChooseFeeds} onClose={() => setScreen('settings')} />}
+			{screen === 'country' && <CountryPicker current={countryOf(config.news.country, tvLanguageTag(), language)} onChoose={onChooseCountry} onClose={() => setScreen('settings')} />}
 			{WEATHER_ENABLED && screen === 'cities' && <CityPicker allowShell={config.useHomebrew && isWebOS()} onChoose={onChooseCity} onClose={() => setScreen('settings')} />}
 			<Toast message={toast} />
 		</>

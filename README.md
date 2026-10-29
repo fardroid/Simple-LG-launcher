@@ -20,6 +20,9 @@ It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudr
 - **Clock and date.** A large clock with the weekday and date next to it. Six typefaces, three weights, any size, 12- or 24-hour.
 - **Weather** from [Open-Meteo](https://open-meteo.com), no account needed. You see the temperature now, what it feels like, the wind, an hourly curve for the day and seven days ahead. The card is not just a picture: press ↑ from the app row to step onto it, then ← → scroll through the days, and the curve redraws for each one. With the Magic Remote you can click a day instead.
 - **Calendar.** Paste the secret iCal address of a Google Calendar (or any `.ics` link). You can add several, and each gets its own colour. Repeating events, exceptions, moved events and all-day events all work. Like the weather, it reacts to the remote: step onto it, ← → scroll back and forth through the days, ↑ opens the whole month with a dot under each busy day. The Magic Remote pointer can click through it too.
+- **News.** Headlines from Google News for the country you choose, in the launcher's language when that country has an edition in it, and from any RSS or Atom feeds you add. Step onto the card with ↑ from the right of the app row: ↑ ↓ choose a headline, ← → turn the pages, and OK shows the headline with its description and a QR code, so you can read the article on your phone. While you are elsewhere the pages turn by themselves.
+- **Quote of the day** from Wikiquote, in the launcher's language. Where the language's Wikiquote has an editors' quote of the day (English, Spanish, Polish, Chinese, Korean, Turkish, Portuguese, Ukrainian, Italian), you get that one. Elsewhere, or on a day the editors left empty, a quote is picked by the date from the page of a well-known writer, poet, thinker or scientist. The text is set as large as the card allows.
+- **Two or three columns.** The clock and the weather on the left, the calendar on the right, and the quote under the calendar if it is on. With the news on as well, the cards stand in three columns: the clock and the weather, the calendar, then the news with the quote under it. A card without a neighbour in its column takes the whole height.
 - **Frosted glass.** The cards blur the wallpaper behind them, as much as you like (30 to 100%). The cards go light or dark together, depending on how bright the picture behind them is, so the text stays readable on any photo; when the wallpaper changes, the glass and the card colour fade with it.
 - **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is. App names under every tile, only under the selected one, or none.
 - **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour. The TV shows the same picture for the moment the launcher takes to start (or the logo, or black).
@@ -86,9 +89,19 @@ On the home screen, press ↑ until the calendar is selected: ← → move throu
 
 The secret address gives read access to that calendar to anyone who has it. It is only stored on the TV and only sent to Google. Don't commit it anywhere.
 
+## News
+
+Settings → Widgets → News. *Google News* shows the top stories of a country; *Country* picks it. At first it is the TV's own country when Google News has an edition there in the launcher's language, otherwise the country of that language (Germany for German, Poland for Polish and so on), so every one of the launcher's thirteen languages gets news in it. The headlines come in the launcher's language when the country has a Google News edition in it, and in the country's own language when it doesn't. *Your feeds* takes the address of any RSS or Atom feed, typed with the on-screen keyboard (up to eight). You can turn Google News off and keep only your own feeds.
+
+Most news sites don't let a web page read their feeds directly, so on a TV the launcher fetches them through the Homebrew Channel, like the calendars: without root, the news card mostly stays empty.
+
+## Quote of the day
+
+Settings → Widgets → Quote of the day. The quote comes from [Wikiquote](https://wikiquote.org) in the launcher's language and changes at midnight; it works without root. In languages without an editors' quote of the day (Russian, German, French, Japanese), the launcher asks [Wikidata](https://www.wikidata.org) once a month for about 400 well-known authors who have a page there, then picks an author and a quote from their page by the date. Wikiquote's texts are under the [CC BY-SA licence](https://creativecommons.org/licenses/by-sa/4.0/); the card names the author and Wikiquote.
+
 ## Wallpapers
 
-Settings → Wallpaper → Picture opens a folder browser for USB drives and the TV's storage (`/media/developer`). OK on a picture sets it, and *Play this folder as a slideshow* plays the whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
+Settings → Wallpaper → Picture opens a gallery of USB drives and the TV's storage (`/media/developer`): folders and pictures as tiles, each picture with its preview. OK ticks pictures, in any folders, and leaving the gallery shows them (one picture, or a slideshow of the ticked ones); the *Slideshow* tile plays a whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
 
 The [`wallpapers`](wallpapers) folder has thirteen to start with: soft gradients, dunes, auroras and a sea at dawn, all drawn for this launcher and free to use. To put them on the TV:
 
@@ -99,7 +112,7 @@ scp -O wallpapers/*.jpg root@<tv-ip>:/media/developer/wallpapers/
 
 ## Privacy
 
-For the weather the launcher sends the coordinates of your city to Open-Meteo, plus whatever you type into the city search. The calendar links are fetched by the TV directly. Nothing else leaves the TV, and there is no tracking of any kind.
+For the weather the launcher sends the coordinates of your city to Open-Meteo, plus whatever you type into the city search. The calendar links and the news feeds are fetched by the TV directly (Google News learns the country and the language you chose). The quote of the day comes from Wikiquote and Wikidata, which learn only the language. Nothing else leaves the TV, and there is no tracking of any kind.
 
 ## Working on it
 

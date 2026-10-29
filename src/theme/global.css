@@ -154,22 +154,20 @@ html, body {
 
 /* ---------- board: the cards ---------- */
 
-/* The cards form one group in the middle of the screen, 40 px between them. Both columns end on the same line, because the
-   board has a fixed height and its cards fill it. */
+/* The cards form one group in the middle of the screen, in columns 40 px apart (lib/boardlayout.ts sets where each column stands
+   and how wide it is). All the columns end on the same line, because the board has a fixed height and its cards fill it: the clock
+   and the quote keep their own height, the weather, the calendar and the news take the rest. */
 .board {
 	position: absolute;
 	left: 0; right: 0; top: 40px;
 	height: 686px;
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: stretch;
 	z-index: 1;
 }
 .screen--shift .board, .screen--shift .rows { transform: translate(var(--shift-x), var(--shift-y)); }
-.board__left { flex: 0 0 880px; display: flex; flex-direction: column; min-width: 0; }
-.board__left + .cal { margin-left: 40px; }
-.board__left > .weather { margin-top: 40px; }
+.board__col { position: absolute; top: 0; bottom: 0; display: flex; flex-direction: column; min-width: 0; }
+.board__col > * + * { margin-top: 40px; }
+.board__col > .weather, .board__col > .cal, .board__col > .news { flex: 1 1 auto; min-height: 0; }
+.board__col > .quote { flex: 0 0 auto; }
 
 /* ---------- cards (weather, calendar) ---------- */
 
@@ -211,9 +209,13 @@ html, body {
 /* Settings → Look → "Card shadows" off */
 .board--flat .card { box-shadow: none; }
 
+/* the clock in a column of three: the date on one line under the time */
+.clock--narrow { flex-direction: column; align-items: center; }
+.clock--narrow .clock__date { margin-left: 0; }
+
 /* One type scale for both cards, so they read as one family. --k is the size chosen in Settings (1 = standard).
    --t-hero: the current temperature   --t-title: the date heading   --t1: main text   --t2: secondary text   --t3: small labels */
-.weather, .cal {
+.weather, .cal, .news, .quote {
 	--k: 1;
 	--t-hero: calc(64px * var(--k));
 	--t-title: calc(26px * var(--k));
@@ -257,13 +259,12 @@ html, body {
 .wx-icon--rain, .wx-icon--storm { stroke: #8cc4ff; }
 
 /* Focus on a card: a layer over the plate that only fades in (opacity is all the TV has to animate: no shadow or size change) */
-.weather::before, .cal::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
-.weather--focus::before, .cal--focus::before { opacity: 1; }
+.weather::before, .cal::before, .news::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: -1; border-radius: inherit; background: var(--pf, rgba(255, 255, 255, 0.06)); opacity: 0; transition: opacity 90ms linear; pointer-events: none; }
+.weather--focus::before, .cal--focus::before, .news--focus::before { opacity: 1; }
 /* The focused card grows by 1.02, text and all (the text is a little soft while it is grown: the growth matters more here) */
-.weather--focus, .cal--focus { transform: scale(1.02); }
+.weather--focus, .cal--focus, .news--focus { transform: scale(1.02); }
 
 .cal {
-	flex: 0 0 600px;
 	min-width: 0;
 	padding: 26px 28px;
 	display: flex;
@@ -287,7 +288,11 @@ html, body {
 .cal__strip { position: relative; height: calc(var(--t3) + var(--t1) * 1.2 + 42px); flex: 0 0 auto; overflow: hidden; }
 /* the chosen day stays in the middle and the days slide under this highlight */
 .cal__hl { position: absolute; left: calc(300% / 7); top: 0; bottom: 0; width: calc(100% / 7); border-radius: 22px; background: rgba(255, 255, 255, 0.16); transition: background 70ms ease-out; }
-.cal--focus .cal__hl { background: rgba(255, 255, 255, 0.22); }
+.cal--head .cal__hl { background: rgba(255, 255, 255, 0.22); }
+/* the remote on the calendar's head (the date and its arrows): ← → turn the days or the months */
+.cal__head { border-radius: 26px; transition: background 90ms linear, box-shadow 90ms linear; }
+.cal--head .cal__head { background: rgba(255, 255, 255, 0.12); box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.12); }
+.cal--head .cal__nav { background: rgba(255, 255, 255, 0.24); }
 .cal__track { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
 .cal__day { position: absolute; top: 0; width: calc(100% / 7); box-sizing: border-box; padding: 12px 0 14px; text-align: center; cursor: pointer; }
 .cal__day span { display: block; font-size: var(--t3); color: var(--color-text-secondary); line-height: 1; }
@@ -328,6 +333,11 @@ html, body {
 .cal__ev--past { opacity: 0.42; }
 .cal__ev--now { background: rgba(255, 195, 107, 0.18); box-shadow: inset 0 0 0 2px rgba(255, 195, 107, 0.55); }
 .cal__ev--now .cal__time small { color: #ffc36b; }
+/* the day's events scroll inside the card (CalendarCard sets the list's offset); the list fades out at an edge with events beyond it */
+.cal__evtrack { position: relative; transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cal__events--below { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent); }
+.cal__events--above { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 56px); }
+.cal__events--above.cal__events--below { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
 .cal__more { padding: 4px 18px; font-size: var(--t2); color: var(--color-text-secondary); }
 .cal__empty { padding-top: 70px; text-align: center; font-size: var(--t1); color: var(--color-text-secondary); }
 
@@ -374,6 +384,8 @@ html, body {
 /* Left/right held down: each step is short and linear, so the steps run together into one smooth glide
    (an ease-out curve restarting on every key repeat looks like stuttering). */
 .row__track--fast { transition: transform 150ms linear; }
+/* the pointer at an end of the row: the row glides frame by frame (Row.tsx), so no transition may smooth it on top */
+.row__track--free { transition: none; }
 
 .row__empty {
 	font-size: var(--font-tile-label);
@@ -731,6 +743,31 @@ html, body {
 }
 .picker .picker__row--focused:before, .picker .picker__row--focused + .picker__row:before { opacity: 0; }
 .picker .picker__row--focused { background: #F2F2F7; }
+/* the wallpaper gallery: pictures as tiles with their previews, 5 across (Picker.tsx has the same sizes: COLUMNS, ROW_STEP, VIEWPORT_HEIGHT) */
+.screen--gallery .settings { width: 1560px; margin-left: -780px; }
+.gallery {
+	overflow: hidden;
+	height: 760px;
+	padding: 24px 30px;          /* room for a focused tile, which grows, and its ring */
+	margin: 0 -30px;              /* the room above stays below the folder's path line */
+}
+/* flex-wrap, not CSS grid: the older webOS web views (Chrome 53) have no grid */
+.gallery__track { display: flex; flex-direction: row; flex-wrap: wrap; width: 1600px; transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
+.gallery__tile { flex: 0 0 auto; width: 280px; height: 232px; margin: 0 40px 28px 0; cursor: pointer; }
+.gallery__frame { position: relative; width: 280px; height: 158px; transform: scale(1); transition: transform var(--motion-focus-ms) ease-out; }
+.gallery__tile--focused .gallery__frame { transform: scale(var(--motion-focus-scale)); z-index: 1; }
+.gallery__box { position: relative; width: 100%; height: 100%; border-radius: 18px; overflow: hidden; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 2px var(--color-tile-border); }
+.gallery__ring { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 18px; box-shadow: 0 0 0 5px var(--color-tile-border-focus); opacity: 0; transition: opacity var(--motion-focus-ms) ease-out; pointer-events: none; }
+.gallery__tile--focused .gallery__ring { opacity: 1; }
+.gallery__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gallery__image--default { background: linear-gradient(135deg, #1B2240 0%, #3A2350 55%, #0D0F18 100%); }
+.gallery__icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.gallery__icon .picker__icon { width: 64px; height: 64px; margin: 0; }
+.gallery__icon--waiting .picker__icon { opacity: 0.35; }
+.gallery__label { margin-top: 14px; padding: 0 4px; font-size: 23px; line-height: 30px; text-align: center; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gallery__detail { padding: 0 4px; font-size: 18px; line-height: 24px; text-align: center; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gallery__tile--focused .gallery__label { color: var(--color-text-primary); }
+.gallery__tile--info { opacity: 0.8; }
 .picker__status { padding: 40px 8px; font-size: var(--font-option-label); line-height: 34px; color: var(--color-text-secondary); }
 .picker__status--error { color: var(--color-danger); }
 .picker__row {
@@ -879,3 +916,40 @@ ul.homemethod__list li:before { position: absolute; left: 4px; top: 0; font-size
 .homemethod__note { margin: 0 0 18px; font-size: 21px; line-height: 28px; color: #FF9F0A; }
 .homemethod__action { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.09); font-size: 22px; line-height: 28px; font-weight: 600; color: var(--color-text-muted); }
 .homemethod__action--armed { color: var(--color-text-primary); }
+
+/* ---------- news ---------- */
+
+.news { min-width: 0; padding: 22px 26px; display: flex; flex-direction: column; }
+.news__head { display: flex; flex-direction: row; align-items: baseline; height: calc(44px * var(--k)); flex: 0 0 auto; }
+.news__title { flex: 1 1 auto; font-size: var(--t-title); font-weight: 500; line-height: 1.2; }
+.news__pages { font-size: var(--t2); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.news__list { flex: 1 1 auto; min-height: 0; overflow: hidden; margin-top: 10px; animation: cal-fade 260ms ease-out; }
+/* one headline: its outlet and age, then two lines (see headlinesPerPage in lib/feeds.ts, which counts on these sizes) */
+.news__item { box-sizing: border-box; padding: 16px 14px 14px; border-radius: 18px; border-top: 1.5px solid rgba(255, 255, 255, 0.1); cursor: pointer; white-space: normal; transition: background 70ms ease-out; }
+.news__item:first-child, .news__item--sel, .news__item--sel + .news__item { border-top-color: transparent; }
+.news__item--sel { background: rgba(255, 255, 255, 0.16); }
+.news__meta { font-size: var(--t3); line-height: 1.35; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news__headline { font-size: var(--t1); font-weight: 500; line-height: 1.3; margin-top: 6px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.news__empty { padding-top: 70px; text-align: center; white-space: normal; font-size: var(--t1); color: var(--color-text-secondary); }
+
+/* ---------- the quote of the day ---------- */
+
+.quote { min-width: 0; padding: 20px 30px; display: flex; flex-direction: column; pointer-events: none; }
+.quote__body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; white-space: normal; }
+.quote__text { font-weight: 300; font-style: italic; line-height: 1.3; white-space: pre-line; }
+.quote__text--clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.quote__text--empty { font-style: normal; font-size: var(--t1); color: var(--color-text-secondary); }
+.quote__by { flex: 0 0 auto; margin-top: 8px; font-size: var(--t2); color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- a headline over the screen ---------- */
+
+.news-detail { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 30; background: rgba(4, 6, 18, 0.72); display: flex; align-items: center; justify-content: center; animation: cal-fade 200ms ease-out; }
+.news-detail__card { width: 1320px; box-sizing: border-box; padding: 48px 56px; border-radius: 36px; background: #161a30; box-shadow: 0 34px 70px rgba(0, 0, 0, 0.55); display: flex; flex-direction: row; align-items: center; color: var(--color-text-primary); font-family: var(--widget-font, inherit); }
+.news-detail__text { flex: 1 1 auto; min-width: 0; }
+.news-detail__meta { font-size: 22px; color: var(--color-text-secondary); }
+.news-detail__title { font-size: 44px; font-weight: 500; line-height: 1.25; margin-top: 14px; }
+.news-detail__summary { font-size: 24px; line-height: 1.45; color: var(--color-text-secondary); margin-top: 22px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; }
+.news-detail__hint { font-size: 20px; color: var(--color-text-muted); margin-top: 30px; }
+.news-detail__qr { flex: 0 0 auto; width: 300px; margin-left: 56px; text-align: center; }
+.news-detail__qr svg { display: block; width: 300px; height: 300px; border-radius: 16px; }
+.news-detail__scan { font-size: 20px; line-height: 1.35; color: var(--color-text-secondary); margin-top: 16px; }

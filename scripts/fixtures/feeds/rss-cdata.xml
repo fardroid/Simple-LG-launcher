@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+<channel>
+<title><![CDATA[Example News - World]]></title>
+<link>https://news.example/</link>
+<item>
+<title><![CDATA[Rail operator adds night trains & sleeper cars]]></title>
+<description><![CDATA[<p>New routes start in <b>December</b>.</p><img src="x.jpg">]]></description>
+<link>https://news.example/rail-night-trains</link>
+<guid isPermaLink="true">https://news.example/rail-night-trains</guid>
+<pubDate>Wed, 28 Oct 2026 08:50:00 GMT</pubDate>
+</item>
+<item>
+<title>Il comune apre tre nuove piste ciclabili</title>
+<description>Same story as on Google News, with another link.</description>
+<link>https://news.example/bikes</link>
+<pubDate>Wed, 28 Oct 2026 08:40:00 GMT</pubDate>
+</item>
+<item>
+<title>Museum reopens its Renaissance wing</title>
+<link>https://news.example/museum</link>
+<dc:date>2026-10-28T06:15:00Z</dc:date>
+</item>
+</channel>
+</rss>

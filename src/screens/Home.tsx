@@ -2,6 +2,9 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
 import {CalendarCard} from '../components/CalendarCard';
 import {Clock} from '../components/Clock';
 import {WeatherCard} from '../components/WeatherCard';
+import {NewsCard} from '../components/NewsCard';
+import {NewsDetail} from '../components/NewsDetail';
+import {QuoteCard} from '../components/QuoteCard';
 import {Row} from '../components/Row';
 import type {TileModel} from '../components/Tile';
 import {useKeys, type NavKey} from '../hooks/useKeys';
@@ -15,6 +18,15 @@ import type {PlateLooks} from '../lib/plates';
 import {shiftAt} from '../lib/pixelshift';
 import {CAL_AHEAD_DAYS, CAL_BACK_DAYS, dayOffsetOfMonth, monthOffsetOfDay, type CalendarData} from '../lib/calendar';
 import {FONT, LAYOUT} from '../theme/tokens';
+import {besideCard, columnAt, entryCard, nextInColumn, type BoardCard, type BoardLayout, type CardId} from '../lib/boardlayout';
+import {headlinesPerPage, type FeedItem} from '../lib/feeds';
+import type {Quote} from '../lib/quote';
+
+type Zone = 'dock' | 'weather' | 'calendar' | 'news';
+/** days in the weather card's row when the cards stand in three narrow columns */
+const NARROW_DAYS = 5;
+/** a page of headlines turns by itself this often while the remote is not on the card */
+const NEWS_PAGE_MS = 20000;
 
 export interface Appearance {
 	/** icon size, % of the standard size */
@@ -59,13 +71,24 @@ interface Props {
 	boardTop?: number;
 	/** the calendar card: null when it is off */
 	calendar?: {data: CalendarData | null; loading: boolean} | null;
+	/** the news card: null when it is off */
+	news?: {items: FeedItem[] | null; loading: boolean} | null;
+	/** the quote of the day: null when it is off */
+	quote?: {quote: Quote | null; loading: boolean} | null;
+	/** where the cards stand (lib/boardlayout.ts) */
+	layout: BoardLayout;
 }
 
-/** The home screen: the clock, the weather and calendar cards, and the tiles along the bottom, in one row or two.
+/** The home screen: the clock and the cards in columns (lib/boardlayout.ts), and the tiles along the bottom, in one row or two.
  *  Left/Right move along a row, Up/Down change row (two rows), OK opens, holding OK opens the app's menu.
- *  Up from the top row goes to the calendar card (when it is on): Left/Right change the day, OK returns to today,
- *  Down goes back to the apps. Back goes to the first tile. */
-export function Home ({items, timeFormat, appearance, active, paused, onActivate, onLongPress, wake, focus, weatherAt = null, cardSize = 100, calendar = null, plates, boardTop = 40}: Props) {
+ *  Up from the top row goes to the card above the selected tile; Up and Down move between the cards of a column, and Up from a card
+ *  with nothing above it goes to the next column on the right. Left/Right also go from card to card: on the weather they choose the
+ *  day and go on past the first or the last; on the news they turn the pages and go on past the first or the last; on the calendar's
+ *  events they go on at once. On the calendar Up/Down scroll through the day's events; Up above the first goes to its head (the date
+ *  and its arrows), where Left/Right change the day, Down goes back to the events and Up opens the month (whose head is again one Up
+ *  away, where Left/Right turn the months). On the news Up/Down choose a headline and OK shows it. Down from the lowest card goes
+ *  back to the apps. Back goes to the first tile. */
+export function Home ({items, timeFormat, appearance, active, paused, onActivate, onLongPress, wake, focus, weatherAt = null, cardSize = 100, calendar = null, news = null, quote = null, layout, plates, boardTop = 40}: Props) {
 	const now = useClock(paused);
 	const shift = appearance.pixelShift ? shiftAt(now) : null;
 	const [position, setPosition] = useState<RowsPosition>(initialPosition);
@@ -74,33 +97,62 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 	const at = clampPosition(sizes, position);
 	const selectedItem = items[offsets[at.row] + at.cols[at.row]];
 	const sizeKey = sizes.join(',');
-	const [zone, setZone] = useState<'dock' | 'weather' | 'calendar'>('dock');
+	const [zone, setZone] = useState<Zone>('dock');
+	const [newsPage, setNewsPage] = useState(0);
+	const [newsSel, setNewsSel] = useState(0);
+	const [detail, setDetail] = useState<FeedItem | null>(null);
+	const screenRef = useRef<HTMLDivElement>(null);
 	const [weatherDay, setWeatherDay] = useState(0);
 	const weather = useMemo(() => (weatherAt ? weatherAt(weatherDay) : null), [weatherAt, weatherDay]);
 	const [dayOffset, setDayOffset] = useState(0);
 	const [calMode, setCalMode] = useState<'day' | 'month'>('day');
+	/** where on the calendar the remote is: its body (the events, or the month's days) or its head (the date and the arrows) */
+	const [calPart, setCalPart] = useState<'body' | 'head'>('body');
 	const [month, setMonth] = useState(0);
 	const [dayDir, setDayDir] = useState(0);
-	// The pointer (Magic Remote) over the row: the magnification follows it. The row's scroll position stays with the keys and the wheel,
-	// so tiles do not slide away under the pointer.
+	// the calendar's events scrolled past, and how far they can go (the card measures it)
+	const [calScroll, setCalScroll] = useState(0);
+	const [calMax, setCalMax] = useState(0);
+	useEffect(() => setCalScroll(0), [dayOffset]);
+	// The pointer (Magic Remote) over the row: the highlight follows it. The row's scroll position stays with the keys and the wheel,
+	// so tiles do not slide away under the pointer, except near an end of the row, where it scrolls on by itself (Row's onEdgeScroll).
+	// Over a card the pointer gives the card the focus, as the keys would.
 	const [pointerPos, setPointerPos] = useState<number | null>(null);
 	const [anchor, setAnchor] = useState<number[]>([0, 0]);
 	const byKey = useRef(false);
 	const calendarOn = !!calendar;
-	const days = weather ? weather.days.length : 0;
-	const live = useRef({row: at.row, calendarOn, weatherOn: !!weather, zone, days, calMode, month, dayOffset});
-	live.current = {row: at.row, calendarOn, weatherOn: !!weather, zone, days, calMode, month, dayOffset};
+	// in three columns the weather card is narrow: five days, so the names and temperatures keep their room
+	const days = weather ? Math.min(weather.days.length, layout.narrow ? NARROW_DAYS : weather.days.length) : 0;
+	const weatherShown = useMemo(() => (weather && days < weather.days.length ? {...weather, days: weather.days.slice(0, days)} : weather), [weather, days]);
+	useEffect(() => { if (days > 0 && weatherDay > days - 1) setWeatherDay(days - 1); }, [days, weatherDay]);
+	const newsOn = !!news;
+	const newsCard = layout.cards.news;
+	const perPage = newsCard ? headlinesPerPage(newsCard.h, cardSize / 100) : 1;
+	const newsCount = news && news.items ? news.items.length : 0;
+	const newsPages = Math.max(1, Math.ceil(newsCount / perPage));
+	const live = useRef({row: at.row, calendarOn, weatherOn: !!weather, newsOn, zone, days, weatherDay, calMode, calPart, month, dayOffset, calScroll, calMax, layout, perPage, newsCount, newsPages, newsPage, newsSel, detail});
+	live.current = {row: at.row, calendarOn, weatherOn: !!weather, newsOn, zone, days, weatherDay, calMode, calPart, month, dayOffset, calScroll, calMax, layout, perPage, newsCount, newsPages, newsPage, newsSel, detail};
 	const weatherOn = !!weather;
 	const inCalendar = zone === 'calendar' && calendarOn;
 	const inWeather = zone === 'weather' && weatherOn;
+	const inNews = zone === 'news' && newsOn;
 
 	// Home pressed (the launcher comes to the front): the apps row keeps its place (the app just used stays selected); the cards go back
 	// to today and the focus to the row. (The first render is skipped: nothing to reset yet.)
 	const firstWake = useRef(true);
 	useEffect(() => {
 		if (firstWake.current) { firstWake.current = false; return; }
-		setPointerPos(null); setZone('dock'); setDayOffset(0); setWeatherDay(0); setCalMode('day'); setMonth(0);
+		setPointerPos(null); setZone('dock'); setDayOffset(0); setCalScroll(0); setCalPart('body'); setWeatherDay(0); setCalMode('day'); setMonth(0); setNewsPage(0); setDetail(null);
 	}, [wake]);
+
+	// The pages of headlines turn by themselves while the remote is elsewhere (and the screen is in front), back to the first after the last.
+	useEffect(() => {
+		if (!newsOn || inNews || detail || !active || paused || newsPages < 2) return undefined;
+		const timer = window.setInterval(() => setNewsPage((page) => (page + 1) % live.current.newsPages), NEWS_PAGE_MS);
+		return () => window.clearInterval(timer);
+	}, [newsOn, inNews, !!detail, active, paused, newsPages]);
+	// fewer headlines than before: stay on a page that exists
+	useEffect(() => { if (newsPage >= newsPages) setNewsPage(0); }, [newsPage, newsPages]);
 
 	// the row scrolls to follow the keys (not the pointer)
 	useEffect(() => { if (byKey.current) { byKey.current = false; setAnchor(clampPosition(sizes, position).cols); } }, [position]);
@@ -147,30 +199,94 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 
 	const shiftDay = useCallback((days: number) => { setDayDir(days > 0 ? 1 : days < 0 ? -1 : 0); setDayOffset((o) => Math.min(CAL_AHEAD_DAYS, Math.max(-CAL_BACK_DAYS, o + days))); }, []);
 
+	/** Where the selected tile of the app row is across the screen, in the 1920 px of the layout (the middle when it is not known). */
+	const selectedTileX = (): number => {
+		const screen = screenRef.current;
+		const tile = screen ? screen.querySelector('.row--focused .tile--focused') as HTMLElement | null : null;
+		if (!screen || !tile) return LAYOUT.screenWidth / 2;
+		const box = screen.getBoundingClientRect(), r = tile.getBoundingClientRect();
+		return box.width ? (r.left + r.width / 2 - box.left) * LAYOUT.screenWidth / box.width : LAYOUT.screenWidth / 2;
+	};
+	/** Steps onto a card: on the news, the first headline of the page shown; on the calendar, its events (or the month's days). */
+	const enter = (card: CardId | null): boolean => {
+		if (card !== 'weather' && card !== 'calendar' && card !== 'news') return false;
+		if (card === 'news') setNewsSel(live.current.newsPage * live.current.perPage);
+		if (card === 'calendar') setCalPart('body');
+		setZone(card);
+		return true;
+	};
+	/** The card above, or (with nothing above) the card the remote steps onto in the next column on the right. */
+	const enterAbove = (from: CardId): void => {
+		const l = live.current.layout;
+		if (enter(nextInColumn(l, from, -1))) return;
+		const index = l.columns.findIndex((c) => c.cards.some((card) => card.id === from));
+		for (let i = index + 1; i < l.columns.length; i++) if (enter(entryCard(l, i))) return;
+	};
+	const leaveDown = (from: CardId): void => { if (!enter(nextInColumn(live.current.layout, from, 1))) setZone('dock'); };
+	/** ← → past the end of what a card turns: the card in the next column that way */
+	const leaveSide = (from: CardId, step: -1 | 1): void => { enter(besideCard(live.current.layout, from, step)); };
+
 	const handleKey = useCallback((key: NavKey): boolean => {
 		const now = live.current;
+		if (now.detail) {
+			if (key === 'back') setDetail(null);            // OK closes it in useOkPress below
+			return true;
+		}
 		if (now.zone === 'weather' && now.weatherOn) {
-			if (key === 'left') setWeatherDay((d) => Math.max(0, d - 1));
-			else if (key === 'right') setWeatherDay((d) => Math.min(Math.max(0, now.days - 1), d + 1));
-			else if (key === 'up' && now.calendarOn) setZone('calendar');
-			else if (key === 'down' || key === 'back') setZone('dock');
+			// ← → choose the day; past the first or the last day they go on to the card beside
+			const day = Math.min(now.weatherDay, Math.max(0, now.days - 1));
+			if (key === 'left') { if (day > 0) setWeatherDay(day - 1); else leaveSide('weather', -1); }
+			else if (key === 'right') { if (day < now.days - 1) setWeatherDay(day + 1); else leaveSide('weather', 1); }
+			else if (key === 'up') enterAbove('weather');
+			else if (key === 'down') leaveDown('weather');
+			else if (key === 'back') setZone('dock');
 			return true;
 		}
 		if (now.zone === 'calendar' && now.calendarOn) {
-			if (now.calMode === 'month') {
-				if (key === 'left') shiftMonth(-1);
-				else if (key === 'right') shiftMonth(1);
-				else if (key === 'down' || key === 'back') leaveMonth();
+			// Two steps on the calendar: its body (the day's events, or the month's days), where ← → go on to the cards beside, and
+			// above it the head (the date and its arrows), where ← → turn the days or the months.
+			if (now.calPart === 'head') {
+				if (key === 'left' || key === 'right') { if (now.calMode === 'month') shiftMonth(key === 'left' ? -1 : 1); else shiftDay(key === 'left' ? -1 : 1); }
+				else if (key === 'down') setCalPart('body');
+				else if (key === 'up') { if (now.calMode === 'day') { enterMonth(); setCalPart('body'); } }
+				else if (key === 'back') { if (now.calMode === 'month') leaveMonth(); else setZone('dock'); }
 				return true;
 			}
-			if (key === 'left') shiftDay(-1);
-			else if (key === 'right') shiftDay(1);
-			else if (key === 'up') enterMonth();
-			else if (key === 'down' || key === 'back') setZone(now.weatherOn ? 'weather' : 'dock');
+			if (key === 'left' || key === 'right') leaveSide('calendar', key === 'left' ? -1 : 1);
+			else if (now.calMode === 'month') {
+				// the month's days: ↑ to its head, ↓ (or Back) back to the day, on its head
+				if (key === 'up') setCalPart('head');
+				else if (key === 'down' || key === 'back') { leaveMonth(); setCalPart('head'); }
+			}
+			// the day's events: ↑ ↓ scroll through them; above the first ↑ goes to the head, below the last ↓ leaves the card
+			else if (key === 'up') { if (now.calScroll > 0) setCalScroll(now.calScroll - 1); else setCalPart('head'); }
+			else if (key === 'down') { if (now.calScroll < now.calMax) setCalScroll(now.calScroll + 1); else leaveDown('calendar'); }
+			else if (key === 'back') setZone('dock');
 			return true;
 		}
-		// Up from the top row climbs to the weather card, and from there to the calendar card
-		if (key === 'up' && now.row === 0 && (now.weatherOn || now.calendarOn)) { setZone(now.weatherOn ? 'weather' : 'calendar'); return true; }
+		if (now.zone === 'news' && now.newsOn) {
+			const first = now.newsPage * now.perPage;
+			const last = Math.min(now.newsCount, first + now.perPage) - 1;
+			if (key === 'left' || key === 'right') {
+				// ← → turn the pages; before the first or after the last they go on to the card beside
+				const step = key === 'left' ? -1 : 1;
+				const page = now.newsPage + step;
+				if (page < 0 || page > now.newsPages - 1) leaveSide('news', step);
+				else { setNewsPage(page); setNewsSel(page * now.perPage); }
+			} else if (key === 'up') {
+				if (now.newsSel > first) setNewsSel(now.newsSel - 1);
+				else enterAbove('news');
+			} else if (key === 'down') {
+				if (now.newsSel < last) setNewsSel(now.newsSel + 1);
+				else leaveDown('news');
+			} else if (key === 'back') setZone('dock');
+			return true;
+		}
+		// Up from the top row climbs to the card above the selected tile
+		if (key === 'up' && now.row === 0) {
+			const l = now.layout;
+			if (enter(entryCard(l, columnAt(l, selectedTileX())))) return true;
+		}
 		// functional updates, so quick repeated presses never act on a stale position
 		byKey.current = true;
 		setPointerPos(null);
@@ -182,6 +298,13 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 	useKeys(handleKey, active);
 	useOkPress({
 		onPress: () => {
+			if (live.current.detail) { setDetail(null); return; }
+			if (live.current.zone === 'news' && live.current.newsOn) {
+				const list = news && news.items;
+				const item = list ? list[live.current.newsSel] : undefined;
+				if (item) setDetail(item);
+				return;
+			}
 			if (live.current.zone === 'calendar' && live.current.calendarOn) { if (live.current.calMode === 'month') leaveMonth(); else { setDayDir(live.current.dayOffset > 0 ? -1 : 1); setDayOffset(0); } }
 			else if (live.current.zone === 'weather' && live.current.weatherOn) setWeatherDay(0);
 			else if (selectedItem) onActivate(selectedItem);
@@ -202,16 +325,25 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 		`--layout-tile-radius:${Math.round(LAYOUT.tileRadius * scale)}px`,
 		`--font-tile-label:${Math.min(30, Math.max(16, Math.round(FONT.tileLabel * scale)))}px`
 	].join(';');
+	/** One card of the board, in its column. */
+	const card = (c: BoardCard) => {
+		if (c.id === 'clock') return <Clock key="clock" now={now} format={timeFormat} config={appearance.clock} plate={plates && plates.clock} narrow={layout.narrow} />;
+		if (c.id === 'weather') return weatherShown && <WeatherCard key="weather" view={weatherShown} plate={plates && plates.weather} size={cardSize} now={now} width={c.w} focused={inWeather && active} onPick={(day) => { setZone('weather'); setWeatherDay(day); }} onHover={(day) => { setZone('weather'); if (day !== null) setWeatherDay(day); }} />;
+		if (c.id === 'calendar') return calendar && <CalendarCard key="calendar" plate={plates && plates.calendar} data={calendar.data} offset={dayOffset} now={now} format={timeFormat} focused={inCalendar && active} mode={calMode} month={month} dayDir={dayDir} size={cardSize} loading={calendar.loading} height={c.h} onShift={(days) => { setZone('calendar'); shiftDay(days); }} onMonthShift={(months) => { setZone('calendar'); shiftMonth(months); }} onHover={() => { if (live.current.zone !== 'calendar') setCalPart('body'); setZone('calendar'); }} part={calPart} scroll={calScroll} onScrollMax={setCalMax} onScrollBy={(step) => setCalScroll((v) => Math.min(live.current.calMax, Math.max(0, v + step)))} />;
+		if (c.id === 'news') return news && <NewsCard key="news" items={news.items} loading={news.loading} page={newsPage} selected={newsSel} focused={inNews && active} height={c.h} size={cardSize} now={now} plate={plates && plates.news} onPick={(index) => { const item = news.items && news.items[index]; setZone('news'); setNewsSel(index); if (item) setDetail(item); }} onHover={(index) => { if (live.current.zone !== 'news') setNewsSel(live.current.newsPage * live.current.perPage); setZone('news'); if (index !== null) setNewsSel(index); }} />;
+		return quote && <QuoteCard key="quote" quote={quote.quote} loading={quote.loading} height={c.h} size={cardSize} plate={plates && plates.quote} />;
+	};
+
 	const classes = ['rows', !appearance.showLabels && 'rows--no-labels', appearance.showLabels && appearance.labelsSelectedOnly && 'rows--focus-labels', sizes.length > 1 && 'rows--multi'].filter(Boolean).join(' ');
 
 	return (
-		<div class={`screen${active ? '' : ' screen--away'}${shift ? ' screen--shift' : ''}`} style={shift ? `--shift-x:${shift.x}px;--shift-y:${shift.y}px` : undefined}>
+		<div ref={screenRef} class={`screen${active ? '' : ' screen--away'}${shift ? ' screen--shift' : ''}`} style={shift ? `--shift-x:${shift.x}px;--shift-y:${shift.y}px` : undefined}>
 			<div class={`board${appearance.shadows ? '' : ' board--flat'}`} style={{top: `${boardTop}px`}}>
-				<div class="board__left">
-					<Clock now={now} format={timeFormat} config={appearance.clock} plate={plates && plates.clock} />
-					{weather && <WeatherCard view={weather} plate={plates && plates.weather} size={cardSize} now={now} focused={inWeather && active} onPick={(day) => { setZone('weather'); setWeatherDay(day); }} />}
-				</div>
-				{calendar && <CalendarCard plate={plates && plates.calendar} data={calendar.data} offset={dayOffset} now={now} format={timeFormat} focused={inCalendar && active} mode={calMode} month={month} dayDir={dayDir} size={cardSize} loading={calendar.loading} onShift={(days) => { setZone('calendar'); shiftDay(days); }} onMonthShift={(months) => { setZone('calendar'); shiftMonth(months); }} />}
+				{layout.columns.map((column, i) => (
+					<div key={i} class="board__col" style={{left: `${column.x}px`, width: `${column.w}px`}}>
+						{column.cards.map(card)}
+					</div>
+				))}
 			</div>
 			<div class={classes} style={rowStyle}>
 				{sizes.map((size, r) => {
@@ -225,14 +357,18 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 							scrollIndex={anchor[r]}
 							pointerPos={r === at.row ? pointerPos : null}
 							onPointer={(p) => {
-								setPointerPos(p);
+								// the row is not magnified, so only the tile counts: the screen is drawn again when the pointer
+								// reaches another tile, not on every move
+								setPointerPos(p === null ? null : Math.round(p));
 								if (p !== null) {
+									setZone('dock');
 									const col = Math.min(size - 1, Math.max(0, Math.round(p)));
 									if (col !== at.cols[r] || r !== at.row) setPosition({row: r, cols: at.cols.map((c, i) => (i === r ? col : c))});
 								}
 							}}
+							onEdgeScroll={(index) => setAnchor((a) => a.map((c, i) => (i === r ? Math.min(size - 1, Math.max(0, index)) : c)))}
 							onWheelStep={(direction) => setAnchor((a) => a.map((c, i) => (i === r ? Math.min(size - 1, Math.max(0, Math.round(c) + direction)) : c)))}
-							ring={r === at.row && !inCalendar && !inWeather}
+							ring={r === at.row && !inCalendar && !inWeather && !inNews}
 							selected={at.cols[r]}
 							onSelect={(col) => setPosition({row: r, cols: at.cols.map((c, i) => (i === r ? col : c))})}
 							onActivate={(col) => onActivate(items[start + col])}
@@ -243,6 +379,7 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 					);
 				})}
 			</div>
+			{detail && <NewsDetail item={detail} now={now} />}
 		</div>
 	);
 }

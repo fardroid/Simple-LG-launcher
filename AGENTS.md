@@ -95,7 +95,7 @@ ssh root@TV mkdir -p /media/developer/wallpapers
 scp -O wallpapers/*.jpg root@TV:/media/developer/wallpapers/    # or the person's own pictures
 ```
 
-On the TV: Settings → Wallpaper → Picture → *TV storage* → `wallpapers` → *Play this folder as a slideshow*.
+On the TV: Settings → Wallpaper → Picture → *TV storage* → `wallpapers` → *Slideshow* (the first tile).
 
 `tools/tv-tweaks.sh` stops some preloading and LG's promotions and Live Plus. Describe it first, as README.md does, and run it only on a yes: `scp -O tools/tv-tweaks.sh root@TV:/media/developer/ && ssh root@TV sh /media/developer/tv-tweaks.sh apply`. Undo: `… tv-tweaks.sh restore`.
 

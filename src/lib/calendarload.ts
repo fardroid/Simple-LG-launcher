@@ -31,15 +31,15 @@ function decode (b64: string): Uint8Array {
 	return bytes;
 }
 
-/** A text file from the TV, read in pieces (a calendar can be a few megabytes). */
-export function readTextFile (path: string): Promise<string> {
+/** A file from the TV as bytes, read in pieces (a calendar can be a few megabytes). */
+export function readFileBytes (path: string, maxBytes: number = 16 * 1048576): Promise<Uint8Array> {
 	if (!validPath(path)) return Promise.reject(new Error('bad path'));
 	const quoted = shellQuote(path);
 	const chunk = WALLPAPER.chunkBytes;
 	return exec(`wc -c < ${quoted}`).then((out) => {
 		const size = parseInt(out.trim(), 10);
 		if (!(size > 0)) throw new Error('empty file');
-		if (size > 16 * 1048576) throw new Error('file too large');
+		if (size > maxBytes) throw new Error('file too large');
 		const count = Math.ceil(size / chunk);
 		const parts: Uint8Array[] = new Array(count);
 		const batch = (first: number): Promise<void> => {
@@ -58,9 +58,14 @@ export function readTextFile (path: string): Promise<string> {
 			const all = new Uint8Array(total);
 			let at = 0;
 			parts.forEach((p) => { all.set(p, at); at += p.length; });
-			return new TextDecoder('utf-8').decode(all);
+			return all;
 		});
 	});
+}
+
+/** A text file from the TV (UTF-8), read in pieces. */
+export function readTextFile (path: string): Promise<string> {
+	return readFileBytes(path).then((bytes) => new TextDecoder('utf-8').decode(bytes));
 }
 
 function isFile (src: string): boolean {

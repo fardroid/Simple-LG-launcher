@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel rdf:about="https://old.example/"><title>Old Example</title><link>https://old.example/</link></channel>
+<item rdf:about="https://old.example/1"><title>Tram line 14 diverted until Sunday</title><link>https://old.example/1</link><dc:date>2026-10-28T05:00:00+01:00</dc:date></item>
+</rdf:RDF>
