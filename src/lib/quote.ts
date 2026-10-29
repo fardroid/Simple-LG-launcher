@@ -48,19 +48,34 @@ const DENSE: readonly Lang[] = ['zh', 'ja'];
 const SKIP_SECTION = new RegExp('^(' + [
 	'quotes? about', 'about ', 'misattributed', 'disputed', 'attributed', 'see also', 'external links', 'sources', 'references',
 	'о нём', 'о ней', 'об ', 'высказывания о', 'цитаты о', 'сомнительн', 'ошибочно', 'приписыва', 'см\\. также', 'ссылки', 'источники', 'литература',
+	'общие источники', 'статьи о',
 	'zitate über', 'über ', 'zitate mit bezug', 'fälschlich', 'zugeschrieben', 'unbelegt', 'siehe auch', 'weblinks', 'quellen', 'literatur',
 	'citations le concernant', 'citations sur', 'à propos', 'attribu', 'apocryph', 'voir aussi', 'liens', 'références', 'bibliographie',
 	'.*について', '.*に関する', '.*誤って', '関連', '外部リンク', '出典', '参考',
-	'про ', 'цитати про', 'сумнівн', 'приписуван', 'див\\. також', 'посилання', 'джерела',
+	'про ', 'цитати про', 'сумнівн', 'приписуван', 'див\\. також', 'посилання', 'джерела', 'загальні джерела', 'статті про',
 	'sobre ', 'citas sobre', 'atribuid', 'véase', 'enlaces', 'fuentes', 'veja também', 'ligações', 'citações sobre',
 	'.*hakkında', 'ayrıca', 'kaynak', 'o nim', 'o niej', 'przypisywane', 'zobacz też', 'linki', 'źródła',
 	'.*에 대한', '관련', '외부 링크', '.*的名言', '关于', '出处', '相关', '外部链接',
 	'su di', 'citazioni su', 'attribuit', 'voci correlate', 'collegamenti', 'fonti'
 ].join('|') + ')', 'i');
 
-/** The item lies in a part of the page to leave out. */
-export function skippedSection (section: string): boolean {
-	return section.split(' / ').some((part) => SKIP_SECTION.test(part.trim()));
+/** "О Льве Толстом", "Про Тараса Шевченка": about a person (two capitalised words), unlike the author's own "О любви и дружбе".
+ *  Case matters here, so it is apart from SKIP_SECTION. */
+const ABOUT_PERSON = /^(?:О|Об|Про) [А-ЯЁІЇЄҐ]\S* [А-ЯЁІЇЄҐ]/;
+
+/** A heading "about" someone ("О Достоевском", "Про Шевченка", "Über Goethe") that names the author: the first five letters
+ *  of a word in it are those of a word of the author's name, whatever its case ending. */
+const ABOUT = /^(?:о|об|обо|про|about|über|sur|sobre|su|o)\s+(.+)$/i;
+function aboutAuthor (part: string, author: string): boolean {
+	const m = ABOUT.exec(part);
+	if (!m || !author) return false;
+	const stems = author.toLowerCase().split(/[\s,.-]+/).filter((w) => w.length >= 5).map((w) => w.slice(0, 5));
+	return m[1].toLowerCase().split(/[\s,.-]+/).some((w) => stems.indexOf(w.slice(0, 5)) !== -1);
+}
+
+/** The item lies in a part of the page to leave out (`author`: the page's author, for the headings about them). */
+export function skippedSection (section: string, author: string = ''): boolean {
+	return section.split(' / ').some((part) => SKIP_SECTION.test(part.trim()) || ABOUT_PERSON.test(part.trim()) || aboutAuthor(part.trim(), author));
 }
 
 export const WIKIQUOTE_API = (lang: Lang): string => `https://${lang}.wikiquote.org/w/api.php`;
@@ -106,13 +121,35 @@ export function cleanQuote (raw: string, lang: Lang): string {
 	text = text.replace(/\s*(?:--|——)[^\n]{0,40}$/, '');
 	const quoted = /^[„"“«‚‹「『]([\s\S]+?)[“"”»‘›„」』]\s*(?:[–—-]\s*[^\n]{0,80})?$/.exec(text);
 	if (quoted) text = quoted[1].trim();
-	return text.replace(/^[„"“«「『]+|[“"”»„」』]+$/g, '').trim();
+	text = text.replace(/^[„"“«「『]+|[“"”»„」』]+$/g, '').trim();
+	// a mark taken off the end that closed a quote inside the text ("… спрашиваю «почему нет?»") goes back
+	const count = (re: RegExp) => (text.match(re) || []).length;
+	if (count(/«/g) > count(/»/g)) text += '»';
+	if (count(/「/g) > count(/」/g)) text += '」';
+	return text;
+}
+
+/** A line that only points elsewhere ("см. «К Шувалову», 1752", "see also …", a category link), not a quote. */
+const CROSS_REF = /^(?:см\.|смотри|див\.|дивись|see |cf\.|vgl\.|siehe |voir |véase |vedi |zob\.|категория:|категорія:|category:|kategorie:|catégorie:)/i;
+
+/** Where a quote on an author's page is followed by its source or a remark ("… меньшее. — «Протагор», 358d",
+ *  "… сумасшедшие. (Дневник: 12 июля 1900 г.)"): the end of the sentence, then a dash, or a bracket (one more may be inside it)
+ *  with a date or a number in it. */
+const DASH_SOURCE = /([.!?…»])\s+—\s+[^\n]+$/;
+const BRACKET_SOURCE = /([.!?…»])\s+(\((?:[^()\n]|\([^()\n]*\))*\))$/;
+
+/** The quote without the source after it, and without a dash before it (a line of speech). */
+export function dropSource (text: string): string {
+	const bracket = BRACKET_SOURCE.exec(text);
+	if (bracket && /\d/.test(bracket[2])) text = text.slice(0, bracket.index + 1);
+	return text.replace(DASH_SOURCE, '$1').replace(/^—\s+/, '');
 }
 
 function fits (text: string, lang: Lang): boolean {
 	const dense = DENSE.indexOf(lang) !== -1;
 	const n = text.length;
 	if (dense ? n < 6 || n > 90 : n < 25 || n > 220) return false;
+	if (CROSS_REF.test(text) || /[,:;]$/.test(text)) return false;      // a pointer elsewhere, or a line cut off mid-sentence
 	return !/https?:|ISBN|\bp\.\s?\d|\bS\.\s?\d|\bed\.|éd\.|trad\.|\(\d{4}\)|^\d{4}\b/i.test(text);
 }
 
@@ -166,14 +203,20 @@ export function dailyFromFeed (xml: string, lang: Lang): {text: string; author: 
 	return dailyFromLines(htmlLines(decodeEntities(summary[1]), true), {}, lang);
 }
 
-/** The quotes on an author's page that suit the card: the items of its lists (French pages keep them in "citation" blocks),
+/** The quotes on an author's page that suit the card: the items of its lists and its quote boxes (French pages keep them in "citation" blocks),
  *  outside sections about the author or of doubtful ones, cleaned and of a fitting length. */
-export function quotesFromPage (html: string, lang: Lang): string[] {
-	const items: ListItem[] = lang === 'fr' ? textOfClass(html, 'citation') : topLevelItems(html);
+export function quotesFromPage (html: string, lang: Lang, author: string = ''): string[] {
+	// Russian and Ukrainian pages keep many quotes in boxes of the "Q" template (tables: the quote in a "poem" block, in Russian in
+	// a row of class q-text; the original language under it in a grey italic cell, left out here), not in lists
+	const boxes = lang === 'ru' || lang === 'uk';
+	const noOriginals = boxes ? html.replace(/<td[^>]*font-style:\s*italic[^>]*>[\s\S]*?<\/td>/gi, '') : '';
+	const items: ListItem[] = lang === 'fr' ? textOfClass(html, 'citation')
+		: boxes ? topLevelItems(html).concat(textOfClass(html, 'q-text', true), textOfClass(noOriginals, 'poem', true))
+		: topLevelItems(html);
 	const out: string[] = [];
 	items.forEach((item) => {
-		if (item.section && skippedSection(item.section)) return;
-		const text = cleanQuote(item.text, lang);
+		if (item.section && skippedSection(item.section, author)) return;
+		const text = dropSource(cleanQuote(item.text, lang));
 		if (fits(text, lang) && out.indexOf(text) === -1) out.push(text);
 	});
 	return out;

@@ -30,14 +30,14 @@ eq(rect(l, 'clock'), [520, 40, 880, 184], 'the clock alone');
 eq(rect(b.boardLayout(on({weather: true, calendar: true}), 74), 'calendar')[1], 74, 'the block moves with its top');
 
 l = b.boardLayout(on({weather: true, calendar: true, quote: true}), 40);
-eq([rect(l, 'calendar'), rect(l, 'quote'), rect(l, 'weather')], [[1120, 40, 600, 518], [1120, 598, 600, 128], [200, 264, 880, 462]], 'with the quote: the calendar above it, both ending with the weather');
+eq([rect(l, 'calendar'), rect(l, 'quote'), rect(l, 'weather')], [[1120, 40, 600, 470], [1120, 550, 600, 176], [200, 264, 880, 462]], 'with the quote: the calendar above it, both ending with the weather');
 l = b.boardLayout(on({weather: true, calendar: true}), 40);
 eq(rect(l, 'calendar')[3], 686, 'no quote: the calendar takes the whole height');
 
 l = b.boardLayout(on({weather: true, news: true}), 40);
 eq([ids(l), rect(l, 'news')], [['clock+weather', 'news'], [1120, 40, 600, 686]], 'the news without the calendar: two columns, the news in the calendar\'s place, full height');
 l = b.boardLayout(on({weather: true, news: true, quote: true}), 40);
-eq([rect(l, 'news'), rect(l, 'quote')], [[1120, 40, 600, 518], [1120, 598, 600, 128]], 'the news with the quote under it');
+eq([rect(l, 'news'), rect(l, 'quote')], [[1120, 40, 600, 470], [1120, 550, 600, 176]], 'the news with the quote under it');
 
 l = b.boardLayout(on({weather: true, calendar: true, news: true}), 40);
 eq([l.narrow, ids(l), l.columns.map((c) => [c.x, c.w])], [true, ['clock+weather', 'calendar', 'news'], [[80, 560], [680, 560], [1280, 560]]], 'the news and the calendar: three columns of 560');

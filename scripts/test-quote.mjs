@@ -36,6 +36,24 @@ eq(de.every((t) => !/–\s*Vers\b/.test(t)), true, 'de: the source after the quo
 eq(ja.every((t) => t.indexOf('--') === -1 && !/（\s*[ぁ-ゖ]+\s*）/.test(t)), true, 'ja: no source after -- and no readings in brackets');
 eq(ja.every((t) => t.length >= 6 && t.length <= 90), true, 'ja: short in characters (no spaces in the language)');
 eq([...ru, ...de, ...fr].every((t) => t.length >= 25 && t.length <= 220 && !/https?:|ISBN/.test(t)), true, 'other languages: 25 to 220 characters, no links or book references');
+// Russian pages that keep their quotes in boxes of the "Q" template (table rows), with a "см. …" line in a list (Lomonosov)
+const box = q.quotesFromPage(read('author-ru-q.html'), 'ru');
+eq(box.length > 20, true, 'ru: the quotes in the boxes are read (' + box.length + ')');
+eq(box.indexOf('Неусыпный труд все препятствия преодолевает.') !== -1, true, 'ru: a quote from a box');
+eq(box.some((t) => /^см\./.test(t) || /Шувалову»/.test(t)), false, 'ru: "см. «К Ивану Ивановичу Шувалову», 1752—1753" points elsewhere: not a quote');
+eq(box.some((t) => /^А математику уже затем/.test(t)), false, 'ru: the boxes under "Приписываемое" are left out');
+eq(box.some((t) => /^Лучи от нас склонились прочь;/.test(t) && t.indexOf('\n') !== -1), true, 'ru: a poem in a box keeps its lines');
+const page = (section, item) => '<h2>' + section + '</h2><ul><li>' + item + '</li></ul>';
+eq(q.quotesFromPage(page('Ссылки', 'x') + page('Цитаты', 'Категория:Произведения Альберта Эйнштейна, одна длинная строка'), 'ru'), [], 'ru: a category link is not a quote');
+eq([q.skippedSection('Общие источники'), q.skippedSection('Статьи о произведениях'), q.skippedSection('О Льве Толстом'), q.skippedSection('Про Тараса Шевченка'), q.skippedSection('О любви и дружбе')], [true, true, true, true, false], 'ru, uk: sources, articles and quotes about a person are skipped; the author\'s own "О любви" is not');
+eq(q.dropSource('Поступать несправедливо хуже, чем терпеть несправедливость. — «Горгий», 473a'), 'Поступать несправедливо хуже, чем терпеть несправедливость.', 'the source after a dash is dropped');
+eq(q.dropSource('Я серьезно убежден, что миром правят совсем сумасшедшие. (Дневник: 12 июля 1900 г.)'), 'Я серьезно убежден, что миром правят совсем сумасшедшие.', 'a source in brackets with a date is dropped');
+eq(q.dropSource('— На том стою, и не могу иначе. Аминь. (Защитная речь в Вормсе (18 апреля 1521 года))'), 'На том стою, и не могу иначе. Аминь.', 'a dash before a line of speech, and a source with brackets inside brackets, are dropped');
+eq([q.skippedSection('О Достоевском / О произведениях', 'Фёдор Михайлович Достоевский'), q.skippedSection('О России', 'Фёдор Михайлович Достоевский'), q.skippedSection('О Достоевском')], [true, false, false], 'a heading about the author (any case ending) is skipped; one on a theme is not; without the author\'s name it cannot be told');
+eq(q.quotesFromPage(page('Цитаты', 'Основная категория: христианин по обязанности, ну и так далее,'), 'ru'), [], 'a line cut off mid-sentence is not a quote');
+eq(q.dropSource('Кто ясно мыслит — ясно излагает.'), 'Кто ясно мыслит — ясно излагает.', 'a dash inside the sentence stays');
+eq(q.cleanQuote('Я вижу что могло бы быть и спрашиваю «почему нет?»', 'ru'), 'Я вижу что могло бы быть и спрашиваю «почему нет?»', 'a closing » of a quote inside the text stays');
+
 eq(q.skippedSection('Überprüft / Gedichte'), false, '"Überprüft" (checked) is not "über" (about)');
 eq([q.skippedSection('Citations le concernant / Sainte-Beuve'), q.skippedSection('孔子に関する引用'), q.skippedSection('See also')], [true, true, true], 'about-the-author and link sections are skipped at any depth');
 

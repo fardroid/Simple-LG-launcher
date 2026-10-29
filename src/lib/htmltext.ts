@@ -4,8 +4,9 @@
 
 /** Elements whose content is never text to read. */
 const DROP = ['style', 'script', 'sup', 'table', 'figure', 'noscript', 'math', 'svg'];
-/** Classes whose element is dropped with all it holds (edit links, navigation boxes, notes). */
-const DROP_CLASS = /\b(mw-editsection|navbox|metadata|noprint|reference|mw-empty-elt|toc|thumb|mw-references-wrap|hatnote|ambox)\b/;
+/** Classes whose element is dropped with all it holds (edit links, navigation boxes, notes; in Wikiquote's quote boxes the
+ *  original-language text and the editors' remarks). */
+const DROP_CLASS = /\b(mw-editsection|navbox|metadata|noprint|reference|mw-empty-elt|toc|thumb|mw-references-wrap|hatnote|ambox|q-original|q-comment)\b/;
 const BLOCK = ['p', 'div', 'td', 'th', 'tr', 'table', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'li', 'ul', 'ol', 'dl', 'dd', 'dt', 'center', 'blockquote', 'section', 'tbody'];
 const VOID = ['br', 'img', 'hr', 'input', 'meta', 'link', 'wbr', 'source', 'area', 'col', 'embed'];
 
@@ -149,8 +150,9 @@ export function topLevelItems (html: string): ListItem[] {
 	return items.filter((i) => i.text.length > 0);
 }
 
-/** The text of every element whose class list has `name` (nested ones are part of their parent's text). */
-export function textOfClass (html: string, name: string): ListItem[] {
+/** The text of every element whose class list has `name` (nested ones are part of their parent's text). `tables`: look inside
+ *  tables too (the quote boxes of Russian and Ukrainian Wikiquote are table rows). */
+export function textOfClass (html: string, name: string, tables: boolean = false): ListItem[] {
 	const out: ListItem[] = [];
 	const re = new RegExp('(^|\\s)' + name + '(\\s|$)');
 	const stack: string[] = [];
@@ -177,6 +179,6 @@ export function textOfClass (html: string, name: string): ListItem[] {
 	}, (text) => {
 		if (heading !== null) heading += text;
 		else if (current !== null) current += text.replace(/\s+/g, ' ');
-	});
+	}, tables ? DROP_KEEP_TABLES : DROP);
 	return out.filter((i) => i.text.length > 0);
 }

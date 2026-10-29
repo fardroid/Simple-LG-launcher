@@ -47,7 +47,7 @@ function picked (lang: Lang, allowShell: boolean, now: number): Promise<{text: s
 			if (!title || n >= 3) return Promise.reject(new Error('nothing to quote'));
 			return get(parseUrl(lang, title), allowShell).then((text) => {
 				const html = parseReply(text);
-				const quote = html ? pickQuote(quotesFromPage(html, lang), now) : null;
+				const quote = html ? pickQuote(quotesFromPage(html, lang, authorName(title)), now) : null;
 				return quote ? {text: quote, author: authorName(title)} : attempt(n + 1);
 			}, () => attempt(n + 1));
 		};

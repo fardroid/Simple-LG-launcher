@@ -21,9 +21,9 @@ const ROW_GAP = 14;           // between two rows of apps (see .rows--multi in g
 const LEFT_WIDTH = 880;
 const RIGHT_WIDTH = 600;
 const THIRD_WIDTH = 560;
-/** the quote of the day under the calendar or the news */
-const QUOTE_HEIGHT = 128;
-const QUOTE_HEIGHT_THIRD = 176;
+/** the quote of the day under the calendar or the news: the same height in two columns and in three, so its text (fitted to
+ *  the card) comes out the same size whichever cards are on */
+const QUOTE_HEIGHT = 176;
 /** the clock card's padding (top and bottom, see .clock in global.css) and its side padding */
 const CLOCK_PAD = 12;
 const CLOCK_SIDE = 40;
@@ -143,7 +143,7 @@ export function boardLayout (on: Cards, top: number): BoardLayout {
 	let x = Math.round((LAYOUT.screenWidth - total) / 2);
 	const fixed = (id: CardId, alone: boolean): number | null => {
 		if (id === 'clock') return clockHeight(on.clock, three);
-		if (id === 'quote') return alone ? BOARD_HEIGHT : three ? QUOTE_HEIGHT_THIRD : QUOTE_HEIGHT;
+		if (id === 'quote') return alone ? BOARD_HEIGHT : QUOTE_HEIGHT;
 		return null;
 	};
 	const columns = lists.map((ids, i) => {
