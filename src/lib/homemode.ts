@@ -38,6 +38,24 @@ export function parseResult (out: string): {ok: boolean; mode: string; why: stri
 	return match ? {ok: match[1] === 'ok', mode: match[2], why: match[3] || ''} : null;
 }
 
+/** While the official way is on, its copy on the TV is brought up to this version's and the TV is set to wake up into the
+ *  launcher (tools/defaulthome.sh refresh). Run once each time the launcher starts, so an update needs nothing more: the copy
+ *  outlives the app. Nothing happens when the official way is off. */
+export const REFRESH_COMMAND = `sh '${TOOLS}/defaulthome.sh' refresh; true`;
+/** The launcher named as the TV's last input again (switching to an input names that one): run when it comes to the front
+ *  and when it goes to the back, so waking up opens it. Nothing happens when the official way is off. */
+export const POINT_COMMAND = `sh '${TOOLS}/defaulthome.sh' point; true`;
+
+export function refreshDefaultHome (): Promise<string> {
+	if (!isWebOS()) return Promise.resolve('off');
+	return exec(REFRESH_COMMAND, 15000);
+}
+
+export function pointWakeAtLauncher (): Promise<string> {
+	if (!isWebOS()) return Promise.resolve('');
+	return exec(POINT_COMMAND, 10000);
+}
+
 export function readHomeMode (): Promise<HomeModeInfo | null> {
 	if (!isWebOS()) return Promise.resolve({mode: 'none', canDefault: true, release: ''});
 	return exec(STATUS_COMMAND, 10000).then(parseModeStatus, () => null);
@@ -82,15 +100,16 @@ export function modeText (mode: HomeMode): ModeText {
 	switch (mode) {
 		case 'default': return {
 			name: tr('Official: the TV opens the launcher', 'Штатно: ТВ сам открывает лаунчер'),
-			how: tr('webOS lets you choose which app is Home, as a computer lets you choose the default browser. The launcher is chosen.', 'webOS позволяет выбрать, какое приложение будет домашним, как на компьютере выбирают браузер по умолчанию. Выбирается лаунчер.'),
+			how: tr('The launcher becomes the TV\'s Home app. For waking up, the TV opens its last input (the launcher) and keeps the launcher loaded in standby.', 'Лаунчер становится домашним приложением ТВ. Для выхода из сна ТВ открывает последний вход (лаунчер) и не выгружает лаунчер во сне.'),
 			pros: [
-				tr('The TV\'s own setting: no LG file is replaced or mounted', 'Собственная настройка ТВ: ни один файл LG не подменяется'),
-				tr('Works from the moment the TV is switched on, also after a full restart', 'Работает с момента включения, в том числе после полной перезагрузки'),
-				tr('LG Home is still there, on its own tile', 'LG Home остаётся доступен со своей плитки')
+				tr('Home and waking up open the launcher, in about a second after standby', 'Home и выход из сна открывают лаунчер, после сна — примерно за секунду'),
+				tr('LG Home is not replaced and keeps its tile', 'LG Home не подменяется и остаётся на своей плитке')
 			],
 			cons: [
-				tr('Only on newer TVs (webOS 25 and later) that let you choose', 'Только на новых ТВ (webOS 25 и новее), где такой выбор есть'),
-				tr('Uninstalled while this is on, the Home button opens nothing until the TV is fully restarted; then LG Home is back by itself', 'Если удалить лаунчер, не выключив этот способ, кнопка Home ничего не откроет до полной перезагрузки ТВ; после неё LG Home вернётся сам')
+				tr('Only where the TV lets you choose a Home app (webOS 25)', 'Только где ТВ даёт выбрать домашнее приложение (webOS 25)'),
+				tr('After a full restart the launcher shows up about a minute later', 'После полной перезагрузки лаунчер появляется примерно через минуту'),
+				tr('Changes two TV settings (put back when switched off)', 'Меняет две настройки ТВ (при выключении возвращаются)'),
+				tr('Switch this off before uninstalling the launcher', 'Перед удалением лаунчера выключите этот способ')
 			]
 		};
 		case 'mount': return {
