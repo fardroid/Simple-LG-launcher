@@ -15,7 +15,13 @@ export interface Quote {
 	day: string;
 	/** 'daily': the editors' quote of the day; 'picked': picked by the date */
 	kind: 'daily' | 'picked';
+	/** the rules it was picked by (QUOTE_RULES) */
+	rules?: number;
 }
+
+/** Goes up when the way quotes are read from the pages changes: a quote saved by older rules is fetched again
+ *  (2: the quote boxes of Russian and Ukrainian pages, without "см. …" lines). */
+export const QUOTE_RULES = 2;
 
 interface Daily {
 	/** the main page, or the feed of the quote of the day */
@@ -267,7 +273,7 @@ export const AUTHORS_FRESH_MS = 30 * 86400000;
 export function readQuoteCache (): Quote | null {
 	try {
 		const q = JSON.parse(localStorage.getItem(QUOTE_KEY) || 'null') as Quote | null;
-		return q && typeof q.text === 'string' && typeof q.author === 'string' && typeof q.day === 'string' ? q : null;
+		return q && typeof q.text === 'string' && typeof q.author === 'string' && typeof q.day === 'string' && q.rules === QUOTE_RULES ? q : null;
 	} catch { return null; }
 }
 

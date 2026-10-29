@@ -6,7 +6,7 @@ import {APP_VERSION} from '../config/constants';
 import type {Lang} from './i18n';
 import {
 	DAILY, authorName, authorsUrl, dailyFromFeed, dailyFromPage, dayKey, feedUrl, parseAuthors, parseReply, parseUrl,
-	pickAuthor, pickQuote, quotesFromPage, readAuthors, writeAuthors, type Quote
+	pickAuthor, pickQuote, QUOTE_RULES, quotesFromPage, readAuthors, writeAuthors, type Quote
 } from './quote';
 import {fetchTextOf} from './webfetch';
 
@@ -59,7 +59,7 @@ function picked (lang: Lang, allowShell: boolean, now: number): Promise<{text: s
 export function fetchQuote (lang: Lang, allowShell: boolean, now: number): Promise<Quote> {
 	const day = dayKey(now);
 	return daily(lang, allowShell).catch(() => null).then((found) => {
-		if (found) return {text: found.text, author: found.author, lang, day, kind: 'daily' as const};
-		return picked(lang, allowShell, now).then((p) => ({text: p.text, author: p.author, lang, day, kind: 'picked' as const}));
+		if (found) return {text: found.text, author: found.author, lang, day, kind: 'daily' as const, rules: QUOTE_RULES};
+		return picked(lang, allowShell, now).then((p) => ({text: p.text, author: p.author, lang, day, kind: 'picked' as const, rules: QUOTE_RULES}));
 	});
 }

@@ -87,10 +87,12 @@ eq(q.parseUrl('ru', 'Конфуций').indexOf('origin=*') !== -1 && q.parseUrl
 // the saved copy
 const store = {};
 globalThis.localStorage = {getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }};
-const quote = {text: 'T', author: 'A', lang: 'ru', day: '2026-10-28', kind: 'picked'};
+const quote = {text: 'T', author: 'A', lang: 'ru', day: '2026-10-28', kind: 'picked', rules: q.QUOTE_RULES};
 q.writeQuoteCache(quote);
 eq([q.todaysQuote(q.readQuoteCache(), 'ru', day), q.todaysQuote(q.readQuoteCache(), 'ru', next), q.todaysQuote(q.readQuoteCache(), 'en', day)], [quote, null, null], 'the saved quote counts for its own day and language');
 eq([q.shownQuote(q.readQuoteCache(), 'ru'), q.shownQuote(q.readQuoteCache(), 'en')], [quote, null], 'yesterday\'s stays on screen until today\'s is in, in the same language');
+store['simplelauncher-quote'] = JSON.stringify({...quote, rules: undefined});
+eq(q.readQuoteCache(), null, 'a quote saved by older rules is fetched again');
 q.writeAuthors('ru', ['X', 'Y'], day);
 eq([q.readAuthors('ru', day + 86400000), q.readAuthors('ru', day + 31 * 86400000), q.readAuthors('de', day)], [['X', 'Y'], null, null], 'the list of authors is kept for a month, per language');
 
