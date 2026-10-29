@@ -4,6 +4,7 @@
 
 - **Switching the official way on could fail and undo itself.** It restarted the app manager first and then checked that Home opens the launcher, giving it 8 seconds; a launcher that has to start from scratch on a busy TV took longer, so the way was switched back off. Home is now checked before the restart, with 20 seconds.
 - After the app manager is restarted at start-up, the launcher is opened by its own id: just after a restart the app manager still opens LG Home when asked for the Home app.
+- Switching to the official way takes about 8 seconds instead of 25 to 30: the launcher is kept in front of the LG Home that the restarted app manager brings up in the background. A second switch pressed meanwhile was refused as *still running*.
 - The official way's description in Settings is shorter: it ran off the bottom of the screen.
 
 ## 1.9.4

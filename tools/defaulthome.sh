@@ -165,9 +165,15 @@ keepalive_apply () {
 	i=0; until luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q returnValue || [ "$i" -ge 20 ]; do sleep 1; i=$((i + 1)); done
 	[ -f "$FLAG" ] || return 0
 	# The launcher is opened at once, by its id (it starts while SAM settles). Not as "the Home app": just after its restart SAM
-	# still answers that with LG Home. A restarted SAM brings LG Home up a few seconds later: for 15 s, when LG Home comes in
-	# front of the launcher, the launcher is opened again.
+	# still answers that with LG Home. A restarted SAM brings LG Home up a few seconds later, so for 15 s the launcher is put
+	# back in front of it: in the background, so that switching to this way in Settings is done without waiting for it.
 	luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
+	( setsid nohup sh "$DIR/defaulthome.sh" keep-front </dev/null >/dev/null 2>&1 & )
+	return 0
+}
+
+# For 15 s: when LG Home comes in front, the launcher is opened again. Another app (an input that woke the TV) is left alone.
+keep_front () {
 	i=0
 	while [ "$i" -lt 15 ]; do
 		sleep 1; i=$((i + 1))
@@ -175,10 +181,9 @@ keepalive_apply () {
 		case "$app" in
 			"$LG_HOME") luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1 ;;
 			''|"$APP_ID") ;;
-			*) return 0 ;;          # another app (an input that woke the TV): left alone
+			*) return 0 ;;
 		esac
 	done
-	return 0
 }
 
 keepalive_listed () {
@@ -283,6 +288,9 @@ case "$1" in
 			( setsid nohup sh "$DIR/defaulthome.sh" keepalive-update </dev/null >/dev/null 2>&1 & )
 		fi
 		echo "ok"
+		;;
+	keep-front)
+		[ -f "$FLAG" ] && keep_front
 		;;
 	keepalive-update)
 		[ -f "$FLAG" ] || exit 0
