@@ -164,15 +164,16 @@ keepalive_apply () {
 	systemctl restart sam 2>/dev/null || { log "could not restart the app manager"; return 1; }
 	i=0; until luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q returnValue || [ "$i" -ge 20 ]; do sleep 1; i=$((i + 1)); done
 	[ -f "$FLAG" ] || return 0
-	# The launcher is opened at once (it starts while SAM settles). A restarted SAM brings LG Home up a few seconds later:
-	# for 15 s, when LG Home comes in front of it, the launcher is opened again.
-	luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1
+	# The launcher is opened at once, by its id (it starts while SAM settles). Not as "the Home app": just after its restart SAM
+	# still answers that with LG Home. A restarted SAM brings LG Home up a few seconds later: for 15 s, when LG Home comes in
+	# front of the launcher, the launcher is opened again.
+	luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
 	i=0
 	while [ "$i" -lt 15 ]; do
 		sleep 1; i=$((i + 1))
 		app=$(luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 		case "$app" in
-			"$LG_HOME") luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1 ;;
+			"$LG_HOME") luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1 ;;
 			''|"$APP_ID") ;;
 			*) return 0 ;;          # another app (an input that woke the TV): left alone
 		esac
@@ -192,11 +193,12 @@ old_guard_off () {
 	rm -f /tmp/launcher-wakeguard.pid "$DIR/wakeguard.py"
 }
 
-# Opens Home the way the Home key does and waits up to 8 s for $1 to be the app in front.
+# Opens Home the way the Home key does and waits up to 20 s for $1 to be the app in front (a launcher that has to start from
+# scratch on a busy TV takes a while).
 open_home () {
 	luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1
 	i=0
-	while [ "$i" -lt 8 ]; do
+	while [ "$i" -lt 20 ]; do
 		luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q "\"appId\"[[:space:]]*:[[:space:]]*\"$1\"" && return 0
 		sleep 1; i=$((i + 1))
 	done
@@ -242,13 +244,13 @@ case "$1" in
 		chmod +x "$LINK"
 		keep_settings || log "could not read start with Home and the last input: they will not be put back by disable"
 		wake_into_launcher || log "the TV did not take the launcher as last input: waking up may show LG Home"
-		[ -n "$(keepalive_mount)" ] && keepalive_apply restart
-		keepalive_listed || log "the launcher is not in keepAliveApps: after waking it starts from scratch"
-		if open_home "$APP_ID"; then
-			log "the launcher is the TV's Home (was $was)"
-		else
+		# checked before the app manager is restarted below: just after a restart it opens LG Home as Home for a while
+		if ! open_home "$APP_ID"; then
 			log "Home did not open the launcher: LG Home put back"; give_back; exit 1
 		fi
+		log "the launcher is the TV's Home (was $was)"
+		[ -n "$(keepalive_mount)" ] && keepalive_apply restart
+		keepalive_listed || log "the launcher is not in keepAliveApps: after waking it starts from scratch"
 		;;
 	disable)
 		give_back

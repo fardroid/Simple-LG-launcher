@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.5
+
+- **Switching the official way on could fail and undo itself.** It restarted the app manager first and then checked that Home opens the launcher, giving it 8 seconds; a launcher that has to start from scratch on a busy TV took longer, so the way was switched back off. Home is now checked before the restart, with 20 seconds.
+- After the app manager is restarted at start-up, the launcher is opened by its own id: just after a restart the app manager still opens LG Home when asked for the Home app.
+
 ## 1.9.4
 
 - **The official way, reworked: the TV wakes up straight into the launcher.** Choosing the launcher as the TV's Home app (`setDefaultApp`) covers the Home button and Back out of the last app, but waking from standby does not ask for it: the TV's start-up opens LG Home by name while LG's *start with Home* is on, and its last input otherwise. So the official way now also switches *start with Home* off and names the launcher as the TV's last input (`lastInputApp`, `physicalLastInputApp`; the trick of [openhome-webos](https://github.com/devic021/openhome-webos)). Opening an HDMI input names that input again, so the launcher names itself once more when it comes to the front and a few seconds after it goes to the back. Both settings are kept as they were and put back when the official way is switched off.
