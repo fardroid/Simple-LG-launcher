@@ -21,6 +21,8 @@ interface Props {
 	plate?: PlateLook;
 	/** a headline was clicked */
 	onPick: (index: number) => void;
+	/** the pointer came onto the card (null) or onto a headline */
+	onHover?: (index: number | null) => void;
 }
 
 /** "12 min ago", "3 h ago" */
@@ -33,7 +35,7 @@ export function ageText (at: number, now: number): string {
 }
 
 /** The news: a page of headlines, each with its outlet and age. ← → turn the pages, ↑ ↓ choose a headline, OK opens it. */
-function NewsCardView ({items, loading, page, selected, focused, height, size, now, plate, onPick}: Props) {
+function NewsCardView ({items, loading, page, selected, focused, height, size, now, plate, onPick, onHover}: Props) {
 	const k = size / 100;
 	const per = headlinesPerPage(height, k);
 	const list = items || [];
@@ -42,7 +44,7 @@ function NewsCardView ({items, loading, page, selected, focused, height, size, n
 	const shown = list.slice(p * per, p * per + per);
 	const nowMs = now.getTime();
 	return (
-		<div class={`card news${focused ? ' news--focus' : ''}`} style={{'--k': String(k), ...plateVars(plate)}}>
+		<div class={`card news${focused ? ' news--focus' : ''}`} style={{'--k': String(k), ...plateVars(plate)}} onMouseEnter={onHover && (() => onHover(null))}>
 			<Frost plate={plate} />
 			<div class="news__head">
 				<div class="news__title">{tr('News', 'Новости')}</div>
@@ -53,7 +55,7 @@ function NewsCardView ({items, loading, page, selected, focused, height, size, n
 					const index = p * per + i;
 					const age = ageText(item.at, nowMs);
 					return (
-						<div key={item.link || item.title} class={`news__item${focused && index === selected ? ' news__item--sel' : ''}`} onClick={() => onPick(index)}>
+						<div key={item.link || item.title} class={`news__item${focused && index === selected ? ' news__item--sel' : ''}`} onClick={() => onPick(index)} onMouseEnter={onHover && (() => onHover(index))}>
 							<div class="news__meta">{[item.source, age].filter((x) => !!x).join(' · ')}</div>
 							<div class="news__headline">{item.title}</div>
 						</div>

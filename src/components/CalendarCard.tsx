@@ -35,12 +35,14 @@ interface Props {
 	height?: number;
 	onShift: (days: number) => void;
 	onMonthShift: (months: number) => void;
+	/** the pointer came onto the card */
+	onHover?: () => void;
 }
 
 /** The events of one day, with the days around it; Up turns it into the month, with the same two layers cross-fading
  *  (the day view shrinks away, the month grows in). The days and the months move as one continuous strip, with no fading,
  *  so the eye can follow where they went; only the list of events fades. */
-function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, height = 686, onShift, onMonthShift}: Props) {
+function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, height = 686, onShift, onMonthShift, onHover}: Props) {
 	const nowMs = now.getTime();
 	const dayStart = startOfDay(nowMs, offset);
 	const inMonth = mode === 'month';
@@ -63,7 +65,7 @@ function CalendarCardView ({data, plate, offset, now, format, focused, mode, mon
 	const title = inMonth ? String(view.year) : relativeDay(offset);
 	const heading = inMonth ? view.name : dayHeading(nowMs, offset);
 	return (
-		<div class={`card cal${focused ? ' cal--focus' : ''}${inMonth ? ' cal--month' : ''}`} style={{'--k': String(scale), ...plateVars(plate)}}>
+		<div class={`card cal${focused ? ' cal--focus' : ''}${inMonth ? ' cal--month' : ''}`} style={{'--k': String(scale), ...plateVars(plate)}} onMouseEnter={onHover}>
 			<Frost plate={plate} />
 			<div class="cal__head">
 				<button class="cal__nav" aria-label={inMonth ? tr('Previous month', 'Предыдущий месяц') : tr('Previous day', 'Предыдущий день')} onClick={() => (inMonth ? onMonthShift(-1) : onShift(-1))}>

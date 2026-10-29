@@ -375,6 +375,8 @@ html, body {
 /* Left/right held down: each step is short and linear, so the steps run together into one smooth glide
    (an ease-out curve restarting on every key repeat looks like stuttering). */
 .row__track--fast { transition: transform 150ms linear; }
+/* the pointer at an end of the row: the row glides frame by frame (Row.tsx), so no transition may smooth it on top */
+.row__track--free { transition: none; }
 
 .row__empty {
 	font-size: var(--font-tile-label);

@@ -103,8 +103,9 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 	const [calMode, setCalMode] = useState<'day' | 'month'>('day');
 	const [month, setMonth] = useState(0);
 	const [dayDir, setDayDir] = useState(0);
-	// The pointer (Magic Remote) over the row: the magnification follows it. The row's scroll position stays with the keys and the wheel,
-	// so tiles do not slide away under the pointer.
+	// The pointer (Magic Remote) over the row: the highlight follows it. The row's scroll position stays with the keys and the wheel,
+	// so tiles do not slide away under the pointer, except near an end of the row, where it scrolls on by itself (Row's onEdgeScroll).
+	// Over a card the pointer gives the card the focus, as the keys would.
 	const [pointerPos, setPointerPos] = useState<number | null>(null);
 	const [anchor, setAnchor] = useState<number[]>([0, 0]);
 	const byKey = useRef(false);
@@ -298,9 +299,9 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 	/** One card of the board, in its column. */
 	const card = (c: BoardCard) => {
 		if (c.id === 'clock') return <Clock key="clock" now={now} format={timeFormat} config={appearance.clock} plate={plates && plates.clock} narrow={layout.narrow} />;
-		if (c.id === 'weather') return weather && <WeatherCard key="weather" view={weather} plate={plates && plates.weather} size={cardSize} now={now} width={c.w} focused={inWeather && active} onPick={(day) => { setZone('weather'); setWeatherDay(day); }} />;
-		if (c.id === 'calendar') return calendar && <CalendarCard key="calendar" plate={plates && plates.calendar} data={calendar.data} offset={dayOffset} now={now} format={timeFormat} focused={inCalendar && active} mode={calMode} month={month} dayDir={dayDir} size={cardSize} loading={calendar.loading} height={c.h} onShift={(days) => { setZone('calendar'); shiftDay(days); }} onMonthShift={(months) => { setZone('calendar'); shiftMonth(months); }} />;
-		if (c.id === 'news') return news && <NewsCard key="news" items={news.items} loading={news.loading} page={newsPage} selected={newsSel} focused={inNews && active} height={c.h} size={cardSize} now={now} plate={plates && plates.news} onPick={(index) => { const item = news.items && news.items[index]; setZone('news'); setNewsSel(index); if (item) setDetail(item); }} />;
+		if (c.id === 'weather') return weather && <WeatherCard key="weather" view={weather} plate={plates && plates.weather} size={cardSize} now={now} width={c.w} focused={inWeather && active} onPick={(day) => { setZone('weather'); setWeatherDay(day); }} onHover={(day) => { setZone('weather'); if (day !== null) setWeatherDay(day); }} />;
+		if (c.id === 'calendar') return calendar && <CalendarCard key="calendar" plate={plates && plates.calendar} data={calendar.data} offset={dayOffset} now={now} format={timeFormat} focused={inCalendar && active} mode={calMode} month={month} dayDir={dayDir} size={cardSize} loading={calendar.loading} height={c.h} onShift={(days) => { setZone('calendar'); shiftDay(days); }} onMonthShift={(months) => { setZone('calendar'); shiftMonth(months); }} onHover={() => setZone('calendar')} />;
+		if (c.id === 'news') return news && <NewsCard key="news" items={news.items} loading={news.loading} page={newsPage} selected={newsSel} focused={inNews && active} height={c.h} size={cardSize} now={now} plate={plates && plates.news} onPick={(index) => { const item = news.items && news.items[index]; setZone('news'); setNewsSel(index); if (item) setDetail(item); }} onHover={(index) => { if (live.current.zone !== 'news') setNewsSel(live.current.newsPage * live.current.perPage); setZone('news'); if (index !== null) setNewsSel(index); }} />;
 		return quote && <QuoteCard key="quote" quote={quote.quote} loading={quote.loading} height={c.h} size={cardSize} plate={plates && plates.quote} />;
 	};
 
@@ -327,12 +328,16 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 							scrollIndex={anchor[r]}
 							pointerPos={r === at.row ? pointerPos : null}
 							onPointer={(p) => {
-								setPointerPos(p);
+								// the row is not magnified, so only the tile counts: the screen is drawn again when the pointer
+								// reaches another tile, not on every move
+								setPointerPos(p === null ? null : Math.round(p));
 								if (p !== null) {
+									setZone('dock');
 									const col = Math.min(size - 1, Math.max(0, Math.round(p)));
 									if (col !== at.cols[r] || r !== at.row) setPosition({row: r, cols: at.cols.map((c, i) => (i === r ? col : c))});
 								}
 							}}
+							onEdgeScroll={(index) => setAnchor((a) => a.map((c, i) => (i === r ? Math.min(size - 1, Math.max(0, index)) : c)))}
 							onWheelStep={(direction) => setAnchor((a) => a.map((c, i) => (i === r ? Math.min(size - 1, Math.max(0, Math.round(c) + direction)) : c)))}
 							ring={r === at.row && !inCalendar && !inWeather && !inNews}
 							selected={at.cols[r]}

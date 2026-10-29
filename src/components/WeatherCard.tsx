@@ -63,14 +63,16 @@ interface Props {
 	focused: boolean;
 	/** a day was clicked (index in the forecast) */
 	onPick: (day: number) => void;
+	/** the pointer came onto the card (null) or onto a day */
+	onHover?: (day: number | null) => void;
 	/** the card's width on the screen, px */
 	width?: number;
 }
 
 /** Weather: now, the chosen day by hours, and the next days. ← → (or a click) choose which day the curve is for. */
-function WeatherCardView ({view, size, now, plate, focused, onPick, width = 880}: Props) {
+function WeatherCardView ({view, size, now, plate, focused, onPick, onHover, width = 880}: Props) {
 	return (
-		<div class={`card weather${focused ? ' weather--focus' : ''}`} style={{'--k': String(size / 100), ...plateVars(plate)}}>
+		<div class={`card weather${focused ? ' weather--focus' : ''}`} style={{'--k': String(size / 100), ...plateVars(plate)}} onMouseEnter={onHover && (() => onHover(null))}>
 			<Frost plate={plate} />
 			<div class="weather__now">
 				<WeatherGlyph icon={view.icon} class="weather__now-icon" />
@@ -86,7 +88,7 @@ function WeatherCardView ({view, size, now, plate, focused, onPick, width = 880}
 			<div class="weather__hours"><Curve view={view} now={now} W={width - 64} /></div>
 			<div class="weather__days">
 				{view.days.map((day, i) => (
-					<div key={i} class={`wday${day.today ? ' wday--today' : ''}${day.selected ? ' wday--sel' : ''}`} onClick={() => onPick(i)}>
+					<div key={i} class={`wday${day.today ? ' wday--today' : ''}${day.selected ? ' wday--sel' : ''}`} onClick={() => onPick(i)} onMouseEnter={onHover && (() => onHover(i))}>
 						<div class="wday__name">{day.label}</div>
 						<WeatherGlyph icon={day.icon} class="wday__icon" />
 						<div class="wday__high">{day.high}</div>
