@@ -50,6 +50,7 @@ LAYERS=/etc/configd/layers
 COPIES=$DIR/configd
 CONFIG=luna://com.webos.service.config
 LOCK=/tmp/launcher-keepalive.lock
+FRONT_PID=/tmp/launcher-keep-front.pid
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
 
@@ -164,20 +165,36 @@ keepalive_apply () {
 	systemctl restart sam 2>/dev/null || { log "could not restart the app manager"; return 1; }
 	i=0; until luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q returnValue || [ "$i" -ge 20 ]; do sleep 1; i=$((i + 1)); done
 	[ -f "$FLAG" ] || return 0
-	# The launcher is opened at once (it starts while SAM settles). A restarted SAM brings LG Home up a few seconds later:
-	# for 15 s, when LG Home comes in front of it, the launcher is opened again.
-	luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1
+	# The launcher is opened at once, by its id (it starts while SAM settles). Not as "the Home app": just after its restart SAM
+	# still answers that with LG Home. A restarted SAM brings LG Home up a few seconds later, so for 15 s the launcher is put
+	# back in front of it: in the background, so that switching to this way in Settings is done without waiting for it.
+	luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
+	( setsid nohup sh "$DIR/defaulthome.sh" keep-front </dev/null >/dev/null 2>&1 & )
+	return 0
+}
+
+# For 15 s: when LG Home comes in front, the launcher is opened again. Another app (an input that woke the TV) is left alone,
+# and it stops as soon as this way is switched off (give_back also ends it at once).
+keep_front () {
+	echo $$ > "$FRONT_PID"
 	i=0
 	while [ "$i" -lt 15 ]; do
 		sleep 1; i=$((i + 1))
+		[ -f "$FLAG" ] || break
 		app=$(luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 		case "$app" in
-			"$LG_HOME") luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1 ;;
+			"$LG_HOME") luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1 ;;
 			''|"$APP_ID") ;;
-			*) return 0 ;;          # another app (an input that woke the TV): left alone
+			*) break ;;
 		esac
 	done
-	return 0
+	rm -f "$FRONT_PID"
+}
+
+keep_front_off () {
+	pid=$(cat "$FRONT_PID" 2>/dev/null)
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+	rm -f "$FRONT_PID"
 }
 
 keepalive_listed () {
@@ -192,11 +209,12 @@ old_guard_off () {
 	rm -f /tmp/launcher-wakeguard.pid "$DIR/wakeguard.py"
 }
 
-# Opens Home the way the Home key does and waits up to 8 s for $1 to be the app in front.
+# Opens Home the way the Home key does and waits up to 20 s for $1 to be the app in front (a launcher that has to start from
+# scratch on a busy TV takes a while).
 open_home () {
 	luna-send -n 1 "$AM/launchDefaultApp" '{"category":"home"}' >/dev/null 2>&1
 	i=0
-	while [ "$i" -lt 8 ]; do
+	while [ "$i" -lt 20 ]; do
 		luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | grep -q "\"appId\"[[:space:]]*:[[:space:]]*\"$1\"" && return 0
 		sleep 1; i=$((i + 1))
 	done
@@ -210,6 +228,7 @@ helper_on () {
 }
 
 give_back () {
+	keep_front_off
 	set_home "$LG_HOME" || log "setDefaultApp for LG Home was not accepted"
 	put_settings_back
 	rm -f "$FLAG" "$LINK"
@@ -242,13 +261,13 @@ case "$1" in
 		chmod +x "$LINK"
 		keep_settings || log "could not read start with Home and the last input: they will not be put back by disable"
 		wake_into_launcher || log "the TV did not take the launcher as last input: waking up may show LG Home"
-		[ -n "$(keepalive_mount)" ] && keepalive_apply restart
-		keepalive_listed || log "the launcher is not in keepAliveApps: after waking it starts from scratch"
-		if open_home "$APP_ID"; then
-			log "the launcher is the TV's Home (was $was)"
-		else
+		# checked before the app manager is restarted below: just after a restart it opens LG Home as Home for a while
+		if ! open_home "$APP_ID"; then
 			log "Home did not open the launcher: LG Home put back"; give_back; exit 1
 		fi
+		log "the launcher is the TV's Home (was $was)"
+		[ -n "$(keepalive_mount)" ] && keepalive_apply restart
+		keepalive_listed || log "the launcher is not in keepAliveApps: after waking it starts from scratch"
 		;;
 	disable)
 		give_back
@@ -281,6 +300,9 @@ case "$1" in
 			( setsid nohup sh "$DIR/defaulthome.sh" keepalive-update </dev/null >/dev/null 2>&1 & )
 		fi
 		echo "ok"
+		;;
+	keep-front)
+		[ -f "$FLAG" ] && keep_front
 		;;
 	keepalive-update)
 		[ -f "$FLAG" ] || exit 0
