@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.4
+
+- **The official way, reworked: the TV wakes up straight into the launcher.** Choosing the launcher as the TV's Home app (`setDefaultApp`) covers the Home button and Back out of the last app, but waking from standby does not ask for it: the TV's start-up opens LG Home by name while LG's *start with Home* is on, and its last input otherwise. So the official way now also switches *start with Home* off and names the launcher as the TV's last input (`lastInputApp`, `physicalLastInputApp`; the trick of [openhome-webos](https://github.com/devic021/openhome-webos)). Opening an HDMI input names that input again, so the launcher names itself once more when it comes to the front and a few seconds after it goes to the back. Both settings are kept as they were and put back when the official way is switched off.
+- **Kept loaded through standby.** When the TV goes to standby its app manager closes every app but those in `com.webos.applicationManager.keepAliveApps` (LG Home is one), so the launcher had to start from scratch after waking: 3 to 5 seconds of black. The official way mounts a copy of each config file that sets that list, with the launcher added, has the config service read them again and restarts the app manager. The launcher is now back about a second after waking. The copies live in RAM, so the boot link mounts them again at every start and restarts the app manager once: after a full restart the launcher shows up about a minute after switching on, after a short black screen. After an update, the first load of the launcher does the same once (the launcher closes and opens again).
+- The wake-up guard of 1.9.3 (`tools/wakeguard.py`) is gone. A TV updated from 1.9.3 has it stopped and removed the first time the launcher loads.
+- Settings → Home screen → *How the launcher opens*: the official way's description now says what it changes on the TV, and its pros and cons.
+
 ## 1.9.3
 
 - **Official way: waking the TV.** The TV's start-up opens LG Home by name when it wakes from standby, whatever app is Home, and the Home key does nothing over it. A small guard (`tools/wakeguard.py`, started with the official way and at every full start) opens the launcher when the TV wakes up with LG Home in front. An app the TV woke up into (a console on HDMI, an app button on the remote) is left alone. LG's "start with Home" is left as it is.

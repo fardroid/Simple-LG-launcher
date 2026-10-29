@@ -8,7 +8,7 @@ import {detectOled, knownOled} from './lib/panel';
 import {applySplashMode, noteSplashMode} from './lib/splash';
 import {readWallpaperCache, readWallpaperLook, wallpaperCacheId} from './lib/wallpaper';
 import {reloadIfUpdated} from './lib/update';
-import {readHomeMode, refreshDefaultHome, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
+import {pointWakeAtLauncher, readHomeMode, refreshDefaultHome, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
 import {Toast, type ToastMessage} from './components/Toast';
 import {Wallpaper} from './components/Wallpaper';
 import type {TileModel} from './components/Tile';
@@ -298,19 +298,33 @@ export function App () {
 		return undefined;
 	}, [screen]);
 
-	// Once each time the launcher is loaded (not on every Home press): with the official way on, its scripts on the TV are brought
-	// up to this version's and its wake-up guard is started (lib/homemode.ts). The Homebrew service may not be up yet just after
-	// the TV starts: then it is tried again a little later.
+	// Once each time the launcher is loaded (not on every Home press): with the official way on, its script on the TV is brought
+	// up to this version's and the TV is set to wake up into the launcher (lib/homemode.ts). The Homebrew service may not be up
+	// yet just after the TV starts: then it is tried again a little later.
 	useEffect(() => {
 		if (!config.useHomebrew || !isWebOS()) return undefined;
 		let timer = 0;
 		const attempt = (n: number) => refreshDefaultHome().then(
-			(out) => { if (/started/.test(out)) logLine('launcher: official way refreshed, wake-up guard started'); },
+			() => undefined,
 			() => { if (n < 3) timer = window.setTimeout(() => attempt(n + 1), [10000, 30000, 90000][n]); }
 		);
 		timer = window.setTimeout(() => attempt(0), TIMING.backgroundWorkMs);
 		return () => window.clearTimeout(timer);
 	}, []);
+
+	// With the official way on, the TV wakes up into its last input, which is the launcher until an input (HDMI…) is opened.
+	// So the launcher names itself again when it comes to the front, and a few seconds after it goes to the back (once the app or
+	// input that took its place has been noted). The script does nothing when the official way is off.
+	useEffect(() => {
+		if (!config.useHomebrew || !isWebOS()) return undefined;
+		let timer = 0;
+		const onVisibility = () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => { pointWakeAtLauncher().catch(() => undefined); }, document.hidden ? 8000 : TIMING.backgroundWorkMs);
+		};
+		document.addEventListener('visibilitychange', onVisibility);
+		return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', onVisibility); };
+	}, [config.useHomebrew]);
 
 	// Shortly after we come to the front (not at the very first moment, while the TV is still switching
 	// apps): make sure the hand-over helper is running (if it is switched on), and end LG's home app to
