@@ -6,7 +6,7 @@ import {CityPicker} from './screens/CityPicker';
 import {HomeMethod} from './screens/HomeMethod';
 import {detectOled, knownOled} from './lib/panel';
 import {applySplashMode, noteSplashMode} from './lib/splash';
-import {readWallpaperCache, readWallpaperLook, wallpaperCacheId} from './lib/wallpaper';
+import {readWallpaperCache, readWallpaperLook, wallpaperCacheId, wallpaperSource} from './lib/wallpaper';
 import {reloadIfUpdated} from './lib/update';
 import {readHomeMode, switchHomeMode, modeText, type HomeMode} from './lib/homemode';
 import {Toast, type ToastMessage} from './components/Toast';
@@ -96,7 +96,7 @@ export function App () {
 	const weatherRef = useRef(weather);
 	weatherRef.current = weather;
 	// the look saved with the cached picture, so the plates open with their glass instead of waiting for the wallpaper to start
-	const [savedLook] = useState(() => readWallpaperLook(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path), config.frost));
+	const [savedLook] = useState(() => readWallpaperLook(wallpaperCacheId(config.wallpaper.mode, wallpaperSource(config.wallpaper)), config.frost));
 	const [wallpaperFrost, setWallpaperFrost] = useState<string | null>(savedLook ? savedLook.frost : null);      // the blurred wallpaper for the frosted glass of the plates
 	const [wallpaperMap, setWallpaperMap] = useState<number[] | null>(savedLook ? savedLook.map : null);       // brightness of the wallpaper picture (null: the theme's own background)
 	const [calendar, setCalendar] = useState<CalendarData | null>(readCalendarCache);
@@ -590,7 +590,7 @@ export function App () {
 	// The start-up picture: noted while drawing (so the wallpaper's first save already follows it), applied when it changes
 	noteSplashMode(config.splash);
 	useEffect(() => {
-		const timer = window.setTimeout(() => applySplashMode(config.splash, readWallpaperCache(wallpaperCacheId(config.wallpaper.mode, config.wallpaper.path))), TIMING.backgroundWorkMs);
+		const timer = window.setTimeout(() => applySplashMode(config.splash, readWallpaperCache(wallpaperCacheId(config.wallpaper.mode, wallpaperSource(config.wallpaper)))), TIMING.backgroundWorkMs);
 		return () => window.clearTimeout(timer);
 	}, [config.splash]);
 
@@ -707,12 +707,12 @@ export function App () {
 
 	const onChooseWallpaper = useCallback((choice: WallpaperChoice) => {
 		const keep = {intervalSec: config.wallpaper.intervalSec, shuffle: config.wallpaper.shuffle};
-		const wallpaper = choice.mode === 'gradient'
-			? {...DEFAULT_WALLPAPER, ...keep}
-			: {mode: choice.mode, path: choice.path, ...keep};
+		const wallpaper = choice.mode === 'gradient' ? {...DEFAULT_WALLPAPER, ...keep}
+			: choice.mode === 'pictures' ? (choice.paths.length === 1 ? {mode: 'image' as const, path: choice.paths[0], paths: [], ...keep} : {mode: 'pictures' as const, path: choice.paths[0], paths: choice.paths, ...keep})
+			: {mode: choice.mode, path: choice.path, paths: [], ...keep};
 		updateConfig({...config, wallpaper});
 		setScreen('settings');
-		showToast(choice.mode === 'gradient' ? tr('Default background restored', 'Фон по умолчанию восстановлен') : choice.mode === 'image' ? tr('Loading the wallpaper…', 'Загружаем обои…') : tr('Starting the slideshow…', 'Запускаем слайд-шоу…'));
+		showToast(choice.mode === 'gradient' ? tr('Default background restored', 'Фон по умолчанию восстановлен') : wallpaper.mode === 'image' ? tr('Loading the wallpaper…', 'Загружаем обои…') : tr('Starting the slideshow…', 'Запускаем слайд-шоу…'));
 	}, [config, showToast]);
 
 	const onChooseCalendars = useCallback((sources: string[]) => {
@@ -786,7 +786,7 @@ export function App () {
 			{menu && <AppMenu title={menu.title} moves={menuMoves} hideDetail={menu.app ? tr('Bring it back in Settings → Apps', 'Вернуть можно в Настройки → Приложения') : tr('Bring it back in Settings → Sources', 'Вернуть можно в Настройки → Источники')} showUninstall={!!menu.app} blockedReason={menuBlocked} onMove={(action) => moveTile(menu.key, action)} onHide={() => hideTile(menu)} onUninstall={() => { if (menu.app) removeApp(menu.app); }} onClose={() => setMenu(null)} />}
 			{/* Settings stays mounted under the picker so it keeps its tab. */}
 			{screen !== 'home' && <Settings tabs={tabs} active={screen === 'settings'} onToggle={onToggle} onReorder={onReorder} onOption={onOption} onRefresh={onRefresh} onAdjust={onAdjust} onClose={() => setScreen('home')} />}
-			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} />}
+			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} chosen={config.wallpaper.mode === 'pictures' ? config.wallpaper.paths : config.wallpaper.mode === 'image' ? [config.wallpaper.path] : []} />}
 			{screen === 'homeMethod' && <HomeMethod info={systemInfo.homeMode || null} busy={modeBusy} onPick={onPickHomeMode} onClose={() => setScreen('settings')} />}
 			{screen === 'calendarUrl' && <CalendarSetup sources={config.calendar.sources} canReadFiles={config.useHomebrew && isWebOS()} onChoose={onChooseCalendars} onClose={() => setScreen('settings')} />}
 			{screen === 'feeds' && <FeedsSetup feeds={config.news.feeds} onChoose={onChooseFeeds} onClose={() => setScreen('settings')} />}

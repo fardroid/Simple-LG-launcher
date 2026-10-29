@@ -363,7 +363,7 @@ export const zh: Record<string, string> = {
 	'Search results': '搜索结果',
 	'City name': '城市名称',
 	'Choose where the pictures are · Back returns to Settings': '选择图片所在位置 · 返回键回到设置',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK 打开文件夹或选择图片 · 返回键返回上一级',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK 勾选幻灯片中的图片或打开文件夹 · 返回键返回上一级',
 	'Try again': '重试',
 	'Read the storage again': '重新读取存储',
 	'Default background': '默认背景',

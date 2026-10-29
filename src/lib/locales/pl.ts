@@ -362,7 +362,7 @@ export const pl: Record<string, string> = {
     'Search results': 'Wyniki wyszukiwania',
     'City name': 'Nazwa miasta',
     'Choose where the pictures are · Back returns to Settings': 'Wybierz lokalizację zdjęć · Wstecz wraca do Ustawień',
-    'OK opens a folder or chooses a picture · Back goes up a level': 'OK otwiera folder lub wybiera zdjęcie · Wstecz wraca poziom wyżej',
+    'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK zaznacza zdjęcia do pokazu slajdów lub otwiera folder · Wstecz wraca poziom wyżej',
     'Try again': 'Spróbuj ponownie',
     'Read the storage again': 'Odczytaj pamięć ponownie',
     'Default background': 'Domyślne tło',

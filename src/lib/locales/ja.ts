@@ -363,7 +363,7 @@ export const ja: Record<string, string> = {
 	'Search results': '検索結果',
 	'City name': '都市名',
 	'Choose where the pictures are · Back returns to Settings': '画像の場所を選んでください · 戻るで設定に戻る',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK でフォルダを開くか画像を選択 · 戻るで 1 つ上の階層へ',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK でスライドショーの画像にチェック、またはフォルダを開く · 戻るで 1 つ上の階層へ',
 	'Try again': '再試行',
 	'Read the storage again': 'ストレージを再読み込み',
 	'Default background': '既定の背景',

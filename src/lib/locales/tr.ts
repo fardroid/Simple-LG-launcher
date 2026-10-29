@@ -363,7 +363,7 @@ export const tr: Record<string, string> = {
 	'Search results': 'Arama sonuçları',
 	'City name': 'Şehir adı',
 	'Choose where the pictures are · Back returns to Settings': 'Resimlerin nerede olduğunu seçin · Geri Ayarlar\'a döner',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK bir klasörü açar veya bir resim seçer · Geri bir üst düzeye çıkar',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK slayt gösterisi için resimleri işaretler veya bir klasörü açar · Geri bir üst düzeye çıkar',
 	'Try again': 'Yeniden dene',
 	'Read the storage again': 'Depolamayı yeniden oku',
 	'Default background': 'Varsayılan arka plan',

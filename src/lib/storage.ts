@@ -13,7 +13,7 @@ import {COUNTRIES, normalizeFeedUrl, validFeedUrl} from './feeds';
 import type {PlateMode} from './plates';
 import {LANG_SETTINGS, type LangSetting} from './i18n';
 
-export type WallpaperMode = 'gradient' | 'image' | 'folder';
+export type WallpaperMode = 'gradient' | 'image' | 'folder' | 'pictures';
 export type ClockFormat = 'tv' | '12h' | '24h';
 export type PixelShift = 'auto' | 'on' | 'off';
 export type {ClockColor};
@@ -92,10 +92,13 @@ export interface QuoteConfig {
 export const MAX_FEEDS = 8;
 
 export interface WallpaperConfig {
-	/** gradient: the default background (black or the calm gradient, per theme). image: one picture. folder: a slideshow. */
+	/** gradient: the default background (black or the calm gradient, per theme). image: one picture. folder: a slideshow of a folder.
+	 *  pictures: a slideshow of the pictures ticked in the gallery. */
 	mode: WallpaperMode;
-	/** absolute path of the picture or the folder (empty for the default background) */
+	/** absolute path of the picture or the folder (empty for the default background); with `pictures`, the first of them */
 	path: string;
+	/** the ticked pictures (absolute paths), with `pictures` */
+	paths: string[];
 	/** seconds between pictures in a slideshow */
 	intervalSec: number;
 	/** play the slideshow in random order */
@@ -159,6 +162,7 @@ export interface UserConfig {
 export const DEFAULT_WALLPAPER: WallpaperConfig = {
 	mode: 'gradient',
 	path: '',
+	paths: [],
 	intervalSec: 60,
 	shuffle: true
 };
@@ -269,8 +273,9 @@ export function parseConfig (raw: string | null): UserConfig {
 		const calSources = (Array.isArray(cal.sources) ? cal.sources : typeof legacy === 'string' ? [legacy] : []).filter((x): x is string => typeof x === 'string' && validSource(x)).slice(0, 8);
 		const wc = wx.city as Partial<City> | null | undefined;
 		const city: City | null = wc && typeof wc.name === 'string' && wc.name && validCoords(wc.lat, wc.lon) ? {name: wc.name.slice(0, 60), lat: wc.lat as number, lon: wc.lon as number, detail: typeof wc.detail === 'string' ? wc.detail.slice(0, 80) : undefined} : null;
-		const mode: WallpaperMode = w.mode === 'image' || w.mode === 'folder' ? w.mode : 'gradient';
-		const path = typeof w.path === 'string' ? w.path : '';
+		const paths = Array.isArray(w.paths) ? w.paths.filter((x): x is string => typeof x === 'string' && x.charAt(0) === '/' && !/[\u0000-\u001f\u007f]/.test(x)).slice(0, WALLPAPER.maxFiles) : [];
+		const mode: WallpaperMode = w.mode === 'image' || w.mode === 'folder' || (w.mode === 'pictures' && paths.length > 0) ? w.mode : 'gradient';
+		const path = mode === 'pictures' ? paths[0] : typeof w.path === 'string' ? w.path : '';
 		const interval = typeof w.intervalSec === 'number' && w.intervalSec >= 5 ? w.intervalSec : DEFAULT_WALLPAPER.intervalSec;
 		return {
 			language: LANG_SETTINGS.find((l) => l === parsed.language) || 'auto',
@@ -330,6 +335,7 @@ export function parseConfig (raw: string | null): UserConfig {
 			wallpaper: {
 				mode: path ? mode : 'gradient',
 				path,
+				paths: mode === 'pictures' ? paths : [],
 				intervalSec: interval,
 				shuffle: w.shuffle !== false
 			}

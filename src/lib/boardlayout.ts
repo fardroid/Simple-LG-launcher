@@ -178,6 +178,18 @@ export function entryCard (layout: BoardLayout, index: number): CardId | null {
 	return cards.length ? cards[cards.length - 1].id : null;
 }
 
+/** The card the remote steps onto from `id` going left (-1) or right (+1): in the nearest column that way with a card it can step
+ *  onto, the lowest such card (null: none). */
+export function besideCard (layout: BoardLayout, id: CardId, step: -1 | 1): CardId | null {
+	const index = layout.columns.findIndex((c) => c.cards.some((card) => card.id === id));
+	if (index === -1) return null;
+	for (let i = index + step; i >= 0 && i < layout.columns.length; i += step) {
+		const card = entryCard(layout, i);
+		if (card) return card;
+	}
+	return null;
+}
+
 /** The card above (-1) or below (+1) `id` in its column that the remote can step onto (null: none). */
 export function nextInColumn (layout: BoardLayout, id: CardId, step: -1 | 1): CardId | null {
 	for (const column of layout.columns) {

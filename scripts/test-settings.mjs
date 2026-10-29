@@ -46,6 +46,12 @@ store[KEY] = '{not json';
 eq(s.loadConfig().theme, 'dusk', 'corrupt storage falls back to defaults');
 store[KEY] = JSON.stringify({wallpaper: {mode: 'folder', path: ''}});
 eq(s.loadConfig().wallpaper.mode, 'gradient', 'folder mode without a path becomes default background');
+store[KEY] = JSON.stringify({wallpaper: {mode: 'pictures', paths: ['/a/1.jpg', 7, 'rel.jpg', '/a/2.jpg']}});
+eq([s.loadConfig().wallpaper.mode, s.loadConfig().wallpaper.path, s.loadConfig().wallpaper.paths], ['pictures', '/a/1.jpg', ['/a/1.jpg', '/a/2.jpg']], 'ticked pictures: only absolute paths are kept, the first is the path');
+store[KEY] = JSON.stringify({wallpaper: {mode: 'pictures', paths: []}});
+eq(s.loadConfig().wallpaper.mode, 'gradient', 'ticked pictures with none left become the default background');
+store[KEY] = JSON.stringify({wallpaper: {mode: 'folder', path: '/x', paths: ['/y.jpg']}});
+eq(s.loadConfig().wallpaper.paths, [], 'a folder keeps no list of pictures');
 
 store[KEY] = JSON.stringify({tileOrder: ['com.webos.app.hdmi1', 'x', 7]});
 eq(s.loadConfig().tileOrder, ['com.webos.app.hdmi1', 'x'], 'a saved tile order is loaded (bad entries dropped)');

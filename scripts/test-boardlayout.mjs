@@ -62,6 +62,10 @@ eq([b.nextInColumn(l, 'weather', -1), b.nextInColumn(l, 'news', 1), b.nextInColu
 const two = b.boardLayout(on({calendar: true, quote: true}), 40);
 eq([b.columnAt(two, 100), b.entryCard(two, b.columnAt(two, 100))], [1, 'calendar'], 'a column with only the clock is passed over for the nearest one with a card');
 eq(b.columnAt(b.boardLayout(on({quote: true}), 40), 500), -1, 'nothing to step onto');
+eq([b.besideCard(l, 'weather', 1), b.besideCard(l, 'calendar', 1), b.besideCard(l, 'news', -1), b.besideCard(l, 'weather', -1), b.besideCard(l, 'news', 1)], ['calendar', 'news', 'calendar', null, null], 'left and right: the card in the next column that way');
+const noCal = b.boardLayout(on({weather: true, news: true, quote: true}), 40);
+eq([b.besideCard(noCal, 'weather', 1), b.besideCard(noCal, 'news', -1)], ['news', 'weather'], 'without the calendar the weather and the news are side by side');
+eq(b.besideCard(b.boardLayout(on({calendar: true, news: true}), 40), 'calendar', -1), null, 'the clock alone on the left is passed over: nothing there');
 
 console.log(fail ? `\n${fail} FAILED` : '\nall passed');
 process.exit(fail ? 1 : 0);

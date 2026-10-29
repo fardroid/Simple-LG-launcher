@@ -4,7 +4,7 @@ import type {WallpaperConfig} from '../lib/storage';
 import type {WallpaperLook} from '../lib/wallpaper';
 import {
 	clearWallpaperCache, listImages, loadPicture, measureDataUrl, readWallpaperCache, readWallpaperLook, releasePicture, createShuffleOrder,
-	wallpaperCacheId, writeWallpaperCache, writeWallpaperLook
+	wallpaperCacheId, wallpaperSource, writeWallpaperCache, writeWallpaperLook
 } from '../lib/wallpaper';
 import {tr} from '../lib/i18n';
 
@@ -43,7 +43,8 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 	useEffect(() => {
 		const layers = [layerA.current as HTMLDivElement, layerB.current as HTMLDivElement];
 		const held: (string | null)[] = [null, null];     // the picture URL each layer holds
-		const cacheId = wallpaperCacheId(config.mode, config.path);
+		const cacheId = wallpaperCacheId(config.mode, wallpaperSource(config));
+		const rotating = config.mode === 'folder' || config.mode === 'pictures';
 		let front = -1;              // layer currently showing, -1 when none
 		let disposed = false;
 		let failed = false;
@@ -137,7 +138,7 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 
 		const schedule = () => {
 			stopTimer();
-			const rotates = config.mode === 'folder' && (files.length === 0 || files.length > 1);
+			const rotates = rotating && (files.length === 0 || files.length > 1);
 			if (rotates && !document.hidden) timer = window.setTimeout(advance, config.intervalSec * 1000);
 		};
 
@@ -181,6 +182,8 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 			files = [];
 			order = null;
 			if (config.mode === 'gradient' || !config.path) { clearWallpaperCache(); hideAll(); if (tone.current) tone.current(null, null); return; }
+			// the ticked pictures need no listing: they are the slideshow
+			if (config.mode === 'pictures') { files = config.paths.slice(); order = config.shuffle ? createShuffleOrder(files, cacheId) : null; }
 
 			const cached = readWallpaperCache(cacheId);
 			if (cached) {                                          // instant: no shell work at all
@@ -196,13 +199,14 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 				snapshot = () => cached;
 				unsaved = false;
 				cacheKnown = true;
-				if (config.mode === 'folder') {
+				if (rotating) {
 					if (config.shuffle) advance();
 					else schedule();
 				}
 				return;
 			}
 			if (config.mode === 'image') { files = [config.path]; next(0); return; }
+			if (config.mode === 'pictures') { next(0); return; }
 			listImages(config.path).then(
 				(list) => {
 					if (disposed) return;
@@ -224,7 +228,7 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 				return;
 			}
 			if (failed) start();                                   // the USB drive may be back
-			else if (config.mode === 'folder') {
+			else if (rotating) {
 				// carry on where the interval left off: coming back to the front must not start a fade of its own (and the
 				// work of loading the next picture would make the remote react late, so it waits a while)
 				stopTimer();
@@ -255,7 +259,7 @@ export function Wallpaper ({config, onProblem, onTone, frost = 100}: Props) {
 			release(0);
 			release(1);
 		};
-	}, [config.mode, config.path, config.intervalSec, config.shuffle]);
+	}, [config.mode, wallpaperSource(config), config.intervalSec, config.shuffle]);
 
 	// another frost setting: the glass of the picture on screen is made again (the picture itself stays)
 	const firstFrost = useRef(true);

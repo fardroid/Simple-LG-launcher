@@ -249,12 +249,12 @@ const basePrefs = (): Pref[] => [
 	{
 		id: 'wallpaper', tab: 'wallpaper', opens: true, label: tr('Picture', 'Картинка'), kind: 'action',
 		description: tr('One picture, or a folder of pictures as a slideshow, from a USB drive or the TV\'s storage.', 'Одна картинка или папка с картинками для слайд-шоу, с USB-накопителя или из памяти ТВ.'),
-		text: (c) => c.wallpaper.mode === 'gradient' ? tr('None', 'Нет') : baseName(c.wallpaper.path)
+		text: (c) => c.wallpaper.mode === 'gradient' ? tr('None', 'Нет') : c.wallpaper.mode === 'pictures' ? count(c.wallpaper.paths.length, ['picture', 'pictures'], ['картинка', 'картинки', 'картинок']) : baseName(c.wallpaper.path)
 	},
 	...group(tr('Slideshow', 'Слайд-шоу'), [
-		only((c) => c.wallpaper.mode === 'folder', choice('interval', 'wallpaper', tr('Change every', 'Менять каждые'), tr('How long each picture stays on screen.', 'Сколько каждая картинка остаётся на экране.'),
+		only((c) => c.wallpaper.mode === 'folder' || c.wallpaper.mode === 'pictures', choice('interval', 'wallpaper', tr('Change every', 'Менять каждые'), tr('How long each picture stays on screen.', 'Сколько каждая картинка остаётся на экране.'),
 			INTERVAL_VALUES, (c) => c.wallpaper.intervalSec, (c, v) => ({...c, wallpaper: {...c.wallpaper, intervalSec: v}}), intervalText)),
-		only((c) => c.wallpaper.mode === 'folder', toggle('shuffle', 'wallpaper', tr('Shuffle', 'Перемешивать'), tr('Random order. Off: in alphabetical order.', 'Случайный порядок. Если выключено, по алфавиту.'),
+		only((c) => c.wallpaper.mode === 'folder' || c.wallpaper.mode === 'pictures', toggle('shuffle', 'wallpaper', tr('Shuffle', 'Перемешивать'), tr('Random order. Off: in alphabetical order.', 'Случайный порядок. Если выключено, по алфавиту.'),
 			(c) => c.wallpaper.shuffle, (c, v) => ({...c, wallpaper: {...c.wallpaper, shuffle: v}}))),
 		choice('splash', 'wallpaper', tr('Start-up picture', 'Заставка при запуске'), tr('What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher\'s logo or black.', 'Что ТВ показывает на мгновение, пока лаунчер запускается (после того как ТВ выгрузил его из памяти): обои, логотип лаунчера или чёрный экран.'),
 			SPLASHES, (c) => c.splash, (c, v) => ({...c, splash: v}), splashText)

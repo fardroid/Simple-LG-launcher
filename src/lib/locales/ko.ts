@@ -363,7 +363,7 @@ export const ko: Record<string, string> = {
 	'Search results': '검색 결과',
 	'City name': '도시 이름',
 	'Choose where the pictures are · Back returns to Settings': '이미지가 있는 위치를 선택하세요 · 뒤로 가기는 설정으로 돌아갑니다',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK는 폴더를 열거나 이미지를 선택 · 뒤로 가기는 한 단계 위로',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK는 슬라이드쇼에 넣을 이미지를 체크하거나 폴더를 열기 · 뒤로 가기는 한 단계 위로',
 	'Try again': '다시 시도',
 	'Read the storage again': '저장소 다시 읽기',
 	'Default background': '기본 배경',

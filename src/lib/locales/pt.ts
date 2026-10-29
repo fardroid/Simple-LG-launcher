@@ -363,7 +363,7 @@ export const pt: Record<string, string> = {
 	'Search results': 'Resultados da busca',
 	'City name': 'Nome da cidade',
 	'Choose where the pictures are · Back returns to Settings': 'Escolha onde estão as imagens · Voltar retorna às Configurações',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK abre uma pasta ou escolhe uma imagem · Voltar sobe um nível',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK marca imagens para uma apresentação ou abre uma pasta · Voltar sobe um nível',
 	'Try again': 'Tentar de novo',
 	'Read the storage again': 'Ler o armazenamento de novo',
 	'Default background': 'Fundo padrão',

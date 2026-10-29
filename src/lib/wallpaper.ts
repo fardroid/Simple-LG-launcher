@@ -187,7 +187,7 @@ export function mimeType (path: string): string {
 
 type Run = (command: string, timeoutMs?: number) => Promise<string>;
 
-function decodeBase64 (text: string): Uint8Array {
+export function decodeBase64 (text: string): Uint8Array {
 	const binary = atob(text);
 	const bytes = new Uint8Array(binary.length);
 	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -379,7 +379,7 @@ export function measureDataUrl (url: string, frost: number = 100): Promise<Wallp
 	});
 }
 
-function decode (url: string): Promise<HTMLImageElement> {
+export function decode (url: string): Promise<HTMLImageElement> {
 	return new Promise<HTMLImageElement>((resolve, reject) => {
 		const img = new Image();
 		const timer = window.setTimeout(() => done(() => reject(pictureError('not-a-picture', tr('The picture took too long to open', 'Картинка слишком долго открывалась')))), WALLPAPER.probeTimeoutMs);
@@ -411,6 +411,11 @@ export interface WallpaperLook {map: number[] | null; frost: string | null}
 
 export function wallpaperCacheId (mode: string, path: string): string {
 	return `${mode}|${path}`;
+}
+
+/** What a wallpaper choice shows, for its cache id: the path, or with ticked pictures all of them. */
+export function wallpaperSource (w: {mode: string; path: string; paths: string[]}): string {
+	return w.mode === 'pictures' ? w.paths.join('\n') : w.path;
 }
 
 /** The cached picture for this wallpaper choice (a data URL), or null. */

@@ -1,14 +1,12 @@
 import {CAL_COLORS, dayHeading, dotsOfDay, eventsOfDay, monthView, relativeDay, startOfDay, type CalendarData} from '../lib/calendar';
 import {dayShort} from '../lib/clock';
-import {fmt, tr} from '../lib/i18n';
+import {tr} from '../lib/i18n';
 import {plateVars, type PlateLook} from '../lib/plates';
 import {Frost} from './Frost';
 import {memoProps} from '../lib/memoprops';
-import {useMemo} from 'preact/hooks';
+import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'preact/hooks';
 import type {TimeFormat} from '../lib/clock';
 
-/** The room for the list of events: the card's height less its head, the strip and the padding (420 px on a full-height card). */
-const listHeight = (height: number): number => Math.max(90, height - 266);
 /** Monday first. */
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0];
 
@@ -37,21 +35,45 @@ interface Props {
 	onMonthShift: (months: number) => void;
 	/** the pointer came onto the card */
 	onHover?: () => void;
+	/** where the remote is on the card, when it is focused: the events (or the month's days), or the head with the date and arrows */
+	part?: 'body' | 'head';
+	/** how many of the day's events are scrolled past (↑ ↓ on the card, or the wheel) */
+	scroll?: number;
+	/** how far the day's events can scroll (0: they all fit) */
+	onScrollMax?: (max: number) => void;
+	/** the wheel turned over the events: -1 or 1 */
+	onScrollBy?: (step: number) => void;
 }
 
 /** The events of one day, with the days around it; Up turns it into the month, with the same two layers cross-fading
  *  (the day view shrinks away, the month grows in). The days and the months move as one continuous strip, with no fading,
  *  so the eye can follow where they went; only the list of events fades. */
-function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, height = 686, onShift, onMonthShift, onHover}: Props) {
+function CalendarCardView ({data, plate, offset, now, format, focused, mode, month, dayDir, size, loading, onShift, onMonthShift, onHover, part = 'body', scroll = 0, onScrollMax, onScrollBy}: Props) {
 	const nowMs = now.getTime();
 	const dayStart = startOfDay(nowMs, offset);
 	const inMonth = mode === 'month';
 	const events = useMemo(() => eventsOfDay(data, dayStart, nowMs, format), [data, dayStart, nowMs, format]);
 	const scale = size / 100;
-	const rowHeight = 24 + 44.5 * scale + 12;
-	const fit = Math.max(1, Math.floor(listHeight(height) / rowHeight));
-	const shown = events.length > fit ? events.slice(0, fit - 1) : events;
-	const more = events.length - shown.length;
+	// All the day's events are in one list that scrolls inside the card, an event at a time: `scroll` is the first one at the top. It
+	// stops when the last one is in view. Where events are hidden above or below, the list fades out at that edge.
+	const area = useRef<HTMLDivElement>(null);
+	const track = useRef<HTMLDivElement>(null);
+	const [maxScroll, setMaxScroll] = useState(0);
+	const first = Math.min(scroll, maxScroll);
+	useLayoutEffect(() => {
+		const box = area.current, list = track.current;
+		if (!box || !list) return;
+		const rows = list.children as HTMLCollectionOf<HTMLElement>;
+		const room = box.clientHeight, total = list.offsetHeight;
+		let max = 0;
+		while (max < rows.length - 1 && total - rows[max].offsetTop > room) max++;
+		if (max !== maxScroll) setMaxScroll(max);
+		const top = rows[Math.min(first, max)] ? rows[Math.min(first, max)].offsetTop : 0;
+		list.style.transform = `translate3d(0, ${-top}px, 0)`;
+		box.classList.toggle('cal__events--above', top > 0);
+		box.classList.toggle('cal__events--below', total - top > room + 1);
+	});
+	useEffect(() => { if (onScrollMax) onScrollMax(maxScroll); }, [maxScroll]);
 	const names = data ? data.sources.map((s) => s.name) : [];
 	const many = names.length > 1;
 	// a window of days around the chosen one; each keeps its own element, so the strip slides instead of being redrawn
@@ -65,7 +87,7 @@ function CalendarCardView ({data, plate, offset, now, format, focused, mode, mon
 	const title = inMonth ? String(view.year) : relativeDay(offset);
 	const heading = inMonth ? view.name : dayHeading(nowMs, offset);
 	return (
-		<div class={`card cal${focused ? ' cal--focus' : ''}${inMonth ? ' cal--month' : ''}`} style={{'--k': String(scale), ...plateVars(plate)}} onMouseEnter={onHover}>
+		<div class={`card cal${focused ? ' cal--focus' : ''}${focused && part === 'head' ? ' cal--head' : ''}${inMonth ? ' cal--month' : ''}`} style={{'--k': String(scale), ...plateVars(plate)}} onMouseEnter={onHover}>
 			<Frost plate={plate} />
 			<div class="cal__head">
 				<button class="cal__nav" aria-label={inMonth ? tr('Previous month', 'Предыдущий месяц') : tr('Previous day', 'Предыдущий день')} onClick={() => (inMonth ? onMonthShift(-1) : onShift(-1))}>
@@ -98,8 +120,9 @@ function CalendarCardView ({data, plate, offset, now, format, focused, mode, mon
 							})}
 						</div>
 					</div>
-					<div class={`cal__events${dayDir > 0 ? " cal__slide--fwd" : dayDir < 0 ? " cal__slide--back" : ""}`} key={"e" + offset}>
-						{shown.map((e, i) => (
+					<div class={`cal__events${dayDir > 0 ? " cal__slide--fwd" : dayDir < 0 ? " cal__slide--back" : ""}`} key={"e" + offset} ref={area} onWheel={(event) => { if (onScrollBy && event.deltaY !== 0) onScrollBy(event.deltaY > 0 ? 1 : -1); }}>
+						<div class="cal__evtrack" ref={track}>
+						{events.map((e, i) => (
 							<div key={i} class={`cal__ev cal__ev--${e.state}`}>
 								<div class="cal__time">{e.time}{e.note && <small>{e.note}</small>}</div>
 								<div class="cal__bar" style={{background: CAL_COLORS[e.src % CAL_COLORS.length]}} />
@@ -109,7 +132,7 @@ function CalendarCardView ({data, plate, offset, now, format, focused, mode, mon
 								</div>
 							</div>
 						))}
-						{more > 0 && <div class="cal__more">{fmt(tr('and {0} more', 'и ещё {0}'), more)}</div>}
+						</div>
 						{events.length === 0 && (
 							<div class="cal__empty">{loading ? tr('Loading the calendar…', 'Загружаю календарь…') : data ? tr('Nothing on this day.', 'В этот день событий нет.') : tr('The calendar has not loaded yet.', 'Календарь пока не загрузился.')}</div>
 						)}

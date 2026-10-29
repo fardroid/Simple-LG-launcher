@@ -363,7 +363,7 @@ export const uk: Record<string, string> = {
 	'Search results': 'Результати пошуку',
 	'City name': 'Назва міста',
 	'Choose where the pictures are · Back returns to Settings': 'Виберіть, де лежать зображення · Назад — до налаштувань',
-	'OK opens a folder or chooses a picture · Back goes up a level': 'OK відкриває теку або вибирає зображення · Назад — на рівень угору',
+	'OK ticks pictures for a slideshow or opens a folder · Back goes up a level': 'OK позначає зображення для слайд-шоу або відкриває теку · Назад — на рівень вище',
 	'Try again': 'Повторити',
 	'Read the storage again': 'Прочитати пам’ять знову',
 	'Default background': 'Типовий фон',

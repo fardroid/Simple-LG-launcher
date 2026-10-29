@@ -288,7 +288,11 @@ html, body {
 .cal__strip { position: relative; height: calc(var(--t3) + var(--t1) * 1.2 + 42px); flex: 0 0 auto; overflow: hidden; }
 /* the chosen day stays in the middle and the days slide under this highlight */
 .cal__hl { position: absolute; left: calc(300% / 7); top: 0; bottom: 0; width: calc(100% / 7); border-radius: 22px; background: rgba(255, 255, 255, 0.16); transition: background 70ms ease-out; }
-.cal--focus .cal__hl { background: rgba(255, 255, 255, 0.22); }
+.cal--head .cal__hl { background: rgba(255, 255, 255, 0.22); }
+/* the remote on the calendar's head (the date and its arrows): ← → turn the days or the months */
+.cal__head { border-radius: 26px; transition: background 90ms linear, box-shadow 90ms linear; }
+.cal--head .cal__head { background: rgba(255, 255, 255, 0.12); box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.12); }
+.cal--head .cal__nav { background: rgba(255, 255, 255, 0.24); }
 .cal__track { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
 .cal__day { position: absolute; top: 0; width: calc(100% / 7); box-sizing: border-box; padding: 12px 0 14px; text-align: center; cursor: pointer; }
 .cal__day span { display: block; font-size: var(--t3); color: var(--color-text-secondary); line-height: 1; }
@@ -329,6 +333,11 @@ html, body {
 .cal__ev--past { opacity: 0.42; }
 .cal__ev--now { background: rgba(255, 195, 107, 0.18); box-shadow: inset 0 0 0 2px rgba(255, 195, 107, 0.55); }
 .cal__ev--now .cal__time small { color: #ffc36b; }
+/* the day's events scroll inside the card (CalendarCard sets the list's offset); the list fades out at an edge with events beyond it */
+.cal__evtrack { position: relative; transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cal__events--below { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent); }
+.cal__events--above { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 56px); }
+.cal__events--above.cal__events--below { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
 .cal__more { padding: 4px 18px; font-size: var(--t2); color: var(--color-text-secondary); }
 .cal__empty { padding-top: 70px; text-align: center; font-size: var(--t1); color: var(--color-text-secondary); }
 
@@ -734,6 +743,31 @@ html, body {
 }
 .picker .picker__row--focused:before, .picker .picker__row--focused + .picker__row:before { opacity: 0; }
 .picker .picker__row--focused { background: #F2F2F7; }
+/* the wallpaper gallery: pictures as tiles with their previews, 5 across (Picker.tsx has the same sizes: COLUMNS, ROW_STEP, VIEWPORT_HEIGHT) */
+.screen--gallery .settings { width: 1560px; margin-left: -780px; }
+.gallery {
+	overflow: hidden;
+	height: 760px;
+	padding: 24px 30px;          /* room for a focused tile, which grows, and its ring */
+	margin: -24px -30px 0;
+}
+/* flex-wrap, not CSS grid: the older webOS web views (Chrome 53) have no grid */
+.gallery__track { display: flex; flex-direction: row; flex-wrap: wrap; width: 1600px; transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
+.gallery__tile { flex: 0 0 auto; width: 280px; height: 232px; margin: 0 40px 28px 0; cursor: pointer; }
+.gallery__frame { position: relative; width: 280px; height: 158px; transform: scale(1); transition: transform var(--motion-focus-ms) ease-out; }
+.gallery__tile--focused .gallery__frame { transform: scale(var(--motion-focus-scale)); z-index: 1; }
+.gallery__box { position: relative; width: 100%; height: 100%; border-radius: 18px; overflow: hidden; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 2px var(--color-tile-border); }
+.gallery__ring { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 18px; box-shadow: 0 0 0 5px var(--color-tile-border-focus); opacity: 0; transition: opacity var(--motion-focus-ms) ease-out; pointer-events: none; }
+.gallery__tile--focused .gallery__ring { opacity: 1; }
+.gallery__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gallery__image--default { background: linear-gradient(135deg, #1B2240 0%, #3A2350 55%, #0D0F18 100%); }
+.gallery__icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.gallery__icon .picker__icon { width: 64px; height: 64px; margin: 0; }
+.gallery__icon--waiting .picker__icon { opacity: 0.35; }
+.gallery__label { margin-top: 14px; padding: 0 4px; font-size: 23px; line-height: 30px; text-align: center; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gallery__detail { padding: 0 4px; font-size: 18px; line-height: 24px; text-align: center; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gallery__tile--focused .gallery__label { color: var(--color-text-primary); }
+.gallery__tile--info { opacity: 0.8; }
 .picker__status { padding: 40px 8px; font-size: var(--font-option-label); line-height: 34px; color: var(--color-text-secondary); }
 .picker__status--error { color: var(--color-danger); }
 .picker__row {
