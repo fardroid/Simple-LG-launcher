@@ -749,7 +749,7 @@ html, body {
 	overflow: hidden;
 	height: 760px;
 	padding: 24px 30px;          /* room for a focused tile, which grows, and its ring */
-	margin: -24px -30px 0;
+	margin: 0 -30px;              /* the room above stays below the folder's path line */
 }
 /* flex-wrap, not CSS grid: the older webOS web views (Chrome 53) have no grid */
 .gallery__track { display: flex; flex-direction: row; flex-wrap: wrap; width: 1600px; transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1); will-change: transform; }
