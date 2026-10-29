@@ -50,6 +50,7 @@ LAYERS=/etc/configd/layers
 COPIES=$DIR/configd
 CONFIG=luna://com.webos.service.config
 LOCK=/tmp/launcher-keepalive.lock
+FRONT_PID=/tmp/launcher-keep-front.pid
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
 
@@ -172,18 +173,28 @@ keepalive_apply () {
 	return 0
 }
 
-# For 15 s: when LG Home comes in front, the launcher is opened again. Another app (an input that woke the TV) is left alone.
+# For 15 s: when LG Home comes in front, the launcher is opened again. Another app (an input that woke the TV) is left alone,
+# and it stops as soon as this way is switched off (give_back also ends it at once).
 keep_front () {
+	echo $$ > "$FRONT_PID"
 	i=0
 	while [ "$i" -lt 15 ]; do
 		sleep 1; i=$((i + 1))
+		[ -f "$FLAG" ] || break
 		app=$(luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 		case "$app" in
 			"$LG_HOME") luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1 ;;
 			''|"$APP_ID") ;;
-			*) return 0 ;;
+			*) break ;;
 		esac
 	done
+	rm -f "$FRONT_PID"
+}
+
+keep_front_off () {
+	pid=$(cat "$FRONT_PID" 2>/dev/null)
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+	rm -f "$FRONT_PID"
 }
 
 keepalive_listed () {
@@ -217,6 +228,7 @@ helper_on () {
 }
 
 give_back () {
+	keep_front_off
 	set_home "$LG_HOME" || log "setDefaultApp for LG Home was not accepted"
 	put_settings_back
 	rm -f "$FLAG" "$LINK"
