@@ -53,6 +53,16 @@ You can put `TV_HOST=root@<tv-ip>` in a `tv.env` file (copy `tv.env.example`) so
 
 **Updating.** The same commands. The TV keeps the launcher loaded in memory (in the Swap way below, a second copy too, the one behind the Home button), and a copy left loaded keeps showing the old version. `npm run install:tv` closes them, and from 1.9.2 on a copy that was missed reloads itself the next time it goes to the background. No need to restart the TV.
 
+### webOS 26: one extra step on rooted TVs
+
+On webOS 26 apps are no longer allowed to use the Homebrew Channel's command service by default, so even on a rooted TV the launcher gets *"Denied method call "exec" for category "/""*: the live app list, wallpapers from the TV's storage, the news through the Homebrew Channel and the ways of making it the home screen don't work. (The Homebrew Channel tracks this in [webos-homebrew-channel#255](https://github.com/webosbrew/webos-homebrew-channel/issues/255); its own fix is not released yet.) Once, over SSH on the TV:
+
+```bash
+sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install
+```
+
+It adds one permission to the launcher (the group `org.webosbrew.hbchannel.service.group`, which the Homebrew Channel's own app has) and reopens it. webOS writes that permission file again whenever the launcher is installed or updated, so the script also leaves a small watcher running (started at each boot from the Homebrew Channel's startup folder): a few seconds after an update it adds the permission back and reopens the launcher if it is on screen. `npm run install:tv` runs the script by itself. Before uninstalling the launcher, `sh …/webos26-access.sh remove`; left behind, the watcher finds no launcher and does nothing. On webOS 25 and older the script does nothing. The fix is from [Hearth](https://github.com/rudra-avatar/Hearth) (by ganondorft); I have no webOS 26 TV to try it on.
+
 ## Making it the home screen
 
 On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back.

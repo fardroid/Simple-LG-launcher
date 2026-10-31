@@ -486,4 +486,5 @@ export const ko: Record<string, string> = {
 	'After a full restart the launcher shows up about a minute later': '완전히 다시 시작하면 약 1분 후에 런처가 나타납니다',
 	'Changes two TV settings (put back when switched off)': 'TV 설정 두 가지를 바꿉니다 (끄면 원래대로)',
 	'Switch this off before uninstalling the launcher': '런처를 삭제하기 전에 이 방식을 끄세요',
+	'webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).': 'webOS 26에서는 앱이 Homebrew Channel을 사용할 수 없습니다. SSH로 한 번만: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (README 참조)',
 };

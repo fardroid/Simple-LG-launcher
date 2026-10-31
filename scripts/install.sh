@@ -31,5 +31,9 @@ ssh -tt "$TV_HOST" "luna-send -w 60000 -i luna://com.webos.appInstallService/dev
 # (which runs as LG Home), so both load the new one. The TV itself needs no restart.
 ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"$APP_ID\"}' >/dev/null; grep -q ' /usr/palm/applications/com.webos.app.home ' /proc/mounts && luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"com.webos.app.home\"}' >/dev/null && echo 'Closed the old copy behind the Home button'; true" | tr -d '\r'
 
+# webOS 26: the installer has just written the launcher's permissions again without access to the Homebrew Channel; the script
+# puts it back (and on its first run sets up the watcher that does so after updates from anywhere). On older webOS it does nothing.
+ssh -tt "$TV_HOST" "sh /media/developer/apps/usr/palm/applications/$APP_ID/tools/webos26-access.sh install" | tr -d '\r' || true
+
 echo "Launching $APP_ID..."
 ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"$APP_ID\"}'" | tr -d '\r'

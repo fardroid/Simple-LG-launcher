@@ -486,4 +486,5 @@ export const fr: Record<string, string> = {
 	'After a full restart the launcher shows up about a minute later': 'Après un redémarrage complet, le lanceur apparaît environ une minute plus tard',
 	'Changes two TV settings (put back when switched off)': 'Modifie deux réglages de la TV (rétablis à la désactivation)',
 	'Switch this off before uninstalling the launcher': 'Désactivez-le avant de désinstaller le lanceur',
+	'webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).': 'webOS 26 tient les applications à l’écart du Homebrew Channel. Une fois, en SSH : sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (voir le README).',
 };

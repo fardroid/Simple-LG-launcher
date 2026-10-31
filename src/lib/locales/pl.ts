@@ -485,4 +485,5 @@ export const pl: Record<string, string> = {
 	'OK on a feed removes it · Back returns to Settings': 'OK na kanale go usuwa · Wstecz wraca do ustawień',
 	'Added: {0}': 'Dodano: {0}',
 	'No feeds of your own yet': 'Nie ma jeszcze własnych kanałów',
+	'webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).': 'webOS 26 nie dopuszcza aplikacji do Homebrew Channel. Raz, przez SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (zob. README).',
 };

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **webOS 26: the launcher can use the Homebrew Channel again.** On webOS 26 apps are no longer in the "public" permission group, which is the only way to the Homebrew Channel's command service (0.7.3), so on a rooted TV every command was refused (*Denied method call "exec" for category "/"*). `tools/webos26-access.sh install`, once over SSH, adds the group `org.webosbrew.hbchannel.service.group` to the launcher's Luna client permissions (the fix of Hearth's `webos11-permission.sh`, by ganondorft) and leaves a watcher running from the Homebrew Channel's startup folder: webOS writes the file again on every install or update, and a few seconds later the watcher adds the group back and reopens the launcher if it is in front (only closes it if it is in the background). `npm run install:tv` runs it by itself; on webOS 25 and older it does nothing. Settings says what to run instead of *Needs a rooted TV*. Not tried on a webOS 26 TV.
+
 ## 1.10.0
 
 - **Cards in columns** (`lib/boardlayout.ts`): the clock and the weather, then the calendar or the news, with the quote of the day under the calendar or the news. With both the calendar and the news on, three columns of 560 px; the clock puts the date under the time there and shrinks its digits only when the time would not fit. A card alone in its column takes the whole height (the calendar and the news without the quote, the quote alone). With the news and the quote off, everything stands exactly where it did. ↑ from the app row goes to the column above the selected tile; ↑ from a card with nothing above it goes to the next column on the right (the weather still leads to the calendar).

@@ -486,4 +486,5 @@ export const zh: Record<string, string> = {
 	'After a full restart the launcher shows up about a minute later': '完全重启后，启动器约一分钟后出现',
 	'Changes two TV settings (put back when switched off)': '会更改两项电视设置（关闭时恢复）',
 	'Switch this off before uninstalling the launcher': '卸载启动器前请先关闭此方式',
+	'webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).': 'webOS 26 不让应用使用 Homebrew Channel。通过 SSH 运行一次：sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install（见 README）',
 };
