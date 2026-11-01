@@ -11,8 +11,8 @@
 # The installer writes the launcher's permission file again on every install or update of the launcher, without the group.
 # So a watcher stays running in the background (started at each boot from the Homebrew Channel's startup folder): every few
 # seconds it checks the file, and when the group is missing (just after an update) it adds it, has the Luna hub read the
-# permissions again and restarts the launcher if it is open (an app keeps the permissions it started with). In front, it is
-# opened again at once; in the background it is only closed, and the next Home press opens it with the new permissions.
+# permissions again and starts the launcher afresh if it is open (an app keeps the permissions it started with): it is
+# closed, and stopped if the TV keeps it loaded (see restart), and opened again at once when it was in front.
 #
 #   sh webos26-access.sh install   once, over SSH: copies itself to /media/developer/launcher-access, adds the boot link,
 #                                  fixes the permission now and starts the watcher. npm run install:tv does it by itself.
@@ -48,17 +48,30 @@ needed () {
 
 watching () { [ -f "$PID" ] && kill -0 "$(cat "$PID")" 2>/dev/null; }
 
-# The launcher open again with the new permissions: in front, closed and opened; in the background, only closed.
+# The launcher's process of the app manager's list of running apps ("" when it is not running).
+pid_of () {
+	luna-send -n 1 "$AM/running" '{}' 2>/dev/null | tr '{}' '\n\n' | grep "\"id\":\"$APP_ID\"" | sed -n 's/.*"processid":"\([0-9]*\)".*/\1/p' | head -n 1
+}
+
+# The launcher started afresh, so that it has the new permissions (an app keeps the ones it started with). Closing it is not
+# enough when the TV keeps it loaded (the app manager's keepAliveApps, which the official way of opening it on Home fills): the
+# TV then only hides it and the process stays. So when the same process is still there, it is stopped, and the TV starts the
+# launcher again by itself within a second. In front it is opened at once; in the background it starts when asked for.
 restart () {
 	front=$(luna-send -n 1 "$AM/getForegroundAppInfo" '{}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-	luna-send -n 1 "$AM/running" '{}' 2>/dev/null | grep -q "\"$APP_ID\"" || return 0
+	old=$(pid_of)
+	[ -n "$old" ] || return 0
 	luna-send -n 1 "$AM/closeByAppId" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
+	sleep 1
+	if [ "$(pid_of)" = "$old" ]; then
+		case "$old" in 0|1|*[!0-9]*) ;; *) kill "$old" 2>/dev/null ;; esac
+		sleep 2
+	fi
 	if [ "$front" = "$APP_ID" ]; then
-		sleep 1
 		luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
-		log "launcher reopened"
+		log "launcher restarted"
 	else
-		log "launcher closed in the background; Home opens it again"
+		log "launcher stopped in the background; it starts again when the TV or Home asks for it"
 	fi
 }
 
@@ -95,7 +108,9 @@ case "$1" in
 		chmod 755 "$COPY"
 		ln -sf "$COPY" "$LINK"
 		fix && restart
-		watching || ( setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
+		# a watcher that is already running has the old copy of this script: start it again
+		if watching; then kill "$(cat "$PID")" 2>/dev/null; rm -f "$PID"; fi
+		( setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
 		echo "installed: the launcher keeps its access to the Homebrew Channel, also after updates"
 		;;
 	remove)
