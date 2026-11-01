@@ -50,7 +50,9 @@ npm run install:tv
 
 It copies the package over SSH, installs it with the TV's developer installer and opens it. The person should now see the launcher on the TV. The first start takes a few seconds while it reads the app list.
 
-Undo: uninstall "Simple LG launcher" from the Homebrew Channel, or run `ssh root@TV "luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{\"id\":\"tld.my.simplelauncher\"}'"`.
+On webOS 26 (step 2 printed a release of 11 or higher) it also runs `tools/webos26-access.sh install`, which gives the launcher back its access to the Homebrew Channel (see README.md, *webOS 26*) and keeps it after updates. Tell the person it changes one permission file of the launcher and leaves a small watcher running; undo with `sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh remove`.
+
+Undo: on webOS 26 first `sh …/tools/webos26-access.sh remove` (as above), then uninstall "Simple LG launcher" from the Homebrew Channel, or run `ssh root@TV "luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{\"id\":\"tld.my.simplelauncher\"}'"`.
 
 ## 5. Make it the home screen (ask first; explain the ways)
 

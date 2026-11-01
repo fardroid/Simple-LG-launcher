@@ -486,4 +486,5 @@ export const ja: Record<string, string> = {
 	'After a full restart the launcher shows up about a minute later': '完全に再起動した後は、約1分後にランチャーが表示されます',
 	'Changes two TV settings (put back when switched off)': 'テレビの設定を2つ変更します（オフにすると元に戻ります）',
 	'Switch this off before uninstalling the launcher': 'ランチャーを削除する前にオフにしてください',
+	'webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).': 'webOS 26 ではアプリから Homebrew Channel を使えません。SSH で一度だけ: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install（README を参照）',
 };

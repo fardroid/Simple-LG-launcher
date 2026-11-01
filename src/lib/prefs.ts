@@ -43,6 +43,10 @@ export const ROOT_OPTIONS = ['replaceHome', 'homeMethod'];
 /** Why a row is greyed out, or null when it is usable. */
 export function disabledReason (id: string, info?: SystemInfo): string | null {
 	if (!info || info.root !== 'no' || ROOT_OPTIONS.indexOf(id) === -1) return null;
+	// webOS 26: the app itself refuses the call (see tools/webos26-access.sh)
+	if (info.rootDetail && /Denied method call/.test(info.rootDetail)) {
+		return tr('webOS 26 keeps apps away from the Homebrew Channel. Once, over SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (see the README).', 'webOS 26 не пускает приложения к Homebrew Channel. Один раз по SSH: sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install (см. README).');
+	}
 	const kind = lastFailure();
 	const why = kind === 'denied' ? tr('the TV refused the command.', 'ТВ отклонил команду.') : tr('the Homebrew Channel service is not running. If the TV is rooted, open the Homebrew Channel once, then open Settings again.', 'служба Homebrew Channel не запущена. Если ТВ рутован, один раз откройте Homebrew Channel, затем заново откройте настройки.');
 	return fmt(tr('Needs a rooted TV: {0}', 'Нужен рутованный ТВ: {0}'), why) + (info.rootDetail ? fmt(tr(' (the TV said: {0})', ' (ответ ТВ: {0})'), info.rootDetail) : '');
