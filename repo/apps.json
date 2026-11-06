@@ -10,22 +10,22 @@
       "id": "tld.my.simplelauncher",
       "title": "Simple LG launcher",
       "iconUri": "https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/assets/app/largeIcon.png",
-      "shortDescription": "Clock, weather, calendar and your apps over your wallpaper. A fork of Hearth.",
+      "shortDescription": "A native home screen: clock, weather, calendar, news and your apps over your wallpaper. A fork of Hearth.",
       "fullDescriptionUrl": "https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/repo/description.html",
       "manifest": {
         "id": "tld.my.simplelauncher",
-        "version": "1.10.1",
-        "type": "web",
+        "version": "2.0.0",
+        "type": "native",
         "title": "Simple LG launcher",
-        "appDescription": "A quieter home screen for LG TVs: clock, weather, your calendar and a row of apps over your wallpaper.",
+        "appDescription": "A native, quieter home screen for LG TVs: clock, weather, your calendar, the news and a row of apps over your wallpaper.",
         "iconUri": "https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/assets/app/largeIcon.png",
         "sourceUrl": "https://github.com/fardroid/Simple-LG-launcher",
-        "rootRequired": "optional",
-        "ipkUrl": "https://github.com/fardroid/Simple-LG-launcher/releases/download/v1.10.1/tld.my.simplelauncher_1.10.1_all.ipk",
+        "rootRequired": true,
+        "ipkUrl": "https://github.com/fardroid/Simple-LG-launcher/releases/download/v2.0.0/tld.my.simplelauncher_2.0.0_arm.ipk",
         "ipkHash": {
-          "sha256": "66e4b196655e2b5a4ee91027c6c35c247c1a9554e74b674a0347fda3b192eccc"
+          "sha256": "58da4eb9989153afc7f10c886d6b93d3e982efa50133307f07d23abd8c876848"
         },
-        "ipkSize": 1664704
+        "ipkSize": 6297056
       }
     }
   ]

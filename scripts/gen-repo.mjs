@@ -29,16 +29,18 @@ if (basename(ipk) !== expected) {
 }
 const data = readFileSync(ipk);
 const raw = `https://raw.githubusercontent.com/${repo}/main`;
+// the name in the Homebrew Channel's list (the TV shows the app under appinfo.json's shorter title)
+const title = 'Simple LG launcher';
 
 const manifest = {
 	id: appinfo.id,
 	version: appinfo.version,
 	type: appinfo.type,
-	title: appinfo.title,
-	appDescription: 'A quieter home screen for LG TVs: clock, weather, your calendar and a row of apps over your wallpaper.',
+	title,
+	appDescription: 'A native, quieter home screen for LG TVs: clock, weather, your calendar, the news and a row of apps over your wallpaper.',
 	iconUri: `${raw}/assets/app/largeIcon.png`,
 	sourceUrl: `https://github.com/${repo}`,
-	rootRequired: 'optional',
+	rootRequired: true,
 	ipkUrl: `https://github.com/${repo}/releases/download/v${appinfo.version}/${expected}`,
 	ipkHash: {sha256: createHash('sha256').update(data).digest('hex')},
 	ipkSize: statSync(ipk).size
@@ -48,9 +50,9 @@ const file = {
 	paging: {page: 1, count: 1, maxPage: 1, itemsTotal: 1},
 	packages: [{
 		id: appinfo.id,
-		title: appinfo.title,
+		title,
 		iconUri: manifest.iconUri,
-		shortDescription: 'Clock, weather, calendar and your apps over your wallpaper. A fork of Hearth.',
+		shortDescription: 'A native home screen: clock, weather, calendar, news and your apps over your wallpaper. A fork of Hearth.',
 		// the longer text shown on the app's page in the Homebrew Channel (repo/description.html, simple HTML)
 		fullDescriptionUrl: `${raw}/repo/description.html`,
 		manifest
