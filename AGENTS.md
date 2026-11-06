@@ -50,7 +50,7 @@ ssh -tt root@TV "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/in
 ssh -tt root@TV "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"tld.my.simplelauncher\"}'"
 ```
 
-(`-tt`: `luna-send` prints only when ssh has a terminal.) The second command prints `"state":"installed"`; the third opens the launcher, and the person should see it on the TV. The first start takes a few seconds while it reads the app list. If a 1.x version of the launcher was installed, its settings, calendars and the way it opens on Home carry over by themselves at the first start: nothing to run.
+(`-tt`: `luna-send` prints only when ssh has a terminal.) The second command prints a long line that contains `"state":"installed"` (or an `errorText`); the third opens the launcher, and the person should see it on the TV. The first start takes a few seconds while it reads the app list. If a 1.x version of the launcher was installed, its settings, calendars and the way it opens on Home carry over by themselves at the first start: nothing to run.
 
 **On webOS 26** (step 2 printed a release of 11 or higher) also run, once:
 

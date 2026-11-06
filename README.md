@@ -62,7 +62,7 @@ Install it (one line, copy it whole):
 ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.0.0_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
 ```
 
-It prints `"state":"installed"` when it is done. Then open Simple LG launcher from the TV's app list.
+When it is done it prints a long line that contains `"state":"installed"`. Then open Simple LG launcher from the TV's app list.
 
 ### B) From the Homebrew Channel
 
