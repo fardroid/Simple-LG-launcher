@@ -1,87 +1,121 @@
 <p align="center"><img src="docs/brand/logo.svg" alt="Simple LG launcher logo" width="120"></p>
 
-# Simple LG launcher
+# Simple LG launcher (native)
 
-A quieter home screen for LG webOS TVs. You get a clock, the weather, your day from Google Calendar and one row of apps, laid over a wallpaper of your own. No ads, no rows of recommendations, nothing that autoplays.
+A native quieter home screen for LG webOS TVs. You get a clock, the weather, your day from Google Calendar, the news and one row of apps, laid over a wallpaper of your own. No ads, no rows of recommendations, nothing that autoplays.
 
-It started as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. Hearth already had the hard parts working: the app row, the clock, the settings screens and the plumbing through the Homebrew Channel. This fork adds the calendar, the frosted-glass cards, a seven-day forecast with an hourly curve, a language switch (thirteen languages) and ways to make the launcher the TV's Home, so the Home button opens it.
+Smooth and fast, with no lag: scrolling the row, stepping between the cards and opening Settings run at the full frame rate the TV gives any app (48 a second on my 43QNED84). The launcher was rewritten from a web page into C++ with SDL and OpenGL ES, drawn straight on the TV's graphics plane, and it fetches the weather, calendars and news itself, without going through the Homebrew Channel.
 
-> **The easy way to install it:** give the link to this repository to Claude Code or Codex and ask it to set the launcher up on your TV. [AGENTS.md](AGENTS.md) walks the agent through every step: building, installing, making it the home screen and adding your calendars. It checks with you before it changes anything on the TV. You only need a rooted TV and its IP address.
+It began as a fork of [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar. This version adds the calendar, the news, frosted-glass cards, a seven-day forecast, thirteen languages and ways to make the launcher the TV's Home.
 
 ![Home screen: clock, weather with the hourly curve, today's calendar and the app row](docs/screenshots/home.jpg)
 
 | | |
 |---|---|
-| ![On a light wallpaper the cards turn darker on their own](docs/screenshots/home-light.jpg) | ![Up on the calendar opens the whole month](docs/screenshots/calendar-month.jpg) |
-| ![Right and left on the weather pick a day; the curve follows](docs/screenshots/weather-day.jpg) | ![Settings: sections on the left, the clock settings on the right](docs/screenshots/settings.jpg) |
+| ![With the news and the quote on, the cards stand in three columns](docs/screenshots/home-widgets.jpg) | ![Up on the calendar opens the whole month](docs/screenshots/calendar-month.jpg) |
+| ![Down from the app row: the TV's quick settings](docs/screenshots/quick-settings.jpg) | ![On a lighter wallpaper the glass follows the picture](docs/screenshots/home-light.jpg) |
+| ![Settings: Appearance](docs/screenshots/settings-appearance.jpg) | ![Settings: Home screen, with the check for new versions](docs/screenshots/settings-home.jpg) |
+| ![The wallpaper gallery: tick pictures in any folder](docs/screenshots/wallpapers.jpg) | ![How the launcher opens: four ways, each with its pros and cons](docs/screenshots/home-method.jpg) |
+
+## The easy way to install it
+
+Give the link to this repository to Claude Code or Codex and ask it to set the launcher up on your TV. [AGENTS.md](AGENTS.md) walks the agent through every step: installing, making it the home screen and adding your calendars. It checks with you before it changes anything on the TV. You only need a rooted TV and its IP address.
 
 ## What's on the screen
 
-- **Clock and date.** A large clock with the weekday and date next to it. Six typefaces, three weights, any size, 12- or 24-hour.
-- **Weather** from [Open-Meteo](https://open-meteo.com), no account needed. You see the temperature now, what it feels like, the wind, an hourly curve for the day and seven days ahead. The card is not just a picture: press ↑ from the app row to step onto it, then ← → scroll through the days, and the curve redraws for each one. With the Magic Remote you can click a day instead.
-- **Calendar.** Paste the secret iCal address of a Google Calendar (or any `.ics` link). You can add several, and each gets its own colour. Repeating events, exceptions, moved events and all-day events all work. Like the weather, it reacts to the remote: step onto it, ← → scroll back and forth through the days, ↑ opens the whole month with a dot under each busy day. The Magic Remote pointer can click through it too.
-- **News.** Headlines from Google News for the country you choose, in the launcher's language when that country has an edition in it, and from any RSS or Atom feeds you add. Step onto the card with ↑ from the right of the app row: ↑ ↓ choose a headline, ← → turn the pages, and OK shows the headline with its description and a QR code, so you can read the article on your phone. While you are elsewhere the pages turn by themselves.
-- **Quote of the day** from Wikiquote, in the launcher's language. Where the language's Wikiquote has an editors' quote of the day (English, Spanish, Polish, Chinese, Korean, Turkish, Portuguese, Ukrainian, Italian), you get that one. Elsewhere, or on a day the editors left empty, a quote is picked by the date from the page of a well-known writer, poet, thinker or scientist. The text is set as large as the card allows.
-- **Two or three columns.** The clock and the weather on the left, the calendar on the right, and the quote under the calendar if it is on. With the news on as well, the cards stand in three columns: the clock and the weather, the calendar, then the news with the quote under it. A card without a neighbour in its column takes the whole height.
-- **Frosted glass.** The cards blur the wallpaper behind them, as much as you like (30 to 100%). The cards go light or dark together, depending on how bright the picture behind them is, so the text stays readable on any photo; when the wallpaper changes, the glass and the card colour fade with it.
-- **Your apps in one row.** Hold OK on a tile to move it, hide it or uninstall the app. The selected tile grows a little; that's all the animation there is. App names under every tile, only under the selected one, or none.
-- **Wallpaper.** One picture or a slideshow of a folder, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour. The TV shows the same picture for the moment the launcher takes to start (or the logo, or black).
-- **Pixel shift for OLED.** Everything moves a few whole pixels once a minute, so nothing stays on the same pixels for hours. On by itself when the TV's model name says OLED.
-- **Sharp text.** The TV draws apps at 1080p and scales them up to 4K, so text on half pixels comes out soft. The launcher keeps its text on whole pixels.
-- **Thirteen languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Polish, Chinese (Simplified), Japanese and Korean. Thanks to [DriftEngineer](https://github.com/DriftEngineer) for the Polish translation! It follows the TV's language by default (English when the TV speaks another one). Settings → Home screen → Language changes it. The Chinese, Japanese and Korean texts are drawn with the TV's own font.
+- **Clock and date.** A large clock with the weekday and date. Six typefaces, five weights, any size, 12- or 24-hour.
+- **Weather** from [Open-Meteo](https://open-meteo.com), no account needed. You see the temperature now, what it feels like, the wind, an hourly curve for the day and seven days ahead. Press ↑ from the app row to step onto the card, then ← → move through the days and the curve redraws for each one. With the Magic Remote you can click a day instead.
+- **Calendar.** Paste the secret iCal address of a Google Calendar (or any `.ics` link). You can add several, and each gets its own colour. Repeating events, exceptions, moved events and all-day events all work. Step onto it, ← → move through the days, ↑ opens the whole month with a dot under each busy day. The Magic Remote pointer can click through it too.
+- **News.** Headlines from Google News for the country you choose, in the launcher's language when that country has an edition in it, and from any RSS or Atom feeds you add. Step onto the card: ↑ ↓ choose a headline, ← → turn the pages, and OK shows the headline with its description and a QR code, so you can read the article on your phone. While you are elsewhere the pages turn by themselves.
+- **Quote of the day** from Wikiquote, in the launcher's language. Where the language's Wikiquote has an editors' quote of the day, you get that one. Elsewhere, or on a day the editors left empty, a quote is picked by the date from the page of a well-known writer, poet, thinker or scientist.
+- **Frosted glass.** The cards blur the wallpaper behind them, as much as you like (30 to 100%). They go light or dark together, depending on how bright the picture behind them is, so the text stays readable on any photo. When the wallpaper changes, the glass fades with it.
+- **Quick settings.** Press ↓ from the app row: picture mode, sound mode, energy saving, screen off and the TV's full settings, without leaving the home screen.
+- **Wallpaper.** One picture or a slideshow, from a USB stick or the TV's own storage, with shuffle and an interval from 10 seconds to an hour.
+- **Pixel shift for OLED.** Everything moves a few pixels once a minute, so nothing stays on the same pixels for hours. On by itself when the TV's model name says OLED.
+- **Thirteen languages.** English, Russian, Spanish, French, German, Italian, Portuguese, Turkish, Ukrainian, Polish, Chinese (Simplified), Japanese and Korean. The translations are machine-made by an LLM, so some phrases may sound unnatural; corrections are welcome. Polish started from [DriftEngineer](https://github.com/DriftEngineer)'s translation, thank you! The launcher follows the TV's language by default (English when the TV speaks another one); Settings → Home screen → Language changes it.
 
 ## What you need
 
-- An LG TV with webOS, **rooted** with the [Homebrew Channel](https://www.webosbrew.org/), with SSH turned on in the Homebrew Channel's settings. Rooting depends on the model and firmware; webosbrew.org keeps track of what works where.
-- A computer on the same network, with Node.js 18 or newer and `ssh`.
+- An LG TV with webOS, **rooted** with the [Homebrew Channel](https://www.webosbrew.org/). Rooting depends on the model and firmware; webosbrew.org keeps track of what works where.
+- For installing over SSH (optional): SSH turned on in the Homebrew Channel's settings, and a computer on the same network.
+I use it every day on an LG 43QNED84A6C (2025, webOS 25, internal release 10.3). Making it the home screen has only been tried on webOS 25.
 
-I use it every day on an LG 43QNED84A6C (2025, webOS 25, internal release 10.3). Hearth itself has been run on webOS 4 through 8. The app should work on those too. Making it the home screen (below) has only been tried on webOS 25.
+I have only tried it on a rooted TV. What needs root is greyed out in Settings, with the reason.
 
-Without root the launcher still opens like any other app, and the clock and weather work. It can't read the full app list, your USB pictures or a Google calendar link (the TV fetches those through the Homebrew Channel), and it can't replace LG Home. Those settings are greyed out with the reason.
+## Installing it
 
-## Installing it yourself
+Download `tld.my.simplelauncher_<version>_arm.ipk` from [Releases](https://github.com/fardroid/Simple-LG-launcher/releases) for A) and C).
+
+### A) Over SSH
+
+Needs SSH turned on in the Homebrew Channel's settings. In the commands below, replace `<tv-ip>` with your TV's address (TV Settings → Network → your connection), for example `192.168.1.50`: then `root@<tv-ip>` becomes `root@192.168.1.50`. Open a terminal in the folder where you downloaded the package and run two commands.
+
+Copy the package to the TV:
 
 ```bash
-git clone https://github.com/fardroid/Simple-LG-launcher.git
-cd Simple-LG-launcher
-npm ci
-npm run build && npm run package          # makes build/tld.my.simplelauncher_<version>_all.ipk
-TV_HOST=root@<tv-ip> npm run install:tv   # copies it over SSH, installs and opens it
+scp -O tld.my.simplelauncher_2.0.0_arm.ipk root@<tv-ip>:/tmp/
 ```
 
-You can put `TV_HOST=root@<tv-ip>` in a `tv.env` file (copy `tv.env.example`) so you don't have to type it each time. If you don't want to use SSH, [webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop) can install the `.ipk` too.
+Install it (one line, copy it whole):
 
-**Updating.** The same commands. The TV keeps the launcher loaded in memory (in the Swap way below, a second copy too, the one behind the Home button), and a copy left loaded keeps showing the old version. `npm run install:tv` closes them, and from 1.9.2 on a copy that was missed reloads itself the next time it goes to the background. No need to restart the TV.
+```bash
+ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.0.0_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
+```
 
-### webOS 26: one extra step on rooted TVs
+It prints `"state":"installed"` when it is done. Then open Simple LG launcher from the TV's app list.
 
-On webOS 26 apps are no longer allowed to use the Homebrew Channel's command service by default, so even on a rooted TV the launcher gets *"Denied method call "exec" for category "/""*: the live app list, wallpapers from the TV's storage, the news through the Homebrew Channel and the ways of making it the home screen don't work. (The Homebrew Channel tracks this in [webos-homebrew-channel#255](https://github.com/webosbrew/webos-homebrew-channel/issues/255); its own fix is not released yet.) Once, over SSH on the TV:
+### B) From the Homebrew Channel
+
+In the Homebrew Channel, open Settings and add this repository:
+
+```
+https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/repo/apps.json
+```
+
+Simple LG launcher then shows up in the app list; install it from there.
+
+### C) From a file
+
+Install the `.ipk` with [webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop) or `ares-install`.
+
+### Coming from version 1
+
+Install 2.0.0 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
+
+### Updates: once you turn it on, nothing more to install by hand
+
+Settings → Home screen → About → **Check for new versions**. With it on, the launcher looks on GitHub once a day for a newer version. When there is one, a note appears on the home screen and an *Update* tile in the row. Press it: the launcher downloads the package, checks it against its SHA-256 checksum and installs it through the TV's own installer, then opens again in the new version. Nothing is downloaded or installed until you ask. No SSH, no `.ipk`, no computer. The row under the switch checks right away. Installing needs root (the Homebrew Channel).
+
+### webOS 26: one command, once
+
+This is the only thing you may have to run by hand, and only on webOS 26. There apps are no longer allowed to use the Homebrew Channel's command service by default, so even on a rooted TV the launcher gets *"Denied method call "exec" for category "/""*, and everything that needs root stays greyed out. (The Homebrew Channel tracks this in [webos-homebrew-channel#255](https://github.com/webosbrew/webos-homebrew-channel/issues/255).) Once, over SSH on the TV:
 
 ```bash
 sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install
 ```
 
-It adds one permission to the launcher (the group `org.webosbrew.hbchannel.service.group`, which the Homebrew Channel's own app has) and reopens it. webOS writes that permission file again whenever the launcher is installed or updated, so the script also leaves a small watcher running (started at each boot from the Homebrew Channel's startup folder): a few seconds after an update it adds the permission back and reopens the launcher if it is on screen. `npm run install:tv` runs the script by itself. Before uninstalling the launcher, `sh …/webos26-access.sh remove`; left behind, the watcher finds no launcher and does nothing. On webOS 25 and older the script does nothing. The fix is from [Hearth](https://github.com/rudra-avatar/Hearth) (by ganondorft); I have no webOS 26 TV to try it on.
+It adds one permission to the launcher (the group `org.webosbrew.hbchannel.service.group`, which the Homebrew Channel's own app has) and reopens it. webOS writes that permission file again on every install or update, so the script also leaves a small watcher running (started at each boot from the Homebrew Channel's startup folder): after an update it adds the permission back by itself, so updates from Settings keep working. Settings shows the same command where it is needed. Before uninstalling the launcher, run it with `remove`. On webOS 25 and older it does nothing. The fix is from [Hearth](https://github.com/rudra-avatar/Hearth) (by ganondorft); I have no webOS 26 TV to try it on.
 
 ## Making it the home screen
 
-On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back.
+On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back. No SSH needed.
 
-**1. Official** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. Waking from standby does not ask for the Home app: the TV opens LG Home by name when its *start with Home* setting is on, and otherwise its last input. So this way switches *start with Home* off and names the launcher as the last input (the trick of [openhome-webos](https://github.com/devic021/openhome-webos)); opening an HDMI input names that input again, so the launcher names itself once more whenever it comes to the front or goes to the back. The three settings are put back when you switch this way off. And when the TV goes to standby its app manager closes every app but a short list (LG Home is on it), so the launcher would start from scratch after waking; this way adds it to that list (`keepAliveApps`, a copy of the TV's config file mounted over it in RAM at every start, then the app manager restarted), and it is back about a second after waking. Nothing of LG's is replaced or mounted, it lasts across a full restart, and LG Home stays on its own tile. Only on TVs that offer the choice (webOS 25 and newer). If you uninstall the launcher while this is on, the Home button opens nothing until a full restart, after which LG Home is back by itself; switch to *Off* first. The method is from [Lumen](https://github.com/ammar027/lumen-webos). From a computer: [tools/defaulthome.sh](tools/defaulthome.sh) `enable | disable | status`.
+**1. Home app** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. Waking from standby does not ask for the Home app: the TV opens LG Home by name when its *start with Home* setting is on, and otherwise its last input. So this way switches *start with Home* off and names the launcher as the last input (the trick of [openhome-webos](https://github.com/devic021/openhome-webos)). Both settings are put back when you switch this way off. When the TV goes to standby, its app manager closes every app but a short list (LG Home is on it); this way adds the launcher to that list (`keepAliveApps`, a copy of the TV's config file mounted over it in RAM at every start), so it is back about a second after waking. Nothing of LG's is replaced, and LG Home stays on its own tile. Things to know:
 
-**2. Swap** ([tools/takeover.sh](tools/takeover.sh)). For TVs that can't choose a Home app. A small folder is bind-mounted over LG Home's app folder: in it are links to the launcher's files and an `appinfo.json` with LG Home's ID, so the TV opens the launcher thinking it is LG Home. Nothing on the read-only system is changed (it all lives in memory), and *Off* undoes it. Things to know:
+- Only on TVs that offer the choice (webOS 25 and newer).
+- After a full restart (not standby) the TV shows no webOS logo, and the launcher settles about a minute later: the app manager has to be restarted once to take the list.
+- If you uninstall the launcher while this is on, the Home button opens nothing until a full restart, after which LG Home is back by itself. Switch to *Off* first.
+- The method is from [Lumen](https://github.com/ammar027/lumen-webos).
 
-- After a full restart of the TV (not standby), LG Home shows for about 40 seconds, until the Homebrew Channel's start-up scripts put the launcher back.
-- The launcher needs the Homebrew Channel's root service, and LG Home's permissions don't include it. The script mounts a copy of that permissions file with the service added. In plain words: whatever runs as Home can run commands as root, which the launcher could already do as itself.
-- The method comes from [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma).
+**2. Swap** (for TVs that can't choose a Home app). A small folder is mounted over LG Home's app folder: in it are links to the launcher's program and a manifest with LG Home's ID, so the TV starts the launcher thinking it is LG Home. Nothing on the read-only system is changed (it all lives in memory), and *Off* undoes it. After a full restart the TV opens the launcher straight away. The method comes from [Luma](https://github.com/ecklf/lg-luma) and [Glasshouse](https://github.com/rorygallagher2024/glasshouse).
 
 **3. Helper.** A small script on the TV watches for LG Home and opens the launcher over it, from the moment the TV starts. Nothing is mounted or replaced, but LG Home can flash for a moment, and the script keeps running.
 
 **4. Off.** The launcher is an ordinary app with its own tile; Home opens LG Home.
 
-The scripts behind them ship with the app (`tools/` in its folder): `sh tools/homemode.sh status` and `set none | default | mount` do the same from SSH.
+*Remove everything from the TV* under the same screen switches the way off and deletes what it left on the TV, for before you uninstall. The scripts behind these ship with the app (`tools/` in its folder); `sh tools/homemode.sh status` and `set none | default | mount` do the same from SSH.
 
-**Optional: a lighter TV** ([tools/tv-tweaks.sh](tools/tv-tweaks.sh)). It stops LG Channels and the browser from preloading, which leaves more memory free so the TV unloads the launcher less often. It also turns off LG's promotions, sports alerts, recommendations and Live Plus (the TV recognising what is on screen). It saves the old values first, so `restore` undoes everything. Run it the same way: `sh tv-tweaks.sh apply | restore | status`. The ideas are from [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco.
+**Optional: a lighter TV** ([tools/tv-tweaks.sh](tools/tv-tweaks.sh)). It stops LG Channels and the browser from preloading, which leaves more memory free so the TV unloads the launcher less often. It also turns off LG's promotions, sports alerts, recommendations and Live Plus (the TV recognising what is on screen). It saves the old values first, so `restore` undoes everything: `sh tv-tweaks.sh apply | restore | status`. The ideas are from [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco.
 
 ## Calendars
 
@@ -101,13 +135,11 @@ The secret address gives read access to that calendar to anyone who has it. It i
 
 ## News
 
-Settings → Widgets → News. *Google News* shows the top stories of a country; *Country* picks it. At first it is the TV's own country when Google News has an edition there in the launcher's language, otherwise the country of that language (Germany for German, Poland for Polish and so on), so every one of the launcher's thirteen languages gets news in it. The headlines come in the launcher's language when the country has a Google News edition in it, and in the country's own language when it doesn't. *Your feeds* takes the address of any RSS or Atom feed, typed with the on-screen keyboard (up to eight). You can turn Google News off and keep only your own feeds.
-
-Most news sites don't let a web page read their feeds directly, so on a TV the launcher fetches them through the Homebrew Channel, like the calendars: without root, the news card mostly stays empty.
+Settings → Widgets → News. *Google News* shows the top stories of a country; *Country* picks it. At first it is the TV's own country when Google News has an edition there in the launcher's language, otherwise the country of that language (Germany for German, Poland for Polish and so on), so every one of the thirteen languages gets news in it. *Your feeds* takes the address of any RSS or Atom feed, typed with the on-screen keyboard (up to eight). You can turn Google News off and keep only your own feeds. The launcher fetches the feeds itself, so the news works without root too.
 
 ## Quote of the day
 
-Settings → Widgets → Quote of the day. The quote comes from [Wikiquote](https://wikiquote.org) in the launcher's language and changes at midnight; it works without root. In languages without an editors' quote of the day (Russian, German, French, Japanese), the launcher asks [Wikidata](https://www.wikidata.org) once a month for about 400 well-known authors who have a page there, then picks an author and a quote from their page by the date. Wikiquote's texts are under the [CC BY-SA licence](https://creativecommons.org/licenses/by-sa/4.0/); the card names the author and Wikiquote.
+Settings → Widgets → Quote of the day. The quote comes from [Wikiquote](https://wikiquote.org) in the launcher's language and changes at midnight. In languages without an editors' quote of the day (Russian, German, French, Japanese), the launcher asks [Wikidata](https://www.wikidata.org) once a month for about 400 well-known authors who have a page there, then picks an author and a quote from their page by the date.
 
 ## Wallpapers
 
@@ -122,24 +154,16 @@ scp -O wallpapers/*.jpg root@<tv-ip>:/media/developer/wallpapers/
 
 ## Privacy
 
-For the weather the launcher sends the coordinates of your city to Open-Meteo, plus whatever you type into the city search. The calendar links and the news feeds are fetched by the TV directly (Google News learns the country and the language you chose). The quote of the day comes from Wikiquote and Wikidata, which learn only the language. Nothing else leaves the TV, and there is no tracking of any kind.
-
-## Working on it
-
-```bash
-npm run dev    # the launcher in a desktop browser at 1920x1080, with sample apps
-npm test
-```
-
-The code is TypeScript and [Preact](https://preactjs.com), built for Chrome 53 so it runs on older web views too. [CHANGELOG.md](CHANGELOG.md) has the history, Hearth's versions included.
+For the weather the launcher sends the coordinates of your city to Open-Meteo, plus whatever you type into the city search. The calendar links and the news feeds are fetched by the TV directly (Google News learns the country and the language you chose). The quote of the day comes from Wikiquote and Wikidata, which learn only the language. With *Check for new versions* on, the TV reads a small file from GitHub once a day. Nothing else leaves the TV, and there is no tracking of any kind.
 
 ## Credits
 
 - [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar, which this is a fork of (and the idea for the pixel shift). If you'd rather have the original (more fonts, a recent apps panel, a quiet mode, no calendar), go there.
 - [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), which Hearth itself grew out of.
 - [Lumen](https://github.com/ammar027/lumen-webos), for the official way to be the TV's Home app, and [openhome-webos](https://github.com/devic021/openhome-webos), for waking up into it.
-- [Glasshouse](https://github.com/rorygallagher2024/glasshouse) and [Luma](https://github.com/ecklf/lg-luma), for the way to take LG Home's place, and Luma for the start-up picture.
+- [Luma](https://github.com/ecklf/lg-luma) and [Glasshouse](https://github.com/rorygallagher2024/glasshouse), for the way to take LG Home's place, and Luma for the start-up picture.
 - [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco, for the TV tweaks.
+- [SDL-webOS](https://github.com/webosbrew/SDL-webOS) and the [native toolchain](https://github.com/webosbrew/native-toolchain) by webosbrew, [nlohmann/json](https://github.com/nlohmann/json), [pugixml](https://pugixml.org) and [QR Code generator](https://www.nayuki.io/page/qr-code-generator-library) by Nayuki.
 - [Open-Meteo](https://open-meteo.com) for the free weather, and the [webOS Homebrew](https://www.webosbrew.org/) project, without which none of this would run.
 
-Fonts and other bundled material are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). MIT licence, see [LICENSE](LICENSE). Not affiliated with LG Electronics; "LG" and "webOS" are their trademarks.
+[CHANGELOG.md](CHANGELOG.md) has the history, the web version's (the last one is tagged `v1.10.1`) and Hearth's included. Fonts and other bundled material are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). MIT licence, see [LICENSE](LICENSE). Not affiliated with LG Electronics; "LG" and "webOS" are their trademarks.
