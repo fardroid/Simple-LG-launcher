@@ -1,0 +1,18 @@
+{
+  "id": "tld.my.simplelauncher",
+  "version": "2.0.0",
+  "vendor": "tld.my.simplelauncher",
+  "type": "native",
+  "main": "simplelauncher",
+  "title": "Simple launcher",
+  "appDescription": "A simple home screen for LG TVs.",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "iconColor": "#5245d0",
+  "bgColor": "#000000",
+  "splashBackground": "splash-wallpaper.jpg",
+  "nativeLifeCycleInterfaceVersion": 2,
+  "appCategory": [
+    "home"
+  ]
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- Not the launcher: this version is a native program. The web version (1.x) put a web app with LG Home's id in LG Home's
+     place (its Swap), made of links to the launcher's files, and this page is what that web app finds after the update. It
+     runs tools/migrate.sh, which puts this version's Swap in its place, and the TV then opens the launcher itself. The web
+     version's Swap gave Home the Homebrew Channel's service, so the command can be run from here. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Simple launcher</title>
+<style>
+	html, body { margin: 0; height: 100%; background: #000; color: #f2f2f7; font: 32px/1.4 sans-serif; overflow: hidden; }
+	body { background: #000 url(splash-wallpaper.jpg) center / cover no-repeat; }
+	p { position: absolute; left: 0; right: 0; bottom: 120px; margin: 0; text-align: center; text-shadow: 0 2px 12px #000; }
+</style>
+</head>
+<body>
+<p id="t">Updating the launcher…</p>
+<script>
+	var ru = /^(ru|uk|be)/i.test(navigator.language || '');
+	if (ru) document.getElementById('t').textContent = 'Обновляю лаунчер…';
+	var tools = '/media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools';
+	// detached, so it outlives this page (the old Swap is taken off, which closes it)
+	// this page as the launcher's own id (the web version kept loaded, the official way): closed, and the launcher opened
+	// again, which now starts the native program; as LG Home's id (the web version's Swap), migrate.sh opens Home itself
+	var me = ((window.PalmSystem && PalmSystem.identifier) || '').split(' ')[0];
+	var after = me === 'tld.my.simplelauncher'
+		? "; luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"tld.my.simplelauncher\"}'; sleep 2; luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"tld.my.simplelauncher\"}'"
+		: "";
+	var command = "( setsid nohup sh -c \"sh '" + tools + "/migrate.sh'" + after.replace(/"/g, '\\"') + "\" </dev/null >/dev/null 2>&1 & ); echo started";
+	function run () {
+		try {
+			var bridge = new PalmServiceBridge();
+			bridge.onservicecallback = function () {};
+			bridge.call('luna://org.webosbrew.hbchannel.service/exec', JSON.stringify({command: command}));
+		} catch (e) {}
+	}
+	run();
+	// if nothing has taken this page away by then (the Homebrew Channel was not up yet, just after a start), once more
+	setTimeout(run, 15000);
+</script>
+</body>
+</html>

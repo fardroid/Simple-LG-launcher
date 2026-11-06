@@ -1,0 +1,542 @@
+{
+	"AR": {
+		"name": "Argentina",
+		"editions": [
+			[
+				"es",
+				"es-419",
+				"AR:es-419"
+			]
+		]
+	},
+	"AU": {
+		"name": "Australia",
+		"editions": [
+			[
+				"en",
+				"en-AU",
+				"AU:en"
+			]
+		]
+	},
+	"BG": {
+		"name": "Bulgaria",
+		"editions": [
+			[
+				"bg",
+				"bg",
+				"BG:bg"
+			]
+		]
+	},
+	"BR": {
+		"name": "Brazil",
+		"editions": [
+			[
+				"pt",
+				"pt-BR",
+				"BR:pt-419"
+			]
+		]
+	},
+	"CA": {
+		"name": "Canada",
+		"editions": [
+			[
+				"en",
+				"en-CA",
+				"CA:en"
+			],
+			[
+				"fr",
+				"fr-CA",
+				"CA:fr"
+			]
+		]
+	},
+	"CL": {
+		"name": "Chile",
+		"editions": [
+			[
+				"es",
+				"es-419",
+				"CL:es-419"
+			]
+		]
+	},
+	"CN": {
+		"name": "China",
+		"editions": [
+			[
+				"zh",
+				"zh-CN",
+				"CN:zh-Hans"
+			]
+		]
+	},
+	"CO": {
+		"name": "Colombia",
+		"editions": [
+			[
+				"es",
+				"es-419",
+				"CO:es-419"
+			]
+		]
+	},
+	"CZ": {
+		"name": "Czechia",
+		"editions": [
+			[
+				"cs",
+				"cs",
+				"CZ:cs"
+			]
+		]
+	},
+	"DE": {
+		"name": "Germany",
+		"editions": [
+			[
+				"de",
+				"de",
+				"DE:de"
+			]
+		]
+	},
+	"EG": {
+		"name": "Egypt",
+		"editions": [
+			[
+				"ar",
+				"ar",
+				"EG:ar"
+			]
+		]
+	},
+	"ES": {
+		"name": "Spain",
+		"editions": [
+			[
+				"es",
+				"es",
+				"ES:es"
+			]
+		]
+	},
+	"FR": {
+		"name": "France",
+		"editions": [
+			[
+				"fr",
+				"fr",
+				"FR:fr"
+			]
+		]
+	},
+	"GB": {
+		"name": "United Kingdom",
+		"editions": [
+			[
+				"en",
+				"en-GB",
+				"GB:en"
+			]
+		]
+	},
+	"GR": {
+		"name": "Greece",
+		"editions": [
+			[
+				"el",
+				"el",
+				"GR:el"
+			]
+		]
+	},
+	"HK": {
+		"name": "Hong Kong",
+		"editions": [
+			[
+				"zh",
+				"zh-HK",
+				"HK:zh-Hant"
+			]
+		]
+	},
+	"HU": {
+		"name": "Hungary",
+		"editions": [
+			[
+				"hu",
+				"hu",
+				"HU:hu"
+			]
+		]
+	},
+	"ID": {
+		"name": "Indonesia",
+		"editions": [
+			[
+				"id",
+				"id",
+				"ID:id"
+			]
+		]
+	},
+	"IE": {
+		"name": "Ireland",
+		"editions": [
+			[
+				"en",
+				"en-IE",
+				"IE:en"
+			]
+		]
+	},
+	"IL": {
+		"name": "Israel",
+		"editions": [
+			[
+				"he",
+				"he",
+				"IL:he"
+			],
+			[
+				"en",
+				"en-IL",
+				"IL:en"
+			]
+		]
+	},
+	"IN": {
+		"name": "India",
+		"editions": [
+			[
+				"en",
+				"en-IN",
+				"IN:en"
+			]
+		]
+	},
+	"IT": {
+		"name": "Italy",
+		"editions": [
+			[
+				"it",
+				"it",
+				"IT:it"
+			]
+		]
+	},
+	"JP": {
+		"name": "Japan",
+		"editions": [
+			[
+				"ja",
+				"ja",
+				"JP:ja"
+			]
+		]
+	},
+	"KR": {
+		"name": "South Korea",
+		"editions": [
+			[
+				"ko",
+				"ko",
+				"KR:ko"
+			]
+		]
+	},
+	"LT": {
+		"name": "Lithuania",
+		"editions": [
+			[
+				"lt",
+				"lt",
+				"LT:lt"
+			]
+		]
+	},
+	"LV": {
+		"name": "Latvia",
+		"editions": [
+			[
+				"lv",
+				"lv",
+				"LV:lv"
+			]
+		]
+	},
+	"MX": {
+		"name": "Mexico",
+		"editions": [
+			[
+				"es",
+				"es-419",
+				"MX:es-419"
+			]
+		]
+	},
+	"MY": {
+		"name": "Malaysia",
+		"editions": [
+			[
+				"en",
+				"en-MY",
+				"MY:en"
+			]
+		]
+	},
+	"NG": {
+		"name": "Nigeria",
+		"editions": [
+			[
+				"en",
+				"en-NG",
+				"NG:en"
+			]
+		]
+	},
+	"NL": {
+		"name": "Netherlands",
+		"editions": [
+			[
+				"nl",
+				"nl",
+				"NL:nl"
+			]
+		]
+	},
+	"NO": {
+		"name": "Norway",
+		"editions": [
+			[
+				"no",
+				"no",
+				"NO:no"
+			]
+		]
+	},
+	"NZ": {
+		"name": "New Zealand",
+		"editions": [
+			[
+				"en",
+				"en-NZ",
+				"NZ:en"
+			]
+		]
+	},
+	"PE": {
+		"name": "Peru",
+		"editions": [
+			[
+				"es",
+				"es-419",
+				"PE:es-419"
+			]
+		]
+	},
+	"PH": {
+		"name": "Philippines",
+		"editions": [
+			[
+				"en",
+				"en-PH",
+				"PH:en"
+			]
+		]
+	},
+	"PL": {
+		"name": "Poland",
+		"editions": [
+			[
+				"pl",
+				"pl",
+				"PL:pl"
+			]
+		]
+	},
+	"PT": {
+		"name": "Portugal",
+		"editions": [
+			[
+				"pt",
+				"pt-PT",
+				"PT:pt-150"
+			]
+		]
+	},
+	"RO": {
+		"name": "Romania",
+		"editions": [
+			[
+				"ro",
+				"ro",
+				"RO:ro"
+			]
+		]
+	},
+	"RS": {
+		"name": "Serbia",
+		"editions": [
+			[
+				"sr",
+				"sr",
+				"RS:sr"
+			]
+		]
+	},
+	"RU": {
+		"name": "Russia",
+		"editions": [
+			[
+				"ru",
+				"ru",
+				"RU:ru"
+			]
+		]
+	},
+	"SA": {
+		"name": "Saudi Arabia",
+		"editions": [
+			[
+				"ar",
+				"ar",
+				"SA:ar"
+			]
+		]
+	},
+	"AE": {
+		"name": "United Arab Emirates",
+		"editions": [
+			[
+				"ar",
+				"ar",
+				"AE:ar"
+			]
+		]
+	},
+	"SE": {
+		"name": "Sweden",
+		"editions": [
+			[
+				"sv",
+				"sv",
+				"SE:sv"
+			]
+		]
+	},
+	"SG": {
+		"name": "Singapore",
+		"editions": [
+			[
+				"en",
+				"en-SG",
+				"SG:en"
+			]
+		]
+	},
+	"SI": {
+		"name": "Slovenia",
+		"editions": [
+			[
+				"sl",
+				"sl",
+				"SI:sl"
+			]
+		]
+	},
+	"SK": {
+		"name": "Slovakia",
+		"editions": [
+			[
+				"sk",
+				"sk",
+				"SK:sk"
+			]
+		]
+	},
+	"TH": {
+		"name": "Thailand",
+		"editions": [
+			[
+				"th",
+				"th",
+				"TH:th"
+			]
+		]
+	},
+	"TR": {
+		"name": "Türkiye",
+		"editions": [
+			[
+				"tr",
+				"tr",
+				"TR:tr"
+			]
+		]
+	},
+	"TW": {
+		"name": "Taiwan",
+		"editions": [
+			[
+				"zh",
+				"zh-TW",
+				"TW:zh-Hant"
+			]
+		]
+	},
+	"UA": {
+		"name": "Ukraine",
+		"editions": [
+			[
+				"uk",
+				"uk",
+				"UA:uk"
+			],
+			[
+				"ru",
+				"ru",
+				"UA:ru"
+			]
+		]
+	},
+	"US": {
+		"name": "United States",
+		"editions": [
+			[
+				"en",
+				"en-US",
+				"US:en"
+			],
+			[
+				"es",
+				"es-419",
+				"US:es-419"
+			]
+		]
+	},
+	"VN": {
+		"name": "Vietnam",
+		"editions": [
+			[
+				"vi",
+				"vi",
+				"VN:vi"
+			]
+		]
+	},
+	"ZA": {
+		"name": "South Africa",
+		"editions": [
+			[
+				"en",
+				"en-ZA",
+				"ZA:en"
+			]
+		]
+	}
+}
