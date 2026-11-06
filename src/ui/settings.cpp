@@ -85,32 +85,6 @@ ListLayout list_layout (const std::vector<OptionItem> &options) {
 
 }  // namespace
 
-void Settings::draw_peek (double now) {
-	// the setting's name and its value in a bar at the top, over the home screen
-	float p = (float)peek_.at(now);
-	const SettingsTab *c = current();
-	if (p <= 0 || !c || !c->has_options) return;
-	const OptionItem *o = nullptr;
-	for (auto &item : c->options) if (item.id == peek_id_) o = &item;
-	if (!o) return;
-	TextStyle lst{Face::ui, 27, 500, 0}, vst{Face::ui, 27, 400, 0}, big{Face::ui, 34, 400, 0};
-	std::string value = o->value >= 0 ? (o->value ? tr("On", "Вкл.") : tr("Off", "Выкл.")) : o->valueText;
-	float lw = (float)text::width(o->label, lst), vw = (float)text::width(value, vst), aw = o->stepper ? 2 * 34.f : 0;
-	float w = std::round(lw + 36 + vw + aw + 64), h = 76;
-	Rect bar{std::round((1920 - w) / 2), 56 - (1 - p) * 20, w, h};
-	gfx::set_alpha(p);
-	gfx::shadow(bar, h / 2, 12, 36, {0, 0, 0, 0.5f});
-	gfx::rect(bar, h / 2, PILL);
-	float x = bar.x + 32;
-	put(o->label, lst, x, bar.y + (h - 34) / 2, 34, ON_PILL);
-	x += lw + 36;
-	if (o->stepper) { put("‹", big, x, bar.y, h, ON_PILL_VALUE); x += 34; }
-	put(value, vst, x, bar.y + (h - 34) / 2, 34, value == tr("On", "Вкл.") && o->value >= 0 ? ON_PILL : ON_PILL_VALUE);
-	x += vw;
-	if (o->stepper) put("›", big, x + 34 - text::width("›", big), bar.y, h, ON_PILL_VALUE);
-	gfx::set_alpha(1);
-}
-
 void Settings::open (double now) {
 	tab_ = button_ = grid_ = option_ = 0;
 	zone_ = Zone::nav;
@@ -519,6 +493,23 @@ void Settings::draw_options (double now, float top) {
 	ListLayout l = list_layout(options);
 	float x0 = LIST_X + TRACK_PAD, w = LIST_W - 2 * TRACK_PAD;
 	float f = (float)focus_.at(now);
+	// a change being shown on the home screen: a dark area round the changed row, the same all the way round it (a shadow from the
+	// row's own outline), drawn before the list's clip so that nothing cuts it, and under all the rows
+	float pk = (float)peek_.at(now);
+	if (pk > 0)
+		for (size_t i = 0; i < options.size(); i++) {
+			if (options[i].id != peek_id_) continue;
+			Rect hr{x0 + BOX_PAD, top + dy + l.row_top[i], w - 2 * BOX_PAD, ROW_H};
+			float keep = gfx::outer_alpha_now();
+			gfx::set_outer_alpha(1);
+			// numbers from the model (build/fade-model.html): the dark runs on past the right edge of the screen, with no round end,
+			// and spreads up and down along that edge
+			const float PAD = 48, FADE = 160, ALPHA = 0.88f, SPREAD = 800, DEPTH = 1330, DENSITY = 1.4f;
+			float left = hr.x - PAD;
+			gfx::halo({left, hr.y - PAD, 1920 + 400 - left, hr.h + 2 * PAD}, 22 + PAD, FADE, {0, 0, 0, ALPHA * pk});
+			gfx::edge_glow({1920 - DEPTH, hr.y + hr.h / 2 - SPREAD, DEPTH, 2 * SPREAD}, DENSITY, {0, 0, 0, ALPHA * pk});
+			gfx::set_outer_alpha(keep);
+		}
 	gfx::push_clip({LIST_X, top, LIST_W, LIST_H});
 	row_spots_.clear();
 	for (size_t i = 0; i < options.size(); i++) {
@@ -546,6 +537,11 @@ void Settings::draw_options (double now, float top) {
 			float prev_pill = zone_ == Zone::content && ((int)i - 1 == sel || (focus_zone_ == Zone::content && (int)i - 1 == focus_from_)) ? 1 : 0;
 			float line = 1 - std::max(pill > 0 ? 1.f : 0.f, prev_pill);
 			if (line > 0) gfx::rect({row.x + 24, ry, row.w - 48, 1}, 0, {1, 1, 1, 0.09f * line});
+		}
+		// a change being shown on the home screen: everything round this row fades, the row itself stays, on a soft dark halo
+		bool kept = peek_.at(now) > 0 && o.id == peek_id_;
+		if (kept) {
+			gfx::set_outer_alpha(1);
 		}
 		if (pill > 0) gfx::rect(row, 22, PILL.with_alpha(pill));
 		float dim = o.disabled.empty() ? 1 : 0.4f;
@@ -606,6 +602,7 @@ void Settings::draw_options (double now, float top) {
 			if (o.progress > 0) gfx::rect({bar.x, bar.y, std::max(6.f, bar.w * std::min(1.f, o.progress)), bar.h}, 3, t.accent);
 		}
 		put(text::ellipsize(o.label, lst, (int)(value_left - 30 - lx)), lst, lx, label_top, 34, label_c, dim);
+		if (kept) gfx::set_outer_alpha(1 - (float)peek_.at(now));
 		// the part of the row in view, for the pointer
 		float vt = std::max(ry, top), vb = std::min(ry + ROW_H, top + LIST_H);
 		if (vb > vt) row_spots_.push_back({{row.x, vt, row.w, vb - vt}, (int)i, o.stepper ? (value_left + right) / 2 : 0});
@@ -696,10 +693,12 @@ void Settings::draw_footer () {
 
 void Settings::draw (double now) {
 	const Theme &t = theme_named(theme_);
+	// while a change is shown on the home screen the screen's dark cover and everything on it fade out, but the changed row
+	gfx::set_outer_alpha(1 - (float)peek_.at(now));
 	gfx::rect({0, 0, 1920, 1080}, 0, t.screen.with_alpha(t.screen.a * SCREEN_OPACITY));      // the wallpaper a little through it
 	draw_nav(now);
 	const SettingsTab *c = current();
-	if (!c) return;
+	if (!c) { gfx::set_outer_alpha(1); return; }
 	put(c->label, TextStyle{Face::ui, 46, 600, -0.46f}, MAIN_X, TITLE_Y, 56, t.textPrimary);
 	if (c->has_options) { draw_options(now, CONTENT_Y); button_spots_.clear(); tile_spots_.clear(); }
 	else {
@@ -725,4 +724,5 @@ void Settings::draw (double now) {
 		else draw_grid(now, GRID_Y);
 	}
 	draw_footer();
+	gfx::set_outer_alpha(1);
 }

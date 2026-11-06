@@ -54,11 +54,11 @@ public:
 	double next_event (double now) const;
 	bool animating (double now) const;
 	void draw (double now);
-	// Changing a setting that shows on the home screen: Settings steps aside for a moment and the home screen shows it, with the
-	// setting's name and value in a small bar ("peek"); it comes back after a pause, or with ↑ ↓ or Back
+	// Changing a setting that shows on the home screen: Settings steps aside for a moment and the home screen shows it
+	// ("peek"): the dark cover and everything on it fade out except the changed row, which stays where it is; it comes back after
+	// a pause, or with ↑ ↓ or Back
 	/** 0-1: how far Settings has stepped aside (the home screen is drawn under it then). */
 	float peek (double now) const { return (float)peek_.at(now); }
-	void draw_peek (double now);
 
 private:
 	enum class Zone { nav, buttons, content };

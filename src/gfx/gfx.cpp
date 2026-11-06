@@ -78,6 +78,13 @@ void main () {
 	float a;
 	if (u_mode == 0) a = clamp(0.5 - d, 0.0, 1.0);
 	else if (u_mode == 1) a = (1.0 - smoothstep(-u_soft, u_soft, d)) * clamp(0.5 + box(v_p + vec2(0.0, u_dy), u_half, u_radius), 0.0, 1.0);
+	else if (u_mode == 3) a = mix(1.0 - clamp(d / u_soft, 0.0, 1.0), 1.0 - smoothstep(0.0, u_soft, d), u_dy);
+	else if (u_mode == 4) {
+		// the dark spreading along an edge of the screen: strongest in the middle of the right edge of the quad, thinning to the quad's
+		// top, bottom and left sides (u_soft: how dense, u_dy: 1 = smooth curves, 0 = straight)
+		float v = max(0.0, 1.0 - abs(v_p.y) / u_half.y), h = clamp(0.5 + v_p.x / (2.0 * u_half.x), 0.0, 1.0);
+		a = min(1.0, mix(v, v * v * (3.0 - 2.0 * v), u_dy) * mix(h, h * h * (3.0 - 2.0 * h), u_dy) * u_soft);
+	}
 	else {
 		float outer = box(v_p, u_half + vec2(u_soft), u_radius + u_soft);
 		a = clamp(0.5 - outer, 0.0, 1.0) * clamp(0.5 + d, 0.0, 1.0);
@@ -285,6 +292,7 @@ void begin_frame (Color c, Target *t) {
 
 void set_alpha (float a) { group_alpha = a; }
 void set_outer_alpha (float a) { outer_alpha = a; }
+float outer_alpha_now () { return outer_alpha; }
 
 void set_grow (float cx, float cy, float k) {
 	grow_x = cx;
@@ -318,6 +326,29 @@ void shadow (Rect r, float radius, float dy, float blur, Color c) {
 	// nothing under the box itself: the middle of it is left out of the quad
 	float rr = std::min(radius, std::min(r.w, r.h) / 2);
 	draw_frame(shape, q, {r.x + rr, r.y + rr, r.w - 2 * rr, r.h - 2 * rr});
+}
+
+void halo (Rect r, float radius, float fade, Color c, bool smooth) {
+	c.a *= group_alpha * outer_alpha;
+	if (c.a <= 0 || fade <= 0) return;
+	Rect q{r.x - fade - 2, r.y - fade - 2, r.w + 2 * fade + 4, r.h + 2 * fade + 4};
+	use(shape, q, r, radius);
+	glUniform4f(shape.color, c.r, c.g, c.b, c.a);
+	glUniform1f(shape.soft, fade);
+	glUniform1f(shape.dy, smooth ? 1.f : 0.f);
+	glUniform1i(shape.mode, 3);
+	draw();
+}
+
+void edge_glow (Rect r, float density, Color c, bool smooth) {
+	c.a *= group_alpha * outer_alpha;
+	if (c.a <= 0 || r.w <= 0 || r.h <= 0) return;
+	use(shape, r, r, 0);
+	glUniform4f(shape.color, c.r, c.g, c.b, c.a);
+	glUniform1f(shape.soft, density);
+	glUniform1f(shape.dy, smooth ? 1.f : 0.f);
+	glUniform1i(shape.mode, 4);
+	draw();
 }
 
 void ring (Rect r, float radius, float spread, Color c) {
