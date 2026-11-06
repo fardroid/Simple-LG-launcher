@@ -1,39 +1,20 @@
 #!/bin/sh
-# Installs the packaged .ipk on a rooted TV over SSH and launches it.
-#
-# Set TV_HOST (an ssh config alias, or root@<tv-ip>) in the environment, or in a
-# git-ignored `tv.env` file at the project root (copy tv.env.example):
-#
-#   TV_HOST=root@192.0.2.10 sh scripts/install.sh
-#
-# Uses webOS's developer install service (the same one the Homebrew Channel and
-# ares-install use). Nothing outside the app's own directory is touched.
-# Without SSH: `npx ares-setup-device`, then `npx ares-install --device <name> build/*.ipk`.
+# Installs build/*.ipk on the TV over SSH with the developer installer, closes the running copy and opens the new one.
+# TV_HOST: from the environment, or from tv.env (git-ignored; copy tv.env.example).
 set -e
 cd "$(dirname "$0")/.."
-# shellcheck disable=SC1091
-[ -f tv.env ] && . ./tv.env
-[ -n "$TV_HOST" ] || { echo "TV_HOST is not set. Copy tv.env.example to tv.env and edit it, or run: TV_HOST=root@<tv-ip> npm run install:tv" >&2; exit 1; }
-
-APP_ID="$(sed -n 's/.*"id": *"\([^"]*\)".*/\1/p' public/appinfo.json | head -1)"
-IPK="$(ls build/*.ipk 2>/dev/null | head -1)"
-[ -n "$IPK" ] || { echo "No .ipk in build/ — run 'npm run package' first" >&2; exit 1; }
-
-REMOTE_IPK="/tmp/$(basename "$IPK")"
-echo "Copying $(basename "$IPK") to $TV_HOST..."
-scp -q "$IPK" "$TV_HOST:$REMOTE_IPK"
-
-echo "Installing $APP_ID..."
-# luna-send needs a tty (-tt) to print anything; the subscription ends when the install does.
-ssh -tt "$TV_HOST" "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"$REMOTE_IPK\",\"subscribe\":true}' | grep -oE '\"state\":\"[^\"]*\"|\"errorText\":\"[^\"]*\"' | uniq; rm -f '$REMOTE_IPK'" | tr -d '\r'
-
-# A launcher that stays loaded keeps the old version: close it, and with the takeover on also its copy behind the Home button
-# (which runs as LG Home), so both load the new one. The TV itself needs no restart.
-ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"$APP_ID\"}' >/dev/null; grep -q ' /usr/palm/applications/com.webos.app.home ' /proc/mounts && luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"com.webos.app.home\"}' >/dev/null && echo 'Closed the old copy behind the Home button'; true" | tr -d '\r'
-
-# webOS 26: the installer has just written the launcher's permissions again without access to the Homebrew Channel; the script
-# puts it back (and on its first run sets up the watcher that does so after updates from anywhere). On older webOS it does nothing.
-ssh -tt "$TV_HOST" "sh /media/developer/apps/usr/palm/applications/$APP_ID/tools/webos26-access.sh install" | tr -d '\r' || true
-
-echo "Launching $APP_ID..."
-ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"$APP_ID\"}'" | tr -d '\r'
+[ -n "$TV_HOST" ] || { [ -f tv.env ] && . ./tv.env; }
+[ -n "$TV_HOST" ] || { echo "TV_HOST is not set (e.g. TV_HOST=root@<tv-ip> make install)" >&2; exit 1; }
+APP_ID=$(node -p "require('./build/app/appinfo.json').id")
+# the package of this build's id and version only (packages of the other id can lie beside it)
+IPK="build/$(node -p "const a=require('./build/app/appinfo.json'); a.id+'_'+a.version").ipk"
+[ -f "$IPK" ] || IPK="$(ls build/"$APP_ID"_*_arm.ipk 2>/dev/null | head -1)"
+[ -f "$IPK" ] || { echo "no package for $APP_ID in build/" >&2; exit 1; }
+echo "installing $IPK"
+REMOTE=/tmp/$(basename "$IPK")
+scp -q -O "$IPK" "$TV_HOST:$REMOTE"
+# luna-send prints only with a terminal (-tt)
+ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"$APP_ID\"}' >/dev/null; \
+	luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"$REMOTE\",\"subscribe\":true}' \
+	| grep -oE '\"state\":\"installed\"|\"errorText\":\"[^\"]*\"' | head -1; rm -f '$REMOTE'; \
+	luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"$APP_ID\"}' >/dev/null" | tr -d '\r'

@@ -3,26 +3,34 @@
 This project is a modified version of [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher) (MIT licence, see [LICENSE](LICENSE)).
 
 The MIT licence in [LICENSE](LICENSE) covers this project's own code and its app icon
-(`public/icon.png`, `public/largeIcon.png`). The following material belongs to others and
+(`assets/app/icon.png`, `assets/app/largeIcon.png`). The following material belongs to others and
 is **not** covered by that licence.
 
 ## Bundled software
 
 | Component | Licence | Where |
 |---|---|---|
-| [Preact](https://preactjs.com) | MIT, © Jason Miller | compiled into `assets/app.js`; licence text in [public/licenses/preact-MIT.txt](public/licenses/preact-MIT.txt) |
-| [QR Code Generator for JavaScript](https://github.com/kazuhikoarase/qrcode-generator) | MIT, © Kazuhiko Arase | compiled into `assets/app.js` (the QR code of a news headline's link); licence text in [public/licenses/qrcode-generator-MIT.txt](public/licenses/qrcode-generator-MIT.txt) |
-| [Inter](https://rsms.me/inter/) typeface | SIL Open Font License 1.1, © The Inter Project Authors | `src/assets/inter-latin-wght.woff2`; licence text in [public/licenses/Inter-OFL.txt](public/licenses/Inter-OFL.txt) |
-| Poppins typeface | SIL Open Font License 1.1, © The Poppins Project Authors | `src/assets/poppins-latin-*.woff2`; licence text in [public/licenses/Poppins-OFL.txt](public/licenses/Poppins-OFL.txt) |
-| Oswald typeface | SIL Open Font License 1.1, © The Oswald Project Authors | `src/assets/oswald-latin-*.woff2`; licence text in [public/licenses/Oswald-OFL.txt](public/licenses/Oswald-OFL.txt) |
-| Roboto Mono typeface | SIL Open Font License 1.1, © The Roboto Mono Project Authors | `src/assets/roboto-mono-latin-*.woff2`; licence text in [public/licenses/RobotoMono-OFL.txt](public/licenses/RobotoMono-OFL.txt) |
-| Cormorant Garamond typeface | SIL Open Font License 1.1, © The Cormorant Garamond Project Authors | `src/assets/cormorant-garamond-latin-*.woff2`; licence text in [public/licenses/CormorantGaramond-OFL.txt](public/licenses/CormorantGaramond-OFL.txt) |
+| [SDL2](https://github.com/webosbrew/SDL-webOS) (webosbrew's SDL-webOS 2.30.12) and SDL2_ttf | zlib | the program links the bundled `libSDL2` and `libSDL2_ttf`; licence text in [licenses/SDL2.txt](https://github.com/libsdl-org/SDL/blob/main/LICENSE.txt) of the installed app |
+| [FreeType](https://freetype.org) | FreeType License (or GPL 2) | bundled `libfreetype` (draws the text) |
+| [libjpeg-turbo](https://libjpeg-turbo.org) | BSD-3-Clause, IJG and zlib | bundled `libturbojpeg` (reads pictures) |
+| [curl](https://curl.se) | curl licence (MIT-like) | bundled `libcurl` (the network) |
+| [OpenSSL](https://www.openssl.org) 1.1.1 | OpenSSL and SSLeay licences | bundled `libssl` and `libcrypto` |
+| [bzip2](https://sourceware.org/bzip2/) | bzip2 licence (BSD-like) | bundled `libbz2` (needed by FreeType) |
+| libatomic, libstdc++ and libgcc (GCC) | GPL 3 with the GCC Runtime Library Exception | `libatomic` bundled; the C++ runtime is linked into the program |
+| [nlohmann/json](https://github.com/nlohmann/json) | MIT, © Niels Lohmann | [third_party/nlohmann](third_party/nlohmann/LICENSE.MIT), compiled in |
+| [pugixml](https://pugixml.org) | MIT, © Arseny Kapoulkine | [third_party/pugixml](third_party/pugixml/LICENSE.md), compiled in (reads RSS and Atom) |
+| [QR Code generator](https://www.nayuki.io/page/qr-code-generator-library) | MIT, © Project Nayuki | [third_party/qrcodegen](third_party/qrcodegen/LICENSE.txt), compiled in (the QR code of a news headline) |
+| [Inter](https://rsms.me/inter/) typeface | SIL Open Font License 1.1, © The Inter Project Authors | `fonts/inter-*.ttf`; licence text in [fonts/OFL-inter.txt](fonts/OFL-inter.txt) |
+| Poppins typeface | SIL Open Font License 1.1, © The Poppins Project Authors | `fonts/poppins-*.ttf`; licence text in [fonts/OFL-poppins.txt](fonts/OFL-poppins.txt) |
+| Oswald typeface | SIL Open Font License 1.1, © The Oswald Project Authors | `fonts/oswald-*.ttf`; licence text in [fonts/OFL-oswald.txt](fonts/OFL-oswald.txt) |
+| Roboto Mono typeface | SIL Open Font License 1.1, © The Roboto Mono Project Authors | `fonts/roboto-mono-*.ttf`; licence text in [fonts/OFL-robotomono.txt](fonts/OFL-robotomono.txt) |
+| Cormorant Garamond typeface | SIL Open Font License 1.1, © The Cormorant Garamond Project Authors | `fonts/cormorant-*.ttf`; licence text in [fonts/OFL-cormorantgaramond.txt](fonts/OFL-cormorantgaramond.txt) |
 
-The licence texts are included in the installed app under `licenses/`.
+The licence texts of the project's own code, the fonts, SDL2 and nlohmann/json are included in the installed app under `licenses/`.
 
 ## App and input icons
 
-`public/icons/apps/` contains the icons of third-party TV apps, and `public/icons/inputs/`
+`assets/icons/apps/` contains the icons of third-party TV apps, and `assets/icons/inputs/`
 contains input-type icons from LG's webOS software. They are trademarks or copyright of
 their respective owners. This project is not affiliated with, endorsed by or sponsored by
 any of them.

@@ -1,8 +1,10 @@
 # Setting up Simple LG launcher on a TV (for AI coding agents)
 
-You are helping someone install this launcher on their own LG TV. Work through the steps below in order, from a clone of this repository on their computer. Say in one line what you are about to do before each step. **Ask before every step that changes something on the TV** (steps 4, 5, 6 and 7), and wait for a yes. Everything here can be undone; the undo is given at each step.
+You are helping someone install this launcher on their own LG TV. Work through the steps below in order. Say in one line what you are about to do before each step. **Ask before every step that changes something on the TV** (steps 4, 5, 6 and 7) and before downloading anything (step 3), and wait for a yes. Everything here can be undone; the undo is given at each step.
 
 Do not root the TV, change its firmware or touch anything outside what these steps describe. If the TV is not rooted yet, stop and point the person to https://www.webosbrew.org/; rooting depends on the model and firmware, and it is their call.
+
+The launcher is a native app (C++, SDL). There is nothing to build: you install a ready-made package.
 
 ## 0. What to ask the person first
 
@@ -10,16 +12,15 @@ Do not root the TV, change its firmware or touch anything outside what these ste
 - Is the TV rooted, with the Homebrew Channel installed and **SSH enabled** in the Homebrew Channel's settings?
 - Optional, for later steps: Google Calendar secret iCal links (see step 6), and a folder of wallpaper pictures.
 
-Never write the calendar links, the TV's IP address or any password into a file in this repository, a commit, an issue or a log you share. The TV's address may go in `tv.env`, which git ignores.
+Never write the calendar links, the TV's IP address or any password into a file in this repository, a commit, an issue or a log you share.
 
 ## 1. Check the computer
 
 ```bash
-node --version    # 18 or newer
 ssh -V
 ```
 
-Install Node.js if it is missing (ask first). Then `npm ci` in the repository.
+`ssh` and `scp` are all that is needed.
 
 ## 2. Reach the TV
 
@@ -29,34 +30,41 @@ ssh -o ConnectTimeout=5 root@TV 'nyx-cmd OSInfo query webos_release; ls /media/d
 
 - If this asks for a password, it is the one set in the Homebrew Channel (the default was `alpine`). Suggest copying a key so later steps don't ask again: `ssh-copy-id root@TV`. Let the person type any password themselves.
 - `Connection refused`: SSH is off in the Homebrew Channel's settings, or the TV is in standby.
-- Note the webOS release it prints. The ways of step 5 have been tried on release 10.x (webOS 25). On an older release, tell the person that; the helper is the safest there.
+- Note the webOS release it prints. Making the launcher the home screen (step 5) has been tried on release 10.x (webOS 25). A release of 11 or higher is webOS 26: step 4 has one more command for it.
 
-Write `TV_HOST=root@TV` to `tv.env` (copy `tv.env.example`).
+## 3. Get the package (ask first: it is a download)
 
-## 3. Build
+The latest `tld.my.simplelauncher_<version>_arm.ipk` from https://github.com/fardroid/Simple-LG-launcher/releases, for example:
 
 ```bash
-npm test
-npm run build && npm run package
+gh release download --repo fardroid/Simple-LG-launcher --pattern '*.ipk' --dir /tmp/launcher-ipk
 ```
 
-This makes `build/tld.my.simplelauncher_<version>_all.ipk`. All tests should pass, on Linux and macOS; a failure is worth reading before going on.
+Say the file name and size when you ask. Check it against the checksum in `repo/apps.json` of this repository (`ipkHash.sha256`, for the same version): `shasum -a 256 <file>`. If they differ, stop and tell the person.
 
 ## 4. Install (ask first)
 
 ```bash
-npm run install:tv
+scp -O /tmp/launcher-ipk/tld.my.simplelauncher_<version>_arm.ipk root@TV:/tmp/
+ssh -tt root@TV "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_<version>_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1; rm -f /tmp/tld.my.simplelauncher_<version>_arm.ipk"
+ssh -tt root@TV "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"tld.my.simplelauncher\"}'"
 ```
 
-It copies the package over SSH, installs it with the TV's developer installer and opens it. The person should now see the launcher on the TV. The first start takes a few seconds while it reads the app list.
+(`-tt`: `luna-send` prints only when ssh has a terminal.) The second command prints a long line that contains `"state":"installed"` (or an `errorText`); the third opens the launcher, and the person should see it on the TV. The first start takes a few seconds while it reads the app list. If a 1.x version of the launcher was installed, its settings, calendars and the way it opens on Home carry over by themselves at the first start: nothing to run.
 
-On webOS 26 (step 2 printed a release of 11 or higher) it also runs `tools/webos26-access.sh install`, which gives the launcher back its access to the Homebrew Channel (see README.md, *webOS 26*) and keeps it after updates. Tell the person it changes one permission file of the launcher and leaves a small watcher running; undo with `sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh remove`.
+**On webOS 26** (step 2 printed a release of 11 or higher) also run, once:
 
-Undo: on webOS 26 first `sh …/tools/webos26-access.sh remove` (as above), then uninstall "Simple LG launcher" from the Homebrew Channel, or run `ssh root@TV "luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{\"id\":\"tld.my.simplelauncher\"}'"`.
+```bash
+ssh -tt root@TV sh /media/developer/apps/usr/palm/applications/tld.my.simplelauncher/tools/webos26-access.sh install
+```
+
+Tell the person it changes one permission file of the launcher (it adds the Homebrew Channel's service group, which webOS 26 no longer gives apps) and leaves a small watcher running that adds the permission back after each update. Without it every row that needs root stays greyed out in Settings.
+
+Undo: on webOS 26 first `sh …/tools/webos26-access.sh remove` (as above), then in the launcher Settings → Home screen → *Remove everything from the TV*, then uninstall "Simple LG launcher" from the Homebrew Channel, or run `ssh root@TV "luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{\"id\":\"tld.my.simplelauncher\"}'"`.
 
 ## 5. Make it the home screen (ask first; explain the ways)
 
-There are four ways, and the person can also pick one on the TV: Settings (the last tile on the row) → Home screen → *How the launcher opens*, which shows each with its pros and cons (OK twice switches). From here, use `homemode.sh`, which ships in the installed app. It switches off the way that is on, turns the new one on, checks it, and turns the old one back on if the new one does not take:
+There are four ways. The person can pick one on the TV: Settings (the last tile on the row) → Home screen → *How the launcher opens*, which shows each with its pros and cons (OK twice switches); the launcher sets everything up itself, no SSH is needed. From here, use `homemode.sh`, which ships in the installed app. It switches off the way that is on, turns the new one on, checks it, and turns the old one back on if the new one does not take:
 
 ```bash
 APP=/media/developer/apps/usr/palm/applications/tld.my.simplelauncher
@@ -64,12 +72,10 @@ ssh -tt root@TV sh $APP/tools/homemode.sh status        # mode=…, can_default=
 ssh -tt root@TV sh $APP/tools/homemode.sh set default   # or: mount, none
 ```
 
-(`-tt`: the scripts ask the TV's app manager through `luna-send`, which answers only when ssh has a terminal.)
-
 Explain them in plain words before asking:
 
-- **default: Official** (recommended where `status` says `can_default=yes`, webOS 25 and newer). webOS's own choice of Home app, like choosing the default browser on a computer: the launcher is a Home app (`appCategory: ["home"]`) and is chosen with the TV's `setDefaultApp`. The Home button and Back out of the last app open it. For waking from standby it switches LG's *start with Home* off and names the launcher as the TV's last input (both put back when switched off), and keeps the launcher loaded through standby by adding it to the app manager's `keepAliveApps` (a config copy mounted in RAM at every start; the app manager is restarted once for it). Nothing of LG's is replaced or mounted, it lasts across a full restart, and LG Home keeps its own tile. Tell the person: before uninstalling the launcher, set it back to `none`; otherwise the Home button opens nothing until the TV's next full restart (a boot script then gives LG Home back).
-- **mount: Swap** (for TVs that cannot choose). It bind-mounts a folder over LG Home's app folder and a copy of LG Home's permissions file with the Homebrew Channel's root service added, so the TV opens the launcher as if it were LG Home. Nothing on the read-only system is changed. After a full restart, LG Home shows for about 40 seconds before the launcher is put back. Tried on webOS 25 only.
+- **default: Home app** (recommended where `status` says `can_default=yes`, webOS 25 and newer). webOS's own choice of Home app, like choosing the default browser on a computer: the launcher is a Home app (`appCategory: ["home"]`) and is chosen with the TV's `setDefaultApp`. The Home button and Back out of the last app open it. For waking from standby it switches LG's *start with Home* off and names the launcher as the TV's last input (both put back when switched off), and keeps the launcher loaded through standby by adding it to the app manager's `keepAliveApps` (a config copy mounted in RAM at every start; the app manager is restarted once for it). Nothing of LG's is replaced, and LG Home keeps its own tile. Tell the person: after a full restart of the TV there is no webOS logo and the launcher settles about a minute later; and before uninstalling the launcher, set it back to `none`, otherwise the Home button opens nothing until the TV's next full restart.
+- **mount: Swap** (for TVs that cannot choose). It mounts a small folder over LG Home's app folder, with links to the launcher's program and a manifest with LG Home's ID, so the TV starts the launcher as if it were LG Home. Nothing on the read-only system is changed. After a full restart the TV opens the launcher straight away. Tried on webOS 25.
 - **The Home button helper.** A script that opens the launcher over LG Home whenever LG Home comes up. Lighter, mounts nothing, but LG Home can flash for a moment. It is switched on from the TV only (the same screen: *Helper*); tell the person which keys to press, you can't press them for them.
 - **none: Off.** Home opens LG Home; the launcher opens from its tile.
 
@@ -107,16 +113,6 @@ Tell the person what was done, what is left for them on the TV (the city for the
 
 ## Updating later
 
-`git pull`, then steps 3 and 4 again (ask before step 4, as the first time). The way chosen in step 5 stays on and needs nothing more.
+Nothing needs to be run. Settings → Home screen → About → *Check for new versions* (on by default) looks on GitHub once a day; when there is a newer version, an *Update* tile appears in the row, and pressing it downloads, checks and installs the package. On a TV without root, or when the person prefers, repeat step 4 with the new package (ask first, as the first time): a launcher that stays loaded reloads itself the next time it comes on screen.
 
-The TV keeps the launcher loaded in memory, and with the Swap on, also its copy behind the Home button (it runs as `com.webos.app.home`). A copy that stays loaded goes on showing the old version, so after an update close both: that is enough, the TV does not need a restart. `npm run install:tv` does it itself. After installing another way (the Homebrew Channel, `ares-install`), close them yourself:
-
-```bash
-ssh root@TV "luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"com.webos.app.home\"}'; luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{\"id\":\"tld.my.simplelauncher\"}'"
-```
-
-The next Home press loads the new version. (From 1.9.2 on, a copy left loaded also reloads itself the next time it goes to the background: it compares its build with `assets/version.txt`.)
-
-Then press Home and check the version at the bottom of Settings → Home screen (the "Simple LG launcher" row).
-
-Over SSH, `luna-send` to the app manager prints nothing unless ssh has a terminal: use `ssh -tt` when you need to read its answer.
+Check the version at the bottom of Settings → Home screen (the "Simple LG launcher" row).

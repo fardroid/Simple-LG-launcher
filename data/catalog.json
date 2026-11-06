@@ -1,0 +1,200 @@
+[
+	{
+		"id": "youtube.leanback.v4",
+		"title": "YouTube",
+		"icon": "youtube.leanback.v4.png",
+		"color": ""
+	},
+	{
+		"id": "netflix",
+		"title": "Netflix",
+		"icon": "",
+		"color": "#b1060f"
+	},
+	{
+		"id": "amazon",
+		"title": "Prime Video",
+		"icon": "amazon.png",
+		"color": ""
+	},
+	{
+		"id": "com.disney.disneyplus-prod",
+		"title": "Disney+",
+		"icon": "",
+		"color": "#0f2b6b"
+	},
+	{
+		"id": "com.apple.appletv",
+		"title": "Apple TV",
+		"icon": "com.apple.appletv.png",
+		"color": ""
+	},
+	{
+		"id": "com.wbd.stream",
+		"title": "Max",
+		"icon": "",
+		"color": "#002be7"
+	},
+	{
+		"id": "cdp-30",
+		"title": "Plex",
+		"icon": "cdp-30.png",
+		"color": ""
+	},
+	{
+		"id": "spotify-beehive",
+		"title": "Spotify",
+		"icon": "",
+		"color": "#1db954"
+	},
+	{
+		"id": "tv.twitch.tv.starshot.lg",
+		"title": "Twitch",
+		"icon": "tv.twitch.tv.starshot.lg.png",
+		"color": ""
+	},
+	{
+		"id": "hulu",
+		"title": "Hulu",
+		"icon": "",
+		"color": "#1ce783"
+	},
+	{
+		"id": "youtube.leanback.ytv.v1",
+		"title": "YouTube TV",
+		"icon": "",
+		"color": "#cc0000"
+	},
+	{
+		"id": "com.plutotv.app",
+		"title": "Pluto TV",
+		"icon": "",
+		"color": "#2b2b2b"
+	},
+	{
+		"id": "com.tubitv.ott.tubi",
+		"title": "Tubi",
+		"icon": "",
+		"color": "#7408ff"
+	},
+	{
+		"id": "com.espn.espnplus-prod",
+		"title": "ESPN",
+		"icon": "",
+		"color": "#c8102e"
+	},
+	{
+		"id": "vudu",
+		"title": "Fandango at Home",
+		"icon": "",
+		"color": "#3399ff"
+	},
+	{
+		"id": "bbc.iplayer.3.0",
+		"title": "BBC iPlayer",
+		"icon": "bbc.iplayer.3.0.png",
+		"color": ""
+	},
+	{
+		"id": "bbc.sounds.1.0",
+		"title": "BBC Sounds",
+		"icon": "bbc.sounds.1.0.png",
+		"color": ""
+	},
+	{
+		"id": "com.fvp.itv",
+		"title": "ITVX",
+		"icon": "com.fvp.itv.png",
+		"color": ""
+	},
+	{
+		"id": "com.fvp.ch4",
+		"title": "Channel 4",
+		"icon": "com.fvp.ch4.png",
+		"color": ""
+	},
+	{
+		"id": "demand5",
+		"title": "Channel 5",
+		"icon": "demand5.png",
+		"color": ""
+	},
+	{
+		"id": "com.fvp.uktv",
+		"title": "UKTV Play",
+		"icon": "com.fvp.uktv.png",
+		"color": ""
+	},
+	{
+		"id": "now.tv",
+		"title": "NOW",
+		"icon": "now.tv.png",
+		"color": ""
+	},
+	{
+		"id": "com.webos.app.browser",
+		"title": "Browser",
+		"icon": "com.webos.app.browser.png",
+		"color": ""
+	},
+	{
+		"id": "com.webos.app.mediadiscovery",
+		"title": "Media Player",
+		"icon": "com.webos.app.mediadiscovery.png",
+		"color": ""
+	},
+	{
+		"id": "com.webos.app.igallery",
+		"title": "Art Gallery",
+		"icon": "com.webos.app.igallery.png",
+		"color": ""
+	},
+	{
+		"id": "com.webos.app.homeconnect",
+		"title": "Home Dashboard",
+		"icon": "com.webos.app.homeconnect.png",
+		"color": ""
+	},
+	{
+		"id": "amazon.alexa.view",
+		"title": "Alexa",
+		"icon": "amazon.alexa.view.png",
+		"color": ""
+	},
+	{
+		"id": "com.palm.app.settings",
+		"title": "LG Settings",
+		"icon": "",
+		"color": "#2f3339"
+	},
+	{
+		"id": "org.webosbrew.hbchannel",
+		"title": "Homebrew",
+		"icon": "org.webosbrew.hbchannel.png",
+		"color": ""
+	},
+	{
+		"id": "org.webosbrew.inputhook",
+		"title": "Input Hook",
+		"icon": "org.webosbrew.inputhook.png",
+		"color": ""
+	},
+	{
+		"id": "org.webosbrew.safeupdate",
+		"title": "HB Updater",
+		"icon": "org.webosbrew.safeupdate.png",
+		"color": ""
+	},
+	{
+		"id": "com.lennylxx.iptv",
+		"title": "IPTV Player",
+		"icon": "com.lennylxx.iptv.png",
+		"color": ""
+	},
+	{
+		"id": "org.jellyfin.webos",
+		"title": "Jellyfin",
+		"icon": "",
+		"color": "#00a4dc"
+	}
+]

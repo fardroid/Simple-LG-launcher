@@ -21,8 +21,8 @@ if (!repo || !ipk) {
 	process.exit(1);
 }
 
-const appinfo = JSON.parse(readFileSync('public/appinfo.json', 'utf8'));
-const expected = `${appinfo.id}_${appinfo.version}_all.ipk`;
+const appinfo = JSON.parse(readFileSync('appinfo.json', 'utf8'));
+const expected = `${appinfo.id}_${appinfo.version}_arm.ipk`;
 if (basename(ipk) !== expected) {
 	console.error(`The file should be called ${expected}`);
 	process.exit(1);
@@ -36,7 +36,7 @@ const manifest = {
 	type: appinfo.type,
 	title: appinfo.title,
 	appDescription: 'A quieter home screen for LG TVs: clock, weather, your calendar and a row of apps over your wallpaper.',
-	iconUri: `${raw}/public/largeIcon.png`,
+	iconUri: `${raw}/assets/app/largeIcon.png`,
 	sourceUrl: `https://github.com/${repo}`,
 	rootRequired: 'optional',
 	ipkUrl: `https://github.com/${repo}/releases/download/v${appinfo.version}/${expected}`,

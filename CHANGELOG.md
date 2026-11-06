@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0
+
+**The launcher is now a native app.** It was rewritten from a web page into C++ (SDL2 and OpenGL ES 2) and draws straight on the TV's graphics plane, at the full frame rate the TV gives any app. It keeps the app ID `tld.my.simplelauncher`: install it over 1.x and the settings, the calendars, the hidden apps and the way of opening on Home move over by themselves at its first start (`tools/migrate.sh`). The web version's code is gone from the repository; its last version is tagged `v1.10.1`.
+
+- **Everything of 1.10 is there**: the clock, the weather with its hourly curve and seven days, the calendar with the month view, the news with its QR code, the quote of the day, the cards in columns, frosted glass and card colours, pixel shift for OLED, the wallpaper gallery with the slideshow, the app row with moving, hiding and uninstalling, and the Magic Remote pointer on all of it. The weather, calendar links and news are fetched by the launcher itself, without the Homebrew Channel.
+- **Check for new versions** (Settings → Home screen → About, on by default): once a day the launcher reads `repo/apps.json` from GitHub. A newer version shows as a note and an *Update* tile; pressing it downloads the package, checks its SHA-256 and installs it through the TV's installer. Nothing is downloaded or installed without a press. Installing needs root.
+- **Quick settings** on the Down key from the app row: picture mode, sound mode, energy saving, screen off, the TV's settings.
+- **Ways of opening on Home**, all switched from Settings with no SSH: *Home app* (the TV's own choice of Home app, named *Official* before), *Swap*, *Helper* and *Off*, with their pros and cons on the screen. A full restart opens the launcher by naming it the TV's last input; the SAM restart that keeps the launcher loaded starts the services that stop with it (the HDMI inputs).
+- **Rows that need root are greyed out** with the reason (webOS 26, no Homebrew Channel, or refused).
+- **Thirteen languages**, the texts of the native version machine-translated by an LLM.
+- **The start-up picture** (what the TV shows while the launcher loads) is always the launcher's logo; the setting is gone.
+- Tests: `make test` (the logic's 359 tests on a computer, the translations, the helper's scripts). Building needs the webosbrew toolchain, see `Makefile`.
+
 ## 1.10.1
 
 - **webOS 26: the launcher can use the Homebrew Channel again.** On webOS 26 apps are no longer in the "public" permission group, which is the only way to the Homebrew Channel's command service (0.7.3), so on a rooted TV every command was refused (*Denied method call "exec" for category "/"*). `tools/webos26-access.sh install`, once over SSH, adds the group `org.webosbrew.hbchannel.service.group` to the launcher's Luna client permissions (the fix of Hearth's `webos11-permission.sh`, by ganondorft) and leaves a watcher running from the Homebrew Channel's startup folder: webOS writes the file again on every install or update, and a few seconds later the watcher adds the group back and starts the launcher afresh (an app keeps the permissions it started with; a launcher the TV keeps loaded, as with the official way, is stopped and the TV starts it again), opening it at once if it was in front. `npm run install:tv` runs it by itself; on webOS 25 and older it does nothing. Settings says what to run instead of *Needs a rooted TV*. Not tried on a webOS 26 TV.

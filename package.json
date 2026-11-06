@@ -1,27 +1,10 @@
 {
   "name": "simple-lg-launcher",
-  "version": "1.10.1",
+  "version": "2.0.0",
   "private": true,
-  "description": "Simple LG launcher: a calm home screen for LG webOS TVs (and Android TV boxes), based on Hearth",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "package": "sh scripts/package.sh",
-    "install:tv": "sh scripts/install.sh",
-    "deploy": "npm run build && npm run package && npm run install:tv",
-    "manifest": "node scripts/gen-manifest.mjs",
-    "test": "node scripts/test-wallpaper.mjs && node scripts/test-thumbs.mjs && node scripts/test-settings.mjs && node scripts/test-appcache.mjs && node scripts/test-closehome.mjs && node scripts/test-homehookcmd.mjs && sh scripts/test-homehook.sh && node scripts/test-uninstall.mjs && node scripts/test-rows.mjs && node scripts/test-apporder.mjs && node scripts/test-tileorder.mjs && node scripts/test-launch.mjs && node scripts/test-weather.mjs && node scripts/test-ics.mjs && node scripts/test-plates.mjs && node scripts/test-dock.mjs && node scripts/test-memoprops.mjs && node scripts/test-boardlayout.mjs && node scripts/test-quote.mjs && node scripts/test-feeds.mjs && node scripts/test-failure.mjs && node scripts/test-keepalive.mjs && node scripts/test-i18n.mjs && node scripts/test-homemode.mjs"
-  },
+  "description": "Simple LG launcher: a native home screen for LG webOS TVs. Node is used only to package the app (ares-package) and to generate some of its data files.",
+  "license": "MIT",
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.6",
-    "@webos-tools/cli": "^3.2.6",
-    "typescript": "^7.0.2",
-    "vite": "^5.4.21"
-  },
-  "dependencies": {
-    "preact": "^10.29.8",
-    "qrcode-generator": "^1.4.4"
-  },
-  "license": "MIT"
+    "@webos-tools/cli": "^3.2.6"
+  }
 }
