@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- **Settings: a change shown on the home screen.** When you change a setting that the home screen shows (icon size, theme, the clock, the weather unit and the like), the row now stays where it is and everything else on the Settings screen fades out, so the home screen shows through. A dark area round the row (solid for a margin, then fading out evenly) keeps it readable; on the right it runs on past the edge of the screen and spreads up and down along it. The bar that used to appear at the top is gone.
+
 ## 2.0.0
 
 **The launcher is now a native app.** It was rewritten from a web page into C++ (SDL2 and OpenGL ES 2) and draws straight on the TV's graphics plane, at the full frame rate the TV gives any app. It keeps the app ID `tld.my.simplelauncher`: install it over 1.x and the settings, the calendars, the hidden apps and the way of opening on Home move over by themselves at its first start (`tools/migrate.sh`). The web version's code is gone from the repository; its last version is tagged `v1.10.1`.

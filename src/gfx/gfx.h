@@ -52,6 +52,11 @@ void rect (Rect r, float radius, Color c);
 /** A soft shadow under a rounded rectangle: the CSS box-shadow `0 dy blur color` (blur is CSS's blur radius). */
 void shadow (Rect r, float radius, float dy, float blur, Color c);
 /** A ring around a rounded rectangle: `spread` px wide, outside it (CSS box-shadow 0 0 0 spread). */
+/** A solid area `r` that fades out over `fade` pixels outside its edge (the same all the way round), over the whole of it. */
+void halo (Rect r, float radius, float fade, Color c, bool smooth = true);
+/** Dark spreading along an edge of the screen: `r` is the area (its right side is the screen's edge); it is `density` (1 = as is)
+ *  at the middle of that side and thins towards the top, the bottom and the left of `r`. */
+void edge_glow (Rect r, float density, Color c, bool smooth = true);
 void ring (Rect r, float radius, float spread, Color c);
 /** A texture over `r`, faded by `opacity`, multiplied by `tint` (white = as it is; its alpha fades too), corners rounded by
  *  `radius`, `brightness` > 1 lightens (CSS filter: brightness). `src`: the part of the texture, in its pixels (w 0: all).
@@ -65,6 +70,8 @@ void gradient (Rect r, float angle, const GradientStop *stops, int count, float 
 void set_alpha (float a);
 /** A whole screen faded by this much, over the groups' own set_alpha (1: as it is). */
 void set_outer_alpha (float a);
+/** The value set by set_outer_alpha. */
+float outer_alpha_now ();
 /** Everything drawn from now on grows by `k` round the point cx, cy (CSS transform: scale); k 1 puts it back. */
 void set_grow (float cx, float cy, float k);
 

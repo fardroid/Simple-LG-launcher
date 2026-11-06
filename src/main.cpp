@@ -1683,14 +1683,7 @@ int main (int argc, char **argv) {
 			app.home.draw_row(now);
 			app.home.draw_overlay(now);
 		}
-		if (app.screen == App::Screen::settings) {
-			if (peek < 1) {
-				gfx::set_outer_alpha(1 - peek);
-				app.settings.draw(now);
-				gfx::set_outer_alpha(1);
-			}
-			app.settings.draw_peek(now);
-		}
+		if (app.screen == App::Screen::settings) app.settings.draw(now);      // fades itself, all but the changed row, while it peeks
 		else if (app.screen == App::Screen::picker) app.picker.draw(now);
 		else if (app.screen == App::Screen::gallery) app.gallery.draw(now);
 		else if (app.screen == App::Screen::home_method) app.home_method.draw(now);

@@ -53,13 +53,13 @@ Needs SSH turned on in the Homebrew Channel's settings. In the commands below, r
 Copy the package to the TV:
 
 ```bash
-scp -O tld.my.simplelauncher_2.0.0_arm.ipk root@<tv-ip>:/tmp/
+scp -O tld.my.simplelauncher_2.0.1_arm.ipk root@<tv-ip>:/tmp/
 ```
 
 Install it (one line, copy it whole):
 
 ```bash
-ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.0.0_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
+ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.0.1_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
 ```
 
 When it is done it prints a long line that contains `"state":"installed"`. Then open Simple LG launcher from the TV's app list.
@@ -80,7 +80,7 @@ Install the `.ipk` with [webOS Dev Manager](https://github.com/webosbrew/dev-man
 
 ### Coming from version 1
 
-Install 2.0.0 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
+Install 2.0.1 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
 
 ### Updates: once you turn it on, nothing more to install by hand
 
