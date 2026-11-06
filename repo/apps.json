@@ -14,18 +14,18 @@
       "fullDescriptionUrl": "https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/repo/description.html",
       "manifest": {
         "id": "tld.my.simplelauncher",
-        "version": "2.0.0",
+        "version": "2.0.1",
         "type": "native",
         "title": "Simple LG launcher",
         "appDescription": "A native, quieter home screen for LG TVs: clock, weather, your calendar, the news and a row of apps over your wallpaper.",
         "iconUri": "https://raw.githubusercontent.com/fardroid/Simple-LG-launcher/main/assets/app/largeIcon.png",
         "sourceUrl": "https://github.com/fardroid/Simple-LG-launcher",
         "rootRequired": true,
-        "ipkUrl": "https://github.com/fardroid/Simple-LG-launcher/releases/download/v2.0.0/tld.my.simplelauncher_2.0.0_arm.ipk",
+        "ipkUrl": "https://github.com/fardroid/Simple-LG-launcher/releases/download/v2.0.1/tld.my.simplelauncher_2.0.1_arm.ipk",
         "ipkHash": {
-          "sha256": "58da4eb9989153afc7f10c886d6b93d3e982efa50133307f07d23abd8c876848"
+          "sha256": "221dbd791ef08486a270731f317b21931d20497eafe5c363e4f8f318827fd763"
         },
-        "ipkSize": 6297056
+        "ipkSize": 6296816
       }
     }
   ]
