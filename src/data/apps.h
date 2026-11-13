@@ -18,7 +18,8 @@ struct InputSource {
 	std::string appId;       // com.webos.app.hdmi1: launching it switches to the input
 	std::string label;
 	int port = 0;
-	bool connected = true;
+	bool connected = true;   // something is plugged in (the TV's own flag; true when it does not say)
+	std::string device;      // the name the device plugged in announces over HDMI, when the TV could be asked (root)
 	std::string icon;        // file name in icons/inputs/
 };
 

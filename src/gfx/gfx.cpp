@@ -291,6 +291,7 @@ void begin_frame (Color c, Target *t) {
 }
 
 void set_alpha (float a) { group_alpha = a; }
+float alpha_now () { return group_alpha; }
 void set_outer_alpha (float a) { outer_alpha = a; }
 float outer_alpha_now () { return outer_alpha; }
 

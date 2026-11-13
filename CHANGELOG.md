@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0
+
+- **Inputs show what is plugged in.** An HDMI input with nothing connected is drawn faded on the home row (it still opens). On a rooted TV with the older device service (Hearth used it on webOS 4) the name the connected device announces over HDMI shows as a second line under the input's name; webOS 25 has no such service (checked on a 43QNED84, webOS 10.3.2), so there the names stay off. The inputs are read again each time the launcher comes back to the front. Both ideas are Hearth's (its pull request 16 by Obednal97).
+- **Dim the picture** (Settings → Wallpaper → Brightness): Off, At night or Always, by 10 to 70%. At night it follows the sun over the weather's city, worked out on the TV, and darkens gradually over the dusk; with no city chosen, from 19:00 to 7:00. The frosted glass of the cards and their light-or-dark choice follow the dimmed picture. (Lumen has such a setting.)
+- **The weather tries three Open-Meteo hosts** and starts with the one that answered last: some networks block the address of `api.open-meteo.com` while the others stay reachable (Hearth 2.2.0, its pull request 51 by Maksim).
+- **The city list starts with your country.** The cities of the country set on the TV come first (Settings → General → Location; a Russian-speaking TV in Italy starts with Rome and Milan; the region of the TV's language when it does not say), then those of the countries of the launcher's language, then the others by country. 22 cities were added, so every one of the thirteen languages has cities of its own.
+- **A full TV storage no longer loses a setting silently.** When the settings cannot be written, the launcher removes the files it can make again (a downloaded update, the copies of the apps' icons, the saved weather, calendar, news and quote) and writes again; if that fails too, a message says the setting was not saved. The settings file is only ever replaced by a complete new one.
+- **The helpers no longer keep the Homebrew Channel's sockets.** A script started through its service inherits its open connections; the ones that stay running (the Home button helper, the webOS 26 watcher, the Home app's background steps) now close them first (Hearth 2.2.0, its pull request 54 by chriskoperdraad-tech). On a 43QNED84 a script started through the Homebrew Channel got 12 of its sockets and a background one kept 9; with the fix it keeps none.
+
 ## 2.0.1
 
 - **Settings: a change shown on the home screen.** When you change a setting that the home screen shows (icon size, theme, the clock, the weather unit and the like), the row now stays where it is and everything else on the Settings screen fades out, so the home screen shows through. A dark area round the row (solid for a margin, then fading out evenly) keeps it readable; on the right it runs on past the edge of the screen and spreads up and down along it. The bar that used to appear at the top is gone.

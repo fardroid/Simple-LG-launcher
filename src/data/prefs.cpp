@@ -71,6 +71,7 @@ std::string base_name (const std::string &path) {
 std::string labels_of (const UserConfig &c) { return !c.showLabels ? "none" : c.labelsSelectedOnly ? "selected" : "all"; }
 std::string labels_text (std::string v) { return v == "none" ? tr("None", "Нет") : v == "selected" ? tr("Selected only", "Только у выбранной") : tr("All", "У всех"); }
 std::string shift_text (std::string v) { return v == "on" ? tr("On", "Вкл.") : v == "off" ? tr("Off", "Выкл.") : tr("Auto", "Авто"); }
+std::string dim_text (std::string v) { return v == "night" ? tr("At night", "Ночью") : v == "always" ? tr("Always", "Всегда") : tr("Off", "Выкл."); }
 std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлые") : v == "dark" ? tr("Dark", "Тёмные") : tr("Auto", "Авто"); }
 std::string theme_text (std::string v) { const ThemeColors &t = theme_colors(v); return tr(t.en, t.ru); }
 std::vector<std::string> theme_list () {
@@ -193,6 +194,14 @@ std::vector<Pref> base_prefs () {
 			INTERVAL_VALUES, [] (const UserConfig &c) { return c.wallpaper.intervalSec; }, [] (UserConfig c, int v) { c.wallpaper.intervalSec = v; return c; }, interval_text)),
 		only(slideshow, toggle("shuffle", "wallpaper", tr("Shuffle", "Перемешивать"), tr("Random order. Off: in alphabetical order.", "Случайный порядок. Если выключено, по алфавиту."),
 			[] (const UserConfig &c) { return c.wallpaper.shuffle; }, [] (UserConfig c, bool v) { c.wallpaper.shuffle = v; return c; }))
+	}));
+	Get picture = [] (const UserConfig &c) { return c.wallpaper.mode != "gradient"; };
+	append(out, group(tr("Brightness", "Яркость"), {
+		only(picture, choice<std::string>("dim", "wallpaper", tr("Dim the picture", "Затемнять картинку"), tr("Darkens the wallpaper, so it is easier on the eyes and the text stands out. At night: from sunset to sunrise in the weather's city (it darkens gradually over the dusk); with no city chosen, from 19:00 to 7:00.", "Делает обои темнее: глазам спокойнее, текст заметнее. Ночью: от заката до рассвета в городе погоды (темнеет постепенно, пока идут сумерки); если город не выбран, с 19:00 до 7:00."),
+			SV{"off", "night", "always"}, [] (const UserConfig &c) { return c.wallpaper.dim; }, [] (UserConfig c, std::string v) { c.wallpaper.dim = v; return c; }, dim_text)),
+		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient" && c.wallpaper.dim != "off"; },
+			range("dimStrength", "wallpaper", tr("Dimming", "Затемнение"), tr("How much darker the picture gets.", "Насколько картинка становится темнее."),
+				ranges::dimStrength, [] (const UserConfig &c) { return c.wallpaper.dimStrength; }, [] (UserConfig c, int v) { c.wallpaper.dimStrength = v; return c; }, pct))
 	}));
 
 	// ----- Home screen -----

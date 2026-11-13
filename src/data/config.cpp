@@ -218,6 +218,9 @@ UserConfig parse_config (const std::string &raw) {
 	c.wallpaper.paths = mode == "pictures" ? paths : std::vector<std::string>();
 	c.wallpaper.intervalSec = interval;
 	c.wallpaper.shuffle = not_false(field(w, "shuffle"));
+	std::string dim = str(field(w, "dim"));
+	c.wallpaper.dim = dim == "night" || dim == "always" ? dim : "off";
+	c.wallpaper.dimStrength = ranged(field(w, "dimStrength"), ranges::dimStrength);
 	(void)one_of;
 	return c;
 }
@@ -243,7 +246,8 @@ std::string config_json (const UserConfig &c) {
 		{"news", {{"on", c.news.on}, {"google", c.news.google}, {"country", c.news.country}, {"feeds", c.news.feeds}}},
 		{"quote", {{"on", c.quote.on}}},
 		{"wallpaper", {{"mode", c.wallpaper.mode}, {"path", c.wallpaper.path}, {"paths", c.wallpaper.paths},
-			{"intervalSec", c.wallpaper.intervalSec}, {"shuffle", c.wallpaper.shuffle}}}
+			{"intervalSec", c.wallpaper.intervalSec}, {"shuffle", c.wallpaper.shuffle},
+			{"dim", c.wallpaper.dim}, {"dimStrength", c.wallpaper.dimStrength}}}
 	};
 	return j.dump();
 }

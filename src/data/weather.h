@@ -25,7 +25,13 @@ struct WeatherData {
 constexpr double WEATHER_FRESH_MS = 30 * 60 * 1000.0;
 constexpr double WEATHER_SHOWN_MS = 6 * 60 * 60 * 1000.0;
 
-std::string forecast_url (double lat, double lon);
+extern const std::vector<std::string> FORECAST_HOSTS;
+std::string forecast_url (double lat, double lon, int host = 0);
+/** The hosts' numbers in the order to try them: `first` (the one that answered last), then the rest. */
+std::vector<int> host_order (int first);
+/** The host that answered last (kept by the caller between starts). */
+int weather_host ();
+void set_weather_host (int i);
 std::string geocode_url (const std::string &query);
 std::optional<WeatherData> parse_weather (const std::string &json, double lat, double lon, double now);
 std::vector<City> parse_cities (const std::string &json);

@@ -13,6 +13,8 @@ struct TileModel {
 	std::string glyphPath;       // LG's grey line-art input icons, drawn smaller and lightened
 	std::string glyph;           // a built-in symbol: "house", "tv", "gear"
 	std::string color;           // the monogram's background when there is no artwork
+	bool dimmed = false;         // an input with nothing plugged in: drawn faded
+	std::string note;            // a second line under the name, in the muted colour (the device on an input)
 };
 
 /** The box at `frame` (radius `r`, grown by `s` from a tile of `ts` px) in colour `box` (a monogram's own colour wins), with what

@@ -6,6 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -58,8 +59,26 @@ std::string wind_text (double ms, const std::string &unit) {
 
 }  // namespace
 
-std::string forecast_url (double lat, double lon) {
-	return "https://api.open-meteo.com/v1/forecast?latitude=" + coord(lat) + "&longitude=" + coord(lon) +
+// Open-Meteo hosts that answer /v1/forecast alike (Hearth's list). The first is the official one; the others run on other
+// servers and are tried when it cannot be reached (some networks block its address while the rest of Open-Meteo stays reachable).
+const std::vector<std::string> FORECAST_HOSTS = {"api.open-meteo.com", "historical-forecast-api.open-meteo.com", "previous-runs-api.open-meteo.com"};
+
+static std::atomic<int> good_host{0};
+
+int weather_host () { return good_host; }
+void set_weather_host (int i) { good_host = i >= 0 && i < (int)FORECAST_HOSTS.size() ? i : 0; }
+
+std::vector<int> host_order (int first) {
+	int n = (int)FORECAST_HOSTS.size();
+	std::vector<int> out;
+	if (first >= 0 && first < n) out.push_back(first);
+	for (int i = 0; i < n; i++) if (i != first) out.push_back(i);
+	return out;
+}
+
+std::string forecast_url (double lat, double lon, int host) {
+	if (host < 0 || host >= (int)FORECAST_HOSTS.size()) host = 0;
+	return "https://" + FORECAST_HOSTS[host] + "/v1/forecast?latitude=" + coord(lat) + "&longitude=" + coord(lon) +
 		"&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m&hourly=temperature_2m,weather_code,is_day"
 		"&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=7&wind_speed_unit=ms&timezone=auto";
 }
@@ -234,11 +253,17 @@ std::optional<WeatherData> weather_from_json (const std::string &raw) {
 
 std::optional<WeatherData> fetch_weather (const City &city, std::string *why) {
 	if (!valid_coords(city.lat, city.lon)) { if (why) *why = "bad place"; return std::nullopt; }
-	HttpResult r = http_get(forecast_url(city.lat, city.lon), 15);
-	if (!r.ok) { if (why) *why = r.error; return std::nullopt; }
-	auto d = parse_weather(r.body, city.lat, city.lon, now_ms());
-	if (!d && why) *why = "unreadable reply";
-	return d;
+	// the host that answered last time first, then the others; the first failure is the one reported
+	std::string first_error;
+	for (int host : host_order(weather_host())) {
+		HttpResult r = http_get(forecast_url(city.lat, city.lon, host), first_error.empty() ? 15 : 10);
+		auto d = r.ok ? parse_weather(r.body, city.lat, city.lon, now_ms()) : std::nullopt;
+		if (d) { set_weather_host(host); return d; }
+		std::string error = FORECAST_HOSTS[host] + ": " + (r.ok ? "unreadable reply" : r.error);
+		if (first_error.empty()) first_error = error;
+	}
+	if (why) *why = first_error;
+	return std::nullopt;
 }
 
 std::vector<City> search_cities (const std::string &query, bool *ok) {

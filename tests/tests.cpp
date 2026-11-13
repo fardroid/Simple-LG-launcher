@@ -20,6 +20,10 @@
 #include "sys/fs.h"
 #include "sys/luna.h"
 #include "data/weather.h"
+#include "data/cities.h"
+#include "data/inputs.h"
+#include "data/storage.h"
+#include "data/sun.h"
 #include "i18n/i18n.h"
 #include "i18n/dates.h"
 #include "ui/boardlayout.h"
@@ -800,7 +804,66 @@ static void updates () {
 	}
 }
 
+// 2.1.0: the weather's hosts, the city list's order, the storage clean-up, the devices on the inputs, dimming at night
+static void v210 () {
+	eq(show(host_order(0)), std::string("[0,1,2]"), "weather hosts: the official one first");
+	eq(show(host_order(2)), std::string("[2,0,1]"), "weather hosts: the one that answered last first");
+	eq(show(host_order(9)), std::string("[0,1,2]"), "weather hosts: an unknown number is ignored");
+	eq(forecast_url(1.5, 2.5, 1).rfind("https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=1.500&longitude=2.500&", 0) == 0, true, "weather hosts: the same request on another host");
+	eq(forecast_url(1.5, 2.5).rfind("https://api.open-meteo.com/v1/forecast?", 0) == 0, true, "weather hosts: the official one by default");
+	set_weather_host(7);
+	eq(weather_host(), 0, "weather hosts: a number out of the list is the first");
+
+	set_lang("en");
+	eq(region_of("ru-RU") + "," + region_of("en_gb") + "," + region_of("zh-Hans-CN") + "," + region_of("de") + "," + region_of(""), std::string("RU,GB,CN,,"), "the region of a language tag");
+	auto names = [] (const std::vector<City> &list, size_t n) { std::string o; for (size_t i = 0; i < n && i < list.size(); i++) o += list[i].name + ","; return o; };
+	eq(names(preset_cities("AZ", "ru"), 5), std::string("Baku,Ganja,Sumgait,Moscow,Saint Petersburg,"), "cities: the TV's country, then the language's");
+	eq(names(preset_cities("IT", "ru"), 3), std::string("Rome,Milan,Moscow,"), "cities: a Russian TV in Italy starts with Italy");
+	eq(names(preset_cities("AT", "de"), 4), std::string("Vienna,Berlin,Munich,Hamburg,"), "cities: the TV's country before the language's other countries");
+	eq(names(preset_cities("US", "en"), 6), std::string("New York,Los Angeles,Chicago,London,Manchester,Toronto,"), "cities: English, the countries in their order");
+	eq(names(preset_cities("", "ja"), 2), std::string("Tokyo,Osaka,"), "cities: without a region, the language's own");
+	auto rest = preset_cities("", "ja");
+	eq(rest[2].detail + "," + rest[3].detail, std::string("Armenia,Austria"), "cities: the others by the name of their country");
+	eq((int)preset_cities("", "").size(), (int)preset_cities("RU", "ru").size(), "cities: the order never drops one");
+
+	std::string dir = "/tmp/launcher-storage-test";
+	system(("rm -rf " + dir + " && mkdir -p " + dir + "/icons").c_str());
+	for (const char *f : {"config.json", "update-2.1.0.ipk", "update-2.1.0.ipk.part", "news.json", "weather.json", "icons/a.png", "config.json.new", "weather-host"}) write_file(dir + "/" + f, "12345");
+	system(("rm -f " + dir + "/*.new.new " + dir + "/icons/*.new").c_str());
+	auto short_names = [&] (std::vector<std::string> v) { for (auto &s : v) s = s.substr(dir.size() + 1); return show(v); };
+	eq(short_names(rebuildable_files(dir, false)), std::string("[update-2.1.0.ipk,update-2.1.0.ipk.part,config.json.new,icons/a.png,news.json,weather.json]"), "storage: what the launcher can make again");
+	eq(short_names(rebuildable_files(dir, true)), std::string("[config.json.new,icons/a.png,news.json,weather.json]"), "storage: an update being installed is kept");
+	eq((int)clear_rebuildable(dir, false), 30, "storage: the bytes freed");
+	eq(file_exists(dir + "/config.json") && file_exists(dir + "/weather-host") && !file_exists(dir + "/news.json"), true, "storage: the settings stay");
+	eq(free_bytes(dir) > 0, true, "storage: free space is read");
+	system(("rm -rf " + dir).c_str());
+
+	auto dn = device_names(R"({"returnValue":true,"cec":{"cecDeviceList":[{"osdName":" Fire TV Stick ","portId":1},{"osdName":"PlayStation 5","physicalAddr":8192},{"osdName":"Second","portId":1},{"osdName":"","portId":3},{"portId":4}]}})");
+	eq((int)dn.size(), 2, "input devices: the named ones");
+	eq(dn[1] + "|" + dn[2], std::string("Fire TV Stick|PlayStation 5"), "input devices: by port id or physical address, the first on a port");
+	eq((int)device_names("** Message: something\n{\"returnValue\":false}").size() + (int)device_names("").size() + (int)device_names("{\"cec\":5}").size(), 0, "input devices: another reply gives none");
+
+	// 21 June 2026 12:00 UTC and 21 December 2026 00:00 UTC over Berlin; the equinox at noon on the equator
+	double june = 1782043200, december = 1797811200, equinox = 1773964800 + 12 * 3600;
+	eq(std::fabs(sun_elevation(june, 52.52, 13.405) - 58.9) < 1.5, true, "sun: high at a summer noon");
+	eq(sun_elevation(december, 52.52, 13.405) < -55, true, "sun: far under the horizon on a winter night");
+	eq(sun_elevation(equinox, 0, 0) > 87, true, "sun: overhead at the equator at the equinox");
+	eq(night_level(10) == 0 && night_level(-3) == 0.5 && night_level(-20) == 1, true, "night: from the horizon down to 6 degrees under it");
+	std::tm t{};
+	t.tm_hour = 18; double six = night_level_by_clock(t);
+	t.tm_hour = 19; double seven = night_level_by_clock(t);
+	t.tm_hour = 6; double morning = night_level_by_clock(t);
+	t.tm_hour = 7; double day = night_level_by_clock(t);
+	eq(six == 0 && seven == 1 && morning == 1 && day == 0, true, "night by the clock: 19:00 to 7:00");
+
+	UserConfig c = parse_config(R"({"wallpaper":{"mode":"image","path":"/a.jpg","dim":"night","dimStrength":57}})");
+	eq(c.wallpaper.dim + "|" + std::to_string(c.wallpaper.dimStrength), std::string("night|60"), "dimming is read, its strength on a step");
+	eq(parse_config(R"({"wallpaper":{"dim":"dusk"}})").wallpaper.dim + "|" + std::to_string(parse_config("{}").wallpaper.dimStrength), std::string("off|40"), "dimming: off and 40% by default");
+	eq(parse_config(config_json(c)).wallpaper.dim, std::string("night"), "dimming is saved");
+}
+
 int main () {
+	v210();
 	updates();
 	quick();
 	homemode();

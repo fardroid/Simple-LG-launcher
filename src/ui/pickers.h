@@ -22,6 +22,8 @@ public:
 	void open (Kind kind, const std::string &current, const std::vector<std::string> &list, bool can_read_files, double now);
 	/** The calendars or feeds changed while the sheet is open (it shows them). */
 	void set_list (const std::vector<std::string> &list) { list_ = list; }
+	/** The TV's country ("IT"): its cities come first in the city list. */
+	void set_tv_country (const std::string &country) { tv_country_ = country; }
 	Kind kind () const { return kind_; }
 	bool typing () const { return typing_; }
 
@@ -52,6 +54,7 @@ private:
 	Kind kind_ = Kind::none;
 	std::string theme_ = "dusk";
 	std::string current_;
+	std::string tv_country_;
 	std::vector<std::string> list_;
 	bool can_read_ = false;
 	int index_ = 0;

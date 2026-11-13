@@ -38,6 +38,19 @@ AM=luna://com.webos.applicationManager
 EVERY=5
 
 log () { echo "$(date '+%H:%M:%S') access: $*" | tee -a "$LOG"; }
+# A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
+# stays running keeps them open, which can hold that service up (Hearth 2.2.0, its pull request 54). fdclean closes every
+# descriptor above 2 in the shell that runs it: called in the ( ... ) that starts a background script, just before it.
+# A shell that cannot name a two-digit descriptor (dash) closes 3 to 9 only.
+fdclean () {
+	_w=0; ( eval "exec 10>&-" ) 2>/dev/null && _w=1
+	for _f in /proc/self/fd/*; do
+		_n=${_f##*/}
+		case "$_n" in ''|*[!0-9]*|0|1|2) continue ;; esac
+		[ "${#_n}" -gt 1 ] && [ "$_w" = 0 ] && continue
+		eval "exec $_n>&-" 2>/dev/null
+	done
+}
 
 # webOS 26 and newer (internal release 11 and up)
 needed () {
@@ -110,7 +123,7 @@ case "$1" in
 		fix && restart
 		# a watcher that is already running has the old copy of this script: start it again
 		if watching; then kill "$(cat "$PID")" 2>/dev/null; rm -f "$PID"; fi
-		( setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
+		( fdclean; setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
 		echo "installed: the launcher keeps its access to the Homebrew Channel, also after updates"
 		;;
 	remove)
@@ -131,7 +144,7 @@ case "$1" in
 		# the startup folder runs its scripts without arguments: start the watcher, never hold up the TV's start
 		case "$0" in */init.d/*) ;; *) echo "usage: sh $0 install|remove|status"; exit 0 ;; esac
 		needed || exit 0
-		watching || ( setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
+		watching || ( fdclean; setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
 		;;
 	watch)
 		watch
