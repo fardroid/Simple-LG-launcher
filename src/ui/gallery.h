@@ -4,6 +4,7 @@
 // (one picture, or a slideshow of them). The default background and a folder's slideshow are chosen at once.
 #pragma once
 
+#include "data/collection_store.h"
 #include "data/gallery.h"
 #include "gfx/gfx.h"
 #include "ui/anim.h"
@@ -28,6 +29,8 @@ public:
 	/** `chosen`: the pictures chosen now (one picture, or the ticked ones), ticked when it opens. */
 	void open (const std::vector<std::string> &chosen, double now);
 	void set_theme (const std::string &theme) { theme_ = theme; }
+	/** The wallpaper collection's list and downloads (the launcher's, so that they go on after the gallery closes). */
+	void set_store (CollectionStore *store) { store_ = store; data_dir_ = store->data_dir(); }
 	bool key_down (int scancode, double now);
 	bool animating (double now) const;
 	void draw (double now);
@@ -35,7 +38,7 @@ public:
 	void release ();
 
 private:
-	struct Row { std::string key, kind, label, detail, path; };    // kind: gradient root folder picture slideshow info retry
+	struct Row { std::string key, kind, label, detail, path; };    // kind: gradient collection root folder picture cphoto callgroup slideshow info retry
 
 	std::vector<Row> rows () const;
 	void load (int attempt);
@@ -44,6 +47,11 @@ private:
 	void leave ();
 	void activate (int i);
 	void next_thumb ();
+	// the collection: path_ is "collection:" for its groups and "collection:<group>" for a group's photos
+	bool in_collection () const { return path_.rfind("collection:", 0) == 0; }
+	const CollectionPhoto *photo (const std::string &id) const;
+	void sync_ticks ();
+	void make_stack (const std::string &path);
 
 	std::string theme_ = "dusk";
 	std::vector<std::string> chosen_, ticked_;
@@ -60,5 +68,9 @@ private:
 	// the previews: made one at a time, the nearest to the highlight first
 	std::map<std::string, TexturePtr> thumbs_;
 	std::set<std::string> no_thumb_;
+	std::map<std::string, std::vector<TexturePtr>> stacks_;    // a folder's first pictures (empty: none), by its path
 	bool thumb_busy_ = false;
+	// the collection (its list and downloads are the store's)
+	CollectionStore *store_ = nullptr;
+	std::string data_dir_;
 };

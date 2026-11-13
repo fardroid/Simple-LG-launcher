@@ -20,9 +20,12 @@ std::vector<std::string> rebuildable_files (const std::string &data_dir, bool ke
 	// a write that was cut short
 	for (auto &e : entries)
 		if (!e.dir && e.name.size() > 4 && e.name.compare(e.name.size() - 4, 4, ".new") == 0) out.push_back(join_path(data_dir, e.name));
-	std::string icons = join_path(data_dir, "icons");
-	for (auto &e : list_dir(icons))
-		if (!e.dir) out.push_back(join_path(icons, e.name));
+	// the copies of the apps' icons and the previews of the wallpaper collection
+	for (const char *folder : {"icons", "collection-thumbs"}) {
+		std::string dir = join_path(data_dir, folder);
+		for (auto &e : list_dir(dir))
+			if (!e.dir) out.push_back(join_path(dir, e.name));
+	}
 	for (const char *name : {"news.json", "quote-authors.json", "calendar.json", "apps.json", "weather.json", "quote.json"})
 		if (file_exists(join_path(data_dir, name))) out.push_back(join_path(data_dir, name));
 	return out;

@@ -91,7 +91,7 @@ install: package
 	sh scripts/install.sh
 
 # ---- tests on this computer: the pure logic only ----
-TEST_SRCS := src/data/rows.cpp src/data/order.cpp src/data/config.cpp src/data/prefs.cpp src/data/gallery.cpp src/data/homemode.cpp src/data/quick.cpp src/data/uninstall.cpp src/ui/boardlayout.cpp src/ui/plates.cpp src/i18n/dates.cpp src/i18n/i18n.cpp src/data/weather.cpp src/data/ics.cpp src/data/tz.cpp src/data/calendar.cpp src/data/htmltext.cpp src/data/feeds.cpp src/data/quote.cpp src/core/unicode.cpp src/core/sha256.cpp src/data/update.cpp src/data/storage.cpp src/data/cities.cpp src/data/inputs.cpp src/data/sun.cpp src/sys/http.cpp src/sys/fs.cpp src/core/log.cpp tests/stubs.cpp tests/tests.cpp
+TEST_SRCS := src/data/rows.cpp src/data/order.cpp src/data/config.cpp src/data/prefs.cpp src/data/gallery.cpp src/data/homemode.cpp src/data/quick.cpp src/data/uninstall.cpp src/ui/boardlayout.cpp src/ui/plates.cpp src/i18n/dates.cpp src/i18n/i18n.cpp src/data/weather.cpp src/data/ics.cpp src/data/tz.cpp src/data/calendar.cpp src/data/htmltext.cpp src/data/feeds.cpp src/data/quote.cpp src/core/unicode.cpp src/core/sha256.cpp src/data/update.cpp src/data/storage.cpp src/data/cities.cpp src/data/inputs.cpp src/data/sun.cpp src/data/collection.cpp src/data/collection_store.cpp src/sys/http.cpp src/sys/fs.cpp src/core/log.cpp tests/stubs.cpp tests/tests.cpp
 build/tests: $(TEST_SRCS) $(shell find src tests -name '*.h') src/i18n/dates.inc src/i18n/locales.inc src/data/editions.inc
 	@mkdir -p build
 	c++ -std=c++17 -O1 -Wall -Isrc -Ithird_party -o $@ $(TEST_SRCS) -lcurl -liconv

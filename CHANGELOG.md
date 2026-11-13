@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0
+
+- **A wallpaper collection** (Settings → Wallpaper → Picture → *Collection*): 84 photos of mountains, nature and space from Wikimedia Commons's featured pictures, all under open licences (public domain, CC0, CC BY, CC BY-SA), cropped to 1920×1080, and as a fourth group the thirteen abstract pictures of the `wallpapers` folder, which until now had to be copied to the TV by hand. They are not in the package: they are files of a GitHub release, listed in `repo/wallpapers.json` with each one's SHA-256. A ticked picture downloads in the background, one after another, and goes on after the gallery closes (and after a restart): tick, leave, and the slideshow takes in each picture as it comes. *Choose all*, the first tile of each group, ticks the whole group (OK on it again clears it), and ticks in several groups make one slideshow. Each download is checked against its sum; one that fails is tried again 10 minutes later, and a full storage says so once; the previews (384×216) are downloaded as you look and count as files the launcher can make again when the storage is full. Leaving the gallery deletes the collection's photos that are not part of the wallpaper, so nothing piles up on the TV. Each tile shows the photo's author and licence; the credits are in THIRD_PARTY_NOTICES.md.
+- **Folders in the gallery show their pictures**: a folder, the collection and each of its groups are drawn as a stack of their first three pictures instead of a grey folder; a folder with no pictures keeps its sign.
+- For tests, the launch parameter `{"open":"keys:R,R,OK,BACK"}` presses keys of the remote on the screen that is open, and a `collection-feed` file in the data folder names another list of photos (https or file://).
+
 ## 2.1.0
 
 - **Inputs show what is plugged in.** An HDMI input with nothing connected is drawn faded on the home row (it still opens). On a rooted TV with the older device service (Hearth used it on webOS 4) the name the connected device announces over HDMI shows as a second line under the input's name; webOS 25 has no such service (checked on a 43QNED84, webOS 10.3.2), so there the names stay off. The inputs are read again each time the launcher comes back to the front. Both ideas are Hearth's (its pull request 16 by Obednal97).

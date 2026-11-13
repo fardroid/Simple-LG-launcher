@@ -23,6 +23,10 @@
 #include "data/cities.h"
 #include "data/inputs.h"
 #include "data/storage.h"
+#include "data/collection.h"
+#include "data/collection_store.h"
+#include "core/sha256.h"
+void run_posted ();
 #include "data/sun.h"
 #include "i18n/i18n.h"
 #include "i18n/dates.h"
@@ -862,8 +866,69 @@ static void v210 () {
 	eq(parse_config(config_json(c)).wallpaper.dim, std::string("night"), "dimming is saved");
 }
 
+void collection () {
+	std::string h64(64, 'a');
+	auto photo = [&] (const std::string &id, const std::string &group, const std::string &url, const std::string &sum) {
+		return "{\"id\":\"" + id + "\",\"group\":\"" + group + "\",\"title\":\"T " + id + "\",\"author\":\"A\",\"licence\":\"CC BY 4.0\",\"url\":\"" + url +
+			"\",\"sha256\":\"" + sum + "\",\"thumb\":\"https://x/t.jpg\",\"thumbSha256\":\"" + h64 + "\",\"size\":700000}";
+	};
+	std::string list = "{\"version\":1,\"photos\":[" + photo("m1", "mountains", "https://x/m1.jpg", h64) + "," + photo("n1", "nature", "http://x/n1.jpg", h64) + "," +
+		photo("s1", "space", "https://x/s1.jpg", "abc") + "," + photo("../x", "space", "https://x/x.jpg", h64) + "," + photo("c1", "cities", "https://x/c1.jpg", h64) + "," +
+		photo("m1", "mountains", "https://x/again.jpg", h64) + "," + photo("s2", "space", "file:///tmp/s2.jpg", h64) + "," +
+		photo("s3", "space", "http://127.0.0.1:8765/s3.jpg", h64) + "," + photo("s4", "space", "http://example.com/s4.jpg", h64) + "]}";
+	auto ids = [] (const std::vector<CollectionPhoto> &v) { std::string o; for (auto &p : v) o += p.id + ","; return o; };
+	eq(ids(parse_collection(list)), std::string("m1,"), "collection: only photos that can be checked, once each, in a known group");
+	eq(ids(parse_collection(list, true)), std::string("m1,s2,s3,"), "collection: a test list may name files or a server on the TV, nothing else without https");
+	auto c = parse_collection(list);
+	eq(c[0].title + "|" + c[0].licence + "|" + std::to_string(c[0].size), std::string("T m1|CC BY 4.0|700000"), "collection: the photo's details");
+	eq((int)parse_collection("").size() + (int)parse_collection("{\"photos\":5}").size(), 0, "collection: a broken list gives none");
+
+	std::string dir = "/tmp/launcher-collection-test";
+	system(("rm -rf " + dir + " && mkdir -p " + dir + "/collection " + dir + "/collection-thumbs").c_str());
+	for (const char *f : {"collection/m1.jpg", "collection/n1.jpg", "collection/s1.jpg.part", "collection-thumbs/m1.jpg", "config.json"}) write_file(dir + "/" + f, "12345");
+	auto unused = unused_collection_files(dir, {collection_file(dir, "m1")});
+	std::sort(unused.begin(), unused.end());
+	for (auto &u : unused) u = u.substr(dir.size() + 1);
+	eq(show(unused), std::string("[collection/n1.jpg,collection/s1.jpg.part]"), "collection: what is not the wallpaper goes");
+	auto rb = rebuildable_files(dir, false);
+	eq(std::find(rb.begin(), rb.end(), dir + "/collection-thumbs/m1.jpg") != rb.end() && std::find(rb.begin(), rb.end(), dir + "/collection/m1.jpg") == rb.end(), true,
+		"storage: the previews of the collection can be made again, its photos in use are kept");
+	system(("rm -rf " + dir).c_str());
+
+	// the store: wanted pictures download in the background (here, from files), the unwanted are deleted when asked
+	std::string data = "/tmp/launcher-store-test", src = "/tmp/launcher-store-src";
+	system(("rm -rf " + data + " " + src + " && mkdir -p " + data + " " + src).c_str());
+	write_file(src + "/a.jpg", "picture a");
+	write_file(src + "/b.jpg", "picture b");
+	auto entry = [&] (const std::string &id) {
+		return "{\"id\":\"" + id + "\",\"group\":\"space\",\"url\":\"file://" + src + "/" + id + ".jpg\",\"sha256\":\"" + sha256_file(src + "/" + id + ".jpg") +
+			"\",\"thumb\":\"file://" + src + "/" + id + ".jpg\",\"thumbSha256\":\"" + h64 + "\",\"size\":9}";
+	};
+	write_file(data + "/list.json", "{\"photos\":[" + entry("a") + "," + entry("b") + "]}");
+	write_file(data + "/collection-feed", "file://" + data + "/list.json\n");
+	make_dirs(collection_dir(data));
+	write_file(collection_file(data, "old"), "an old one");
+	CollectionStore store;
+	store.set_data_dir(data);
+	std::vector<std::string> arrived;
+	store.on_arrived = [&] (const std::string &path) { arrived.push_back(base_name(path)); };
+	store.set_wanted({collection_file(data, "a")});
+	store.set_ticked({collection_file(data, "b")});
+	eq(store.missing(), 2, "store: two wanted, none on the TV");
+	for (int i = 0; i < 5; i++) run_posted();
+	eq(show(arrived), std::string("[b.jpg,a.jpg]"), "store: the list is read, then the gallery's ticks come first, one at a time");
+	eq(store.missing() == 0 && file_exists(collection_file(data, "a")) && store.state("a") == CollectionStore::State::none, true, "store: all on the TV");
+	store.set_ticked({});
+	store.prune();
+	run_posted();
+	eq(!file_exists(collection_file(data, "b")) && !file_exists(collection_file(data, "old")) && file_exists(collection_file(data, "a")), true,
+		"store: what is not wanted is deleted, the wallpaper's picture stays");
+	system(("rm -rf " + data + " " + src).c_str());
+}
+
 int main () {
 	v210();
+	collection();
 	updates();
 	quick();
 	homemode();
