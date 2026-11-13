@@ -14,6 +14,8 @@
 #include "data/quick.h"
 #include "data/uninstall.h"
 #include "data/storage.h"
+#include "data/collection.h"
+#include "data/collection_store.h"
 #include "data/sun.h"
 #include "data/update.h"
 #include "data/weather.h"
@@ -103,6 +105,7 @@ struct App {
 	Settings settings;
 	Picker picker;
 	Gallery gallery;
+	CollectionStore collection;      // the wallpaper collection: its list and its downloads, which go on in the background
 	AppMenu menu;                    // over the home screen: OK held on a tile
 	QuickPanel quick;                // over the home screen: Down from the row
 	std::string menu_key;            // the tile it is for
@@ -257,6 +260,17 @@ void apply_dim () {
 	app.dirty = true;
 }
 
+/** The collection's pictures the wallpaper shows are wanted: the ones not on the TV are downloaded in the background (also after
+ *  a restart), and, with `prune`, the ones it no longer shows are deleted. A slideshow of the collection's folder keeps them all. */
+void sync_collection (bool prune) {
+	const WallpaperConfig &w = app.cfg.wallpaper;
+	std::vector<std::string> wanted;
+	if (w.mode == "image") wanted.push_back(w.path);
+	if (w.mode == "pictures") wanted = w.paths;
+	app.collection.set_wanted(wanted);
+	if (prune && !(w.mode == "folder" && w.path == collection_dir(DATA_DIR))) app.collection.prune();
+}
+
 void load_config () {
 	std::string raw;
 	if (read_file(join_path(DATA_DIR, "config.json"), raw)) logf("config: own");
@@ -270,6 +284,7 @@ void load_config () {
 	app.wallpaper.configure(app.cfg.wallpaper, app.cfg.theme, app.cfg.frost);
 	apply_dim();
 	apply_lang();
+	sync_collection(true);
 }
 
 // The names the devices on the HDMI inputs announce (HDMI-CEC). The TV's list of them is not open to apps: it is asked through the
@@ -866,6 +881,7 @@ void update_config (const UserConfig &next) {
 	const auto &a = old.wallpaper, &b = next.wallpaper;
 	if (a.mode != b.mode || a.path != b.path || a.paths != b.paths || a.intervalSec != b.intervalSec || a.shuffle != b.shuffle || old.theme != next.theme || old.frost != next.frost)
 		app.wallpaper.configure(next.wallpaper, next.theme, next.frost);
+	if (a.mode != b.mode || a.path != b.path || a.paths != b.paths) sync_collection(app.screen != App::Screen::gallery);
 	apply_dim();
 	if (old.language != next.language || old.clockFormat != next.clockFormat) apply_lang();
 	if (old.checkUpdates != next.checkUpdates) {
@@ -1056,7 +1072,8 @@ void setup_settings () {
 // ---------- the wallpaper gallery and the menu of a tile (app.tsx onChooseWallpaper, moveTile, hideTile, removeApp) ----------
 
 void setup_gallery_and_menu () {
-	app.gallery.on_close = [] { app.gallery.release(); app.screen = App::Screen::settings; refresh_settings(); };
+	app.gallery.set_store(&app.collection);
+	app.gallery.on_close = [] { app.gallery.release(); app.screen = App::Screen::settings; refresh_settings(); sync_collection(true); };
 	app.gallery.on_choose = [] (const WallpaperChoice &choice) {
 		WallpaperConfig w = app.cfg.wallpaper;        // the interval and the shuffle stay
 		if (choice.mode == "gradient") { w.mode = "gradient"; w.path.clear(); w.paths.clear(); }
@@ -1069,7 +1086,12 @@ void setup_gallery_and_menu () {
 		app.gallery.release();
 		app.screen = App::Screen::settings;
 		refresh_settings();
-		app.toast.show(choice.mode == "gradient" ? tr("Default background restored", "Фон по умолчанию восстановлен") : w.mode == "image" ? tr("Loading the wallpaper…", "Загружаем обои…") : tr("Starting the slideshow…", "Запускаем слайд-шоу…"), false, now_ms());
+		sync_collection(true);
+		int coming = app.collection.missing();
+		if (coming > 0)
+			app.toast.show(fmt(tr("The wallpaper downloads in the background: {0}", "Обои скачиваются в фоне: {0}"),
+				count(coming, "picture", "pictures", "картинка", "картинки", "картинок")), false, now_ms());
+		else app.toast.show(choice.mode == "gradient" ? tr("Default background restored", "Фон по умолчанию восстановлен") : w.mode == "image" ? tr("Loading the wallpaper…", "Загружаем обои…") : tr("Starting the slideshow…", "Запускаем слайд-шоу…"), false, now_ms());
 	};
 	// OK held on a tile: it is lifted to be moved, with buttons over it to hide it and (an app that can be removed) uninstall it
 	app.home.on_long_press = [] (const TileModel &t) {
@@ -1350,8 +1372,26 @@ void on_activate (const TileModel &t) {
 /** For screenshots and tests with no remote, from the launch's (or a relaunch's) parameters: {"open":"settings:3"} opens
  *  Settings in its fourth section, in the list; "settings:3:nav" leaves the focus on the sections; "city" (country, calendars,
  *  feeds) a sheet; "gallery" the wallpaper gallery; "update" what the Update tile does (Settings on the update row, and on to
- *  the download), "update:install" that and Install answered by itself. */
+ *  the download), "update:install" that and Install answered by itself; "keys:R,R,OK,BACK" presses keys of the remote on the screen
+ *  that is open (L R U D OK BACK), as the remote would. */
 void test_open (const std::string &what) {
+	if (what.rfind("keys:", 0) == 0) {
+		std::string list = what.substr(5) + ",";
+		for (size_t at = 0, comma; (comma = list.find(',', at)) != std::string::npos; at = comma + 1) {
+			std::string k = list.substr(at, comma - at);
+			SDL_Scancode sc = k == "L" ? SDL_SCANCODE_LEFT : k == "R" ? SDL_SCANCODE_RIGHT : k == "U" ? SDL_SCANCODE_UP : k == "D" ? SDL_SCANCODE_DOWN
+				: k == "OK" ? SDL_SCANCODE_RETURN : k == "BACK" ? SDL_SCANCODE_ESCAPE : SDL_SCANCODE_UNKNOWN;
+			if (sc == SDL_SCANCODE_UNKNOWN) continue;
+			for (Uint32 type : {SDL_KEYDOWN, SDL_KEYUP}) {
+				SDL_Event e{};
+				e.type = type;
+				e.key.keysym.scancode = sc;
+				e.key.state = type == SDL_KEYDOWN ? SDL_PRESSED : SDL_RELEASED;
+				SDL_PushEvent(&e);
+			}
+		}
+		return;
+	}
 	if (what.rfind("update", 0) == 0) {
 		test_install = what == "update:install";
 		open_settings();
@@ -1387,7 +1427,9 @@ void lifecycle (const std::string &msg) {
 		// that ourselves, to get the parameters), and a reading that got old is fetched again
 		SDL_ShowWindow(app.win);
 		SDL_RaiseWindow(app.win);
-		close_screens();
+		// keys for a test go to the screen that is open
+		bool keys = j["parameters"].is_object() && j["parameters"].value("open", std::string()).rfind("keys:", 0) == 0;
+		if (!keys) close_screens();
 		app.home.wake();
 		app.weather_next = std::min(app.weather_next, now_ms());
 		app.cal_next = std::min(app.cal_next, now_ms());
@@ -1532,6 +1574,14 @@ int main (int argc, char **argv) {
 	http_init();
 	// the cards are kept as a picture: new glass (Frost changed) draws them again, or they would show the step before
 	app.wallpaper.on_glass = [] { app.home.mark_board(); app.dirty = true; };
+	// the collection is set up before the settings are read: they say which of its pictures to download (what a restart left)
+	app.collection.set_data_dir(DATA_DIR);
+	// a picture of the collection came: the wallpaper takes it in (a slideshow grows as they come)
+	app.collection.on_arrived = [] (const std::string &) { app.wallpaper.files_changed(); app.dirty = true; };
+	app.collection.on_no_room = [] {
+		app.toast.show(tr("Not enough room on the TV for the wallpaper collection", "На ТВ не хватает места для обоев из коллекции"), true, now_ms());
+		app.dirty = true;
+	};
 	load_config();
 	forget_splash();
 	load_weather();
@@ -1624,7 +1674,7 @@ int main (int argc, char **argv) {
 		std::time_t tt = std::time(nullptr);
 		std::tm lt;
 		localtime_r(&tt, &lt);
-		if (lt.tm_min != app.last_minute) { app.last_minute = lt.tm_min; app.dirty = true; app.home.mark_board(); apply_dim(); }
+		if (lt.tm_min != app.last_minute) { app.last_minute = lt.tm_min; app.dirty = true; app.home.mark_board(); apply_dim(); app.collection.tick(); }
 		weather_tick(now);
 		calendar_tick(now);
 		news_tick(now);

@@ -22,6 +22,9 @@ public:
 	std::function<void()> on_glass;
 	/** `frost`: % of the glass's full blur (Settings → Frost). */
 	void configure (const WallpaperConfig &c, const std::string &theme, int frost);
+	/** Pictures it shows came onto the TV (the wallpaper collection downloads them in the background): a picture not shown yet
+	 *  is shown, and a slideshow takes the new ones in. */
+	void files_changed ();
 	/** Moves the slideshow on when its time came. Returns true while something on it is changing (a fade). */
 	bool update (double now);
 	void draw (double now);
@@ -55,7 +58,7 @@ private:
 	std::string theme_ = "dusk", key_;
 	Layer cur_, prev_;
 	std::vector<std::string> files_, deck_;
-	std::string last_;
+	std::string last_, shown_;       // the picture asked for last, and the one on screen
 	double next_at_ = -1, paused_at_ = -1;
 	int generation_ = 0, frost_ = 100, frost_seq_ = 0;
 	void remake_glass ();

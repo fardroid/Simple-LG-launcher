@@ -46,5 +46,7 @@
 	"q-sound": "<g stroke-width=\"1.9\"><path d=\"M4 9.5h3.5L12 5.5v13l-4.5-4H4z\"/><path d=\"M15.5 9a4 4 0 0 1 0 6M18.3 6.5a7.5 7.5 0 0 1 0 11\"/></g>",
 	"q-energy": "<g stroke-width=\"1.9\"><path d=\"M5 19c0-8 5-13 14-14-1 9-6 14-14 14z\"/><path d=\"M5 19l7-7\"/></g>",
 	"q-screenoff": "<g stroke-width=\"1.9\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8.5 20h7M12 16v4M3 3l18 18\"/></g>",
-	"q-network": "<g stroke-width=\"1.9\"><path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.4a5 5 0 0 1 6.8 0\"/><circle cx=\"12\" cy=\"18.6\" r=\".9\"/></g>"
+	"q-network": "<g stroke-width=\"1.9\"><path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.4a5 5 0 0 1 6.8 0\"/><circle cx=\"12\" cy=\"18.6\" r=\".9\"/></g>",
+	"download": "<path stroke-width=\"2.6\" d=\"M12 5v10.5M7.5 11l4.5 4.5 4.5-4.5M6 19.5h12\" />",
+	"collection": "<><path d=\"M3 18.5l5.5-8 4 5.5 2.5-3 6 5.5z\" /><circle cx=\"17\" cy=\"6.5\" r=\"1.8\" /></>"
 }

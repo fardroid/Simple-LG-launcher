@@ -146,12 +146,36 @@ void Wallpaper::configure (const WallpaperConfig &c, const std::string &theme, i
 				if (size > 0 && size <= MAX_BYTES) files.push_back(f);
 				if (files.size() >= MAX_FILES) break;
 			}
-		} else files = cfg.paths;
+		} else
+			// the ticked ones that are on the TV (the collection's come later, in the background: files_changed())
+			for (auto &f : cfg.paths) if (file_exists(f)) files.push_back(f);
 		post_main([this, gen, files] {
 			if (gen != generation_) return;
 			files_ = files;
 			logf("wallpaper: %zu pictures", files_.size());
 			advance(now_ms());
+		});
+	});
+}
+
+void Wallpaper::files_changed () {
+	if (cfg_.mode == "image") { if (shown_ != cfg_.path) load(cfg_.path); return; }
+	if (cfg_.mode != "pictures") return;
+	int gen = generation_;
+	std::vector<std::string> paths = cfg_.paths;
+	run_background([this, gen, paths] {
+		std::vector<std::string> files;
+		for (auto &f : paths) if (file_exists(f)) files.push_back(f);
+		post_main([this, gen, files] {
+			if (gen != generation_) return;
+			// the new ones join the shuffled deck too, so they come before the others come again
+			for (auto &f : files)
+				if (std::find(files_.begin(), files_.end(), f) == files_.end() && cfg_.shuffle) deck_.insert(deck_.begin() + rng()() % (deck_.size() + 1), f);
+			bool first = files_.empty();
+			if (files.size() != files_.size()) logf("wallpaper: %zu pictures now", files.size());
+			files_ = files;
+			if (first) advance(now_ms());
+			else if (files_.size() > 1 && next_at_ < 0) next_at_ = now_ms() + cfg_.intervalSec * 1000.0;
 		});
 	});
 }
@@ -203,6 +227,7 @@ void Wallpaper::load (const std::string &path) {
 			loading_ = false;
 			if (!fitted) { logf("wallpaper %s: %s", path.c_str(), why.c_str()); return; }
 			logf("wallpaper: %s", path.c_str());
+			shown_ = path;
 			prev_ = cur_;
 			cur_.tex = make_texture(*fitted);
 			cur_.small = small;
