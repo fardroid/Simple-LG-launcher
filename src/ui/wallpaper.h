@@ -40,6 +40,10 @@ public:
 	double shown_at () const { return cur_.shown_at; }
 	/** Drawn as if the change were over (the screen then cross-fades whole pictures of the board instead). */
 	void set_settled (bool s) { settled_ = s; }
+	/** How much darker the picture is drawn (0: as it is, 0.4: 40% darker); the gradient of a theme is never dimmed. True when
+	 *  it changed. The glass of the cards and their light-or-dark choice follow it (dim()). */
+	bool set_dim (float d) { if (d == dim_) return false; dim_ = d; return true; }
+	float dim () const { return cur_.tex || prev_.tex ? dim_ : 0; }
 
 private:
 	struct Layer { TexturePtr tex; Glass glass; std::shared_ptr<Pixels> small; double shown_at = -1e9; };
@@ -64,4 +68,5 @@ private:
 	void own_cache ();
 	void make_ahead (int frost);
 	bool loading_ = false, settled_ = false;
+	float dim_ = 0;
 };

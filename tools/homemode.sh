@@ -27,6 +27,19 @@ LOG=/tmp/launcher-homehook.log
 AM=luna://com.webos.service.applicationmanager
 
 log () { echo "$(date '+%H:%M:%S') homemode: $*" >> "$LOG"; }
+# A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
+# stays running keeps them open, which can hold that service up (Hearth 2.2.0, its pull request 54). fdclean closes every
+# descriptor above 2 in the shell that runs it: called in the ( ... ) that starts a background script, just before it.
+# A shell that cannot name a two-digit descriptor (dash) closes 3 to 9 only.
+fdclean () {
+	_w=0; ( eval "exec 10>&-" ) 2>/dev/null && _w=1
+	for _f in /proc/self/fd/*; do
+		_n=${_f##*/}
+		case "$_n" in ''|*[!0-9]*|0|1|2) continue ;; esac
+		[ "${#_n}" -gt 1 ] && [ "$_w" = 0 ] && continue
+		eval "exec $_n>&-" 2>/dev/null
+	done
+}
 
 helper_on () {
 	[ -L "$HOOK_LINK" ] && return 0
@@ -117,7 +130,7 @@ case "$1" in
 		if [ -f "$LOCK" ] && [ $(( $(date +%s) - $(cat "$LOCK" 2>/dev/null || echo 0) )) -lt 120 ]; then echo "busy"; exit 0; fi
 		date +%s > "$LOCK"
 		rm -f "$RESULT"
-		( set_mode "$2" > "$RESULT.new" 2>&1; tail -n 1 "$RESULT.new" > "$RESULT"; rm -f "$RESULT.new" "$LOCK"; log "result: $(cat "$RESULT")" ) </dev/null >/dev/null 2>&1 &
+		( fdclean; set_mode "$2" > "$RESULT.new" 2>&1; tail -n 1 "$RESULT.new" > "$RESULT"; rm -f "$RESULT.new" "$LOCK"; log "result: $(cat "$RESULT")" ) </dev/null >/dev/null 2>&1 &
 		echo started
 		;;
 	*) echo "usage: sh $0 status | set <none|default|mount> | run <none|default|mount>"; exit 1 ;;

@@ -16,6 +16,7 @@ constexpr Range clockOpacity{10, 100, 10, 100};
 constexpr Range dateSize{60, 160, 5, 100};
 constexpr Range cardSize{60, 160, 5, 100};
 constexpr Range frost{30, 100, 10, 100};
+constexpr Range dimStrength{10, 70, 10, 40};
 }  // namespace ranges
 
 struct City {
@@ -46,6 +47,8 @@ struct WallpaperConfig {
 	std::vector<std::string> paths;
 	int intervalSec = 60;
 	bool shuffle = true;
+	std::string dim = "off";         // off night always: the picture darkened (Settings → Wallpaper → Dim the picture)
+	int dimStrength = ranges::dimStrength.def;      // by how much, %
 };
 
 struct UserConfig {

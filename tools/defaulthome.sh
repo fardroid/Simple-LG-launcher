@@ -53,6 +53,19 @@ LOCK=/tmp/launcher-keepalive.lock
 FRONT_PID=/tmp/launcher-keep-front.pid
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
+# A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
+# stays running keeps them open, which can hold that service up (Hearth 2.2.0, its pull request 54). fdclean closes every
+# descriptor above 2 in the shell that runs it: called in the ( ... ) that starts a background script, just before it.
+# A shell that cannot name a two-digit descriptor (dash) closes 3 to 9 only.
+fdclean () {
+	_w=0; ( eval "exec 10>&-" ) 2>/dev/null && _w=1
+	for _f in /proc/self/fd/*; do
+		_n=${_f##*/}
+		case "$_n" in ''|*[!0-9]*|0|1|2) continue ;; esac
+		[ "${#_n}" -gt 1 ] && [ "$_w" = 0 ] && continue
+		eval "exec $_n>&-" 2>/dev/null
+	done
+}
 
 defaults () { luna-send -n 1 "$SETTINGS/getSystemSettings" '{"category":"general","keys":["defaultApps"]}' 2>/dev/null; }
 
@@ -169,7 +182,7 @@ keepalive_apply () {
 	# still answers that with LG Home. A restarted SAM brings LG Home up a few seconds later, so for 15 s the launcher is put
 	# back in front of it: in the background, so that switching to this way in Settings is done without waiting for it.
 	luna-send -n 1 "$AM/launch" "{\"id\":\"$APP_ID\"}" >/dev/null 2>&1
-	( setsid nohup sh "$DIR/defaulthome.sh" keep-front </dev/null >/dev/null 2>&1 & )
+	( fdclean; setsid nohup sh "$DIR/defaulthome.sh" keep-front </dev/null >/dev/null 2>&1 & )
 	return 0
 }
 
@@ -297,7 +310,7 @@ case "$1" in
 		# not mounted yet (an update, without a restart since): mounted, and SAM restarted once to take them. That closes the
 		# launcher that has just loaded, so it is done in the background, a moment later, and opens the launcher again after it.
 		if keepalive_pending; then
-			( setsid nohup sh "$DIR/defaulthome.sh" keepalive-update </dev/null >/dev/null 2>&1 & )
+			( fdclean; setsid nohup sh "$DIR/defaulthome.sh" keepalive-update </dev/null >/dev/null 2>&1 & )
 		fi
 		echo "ok"
 		;;

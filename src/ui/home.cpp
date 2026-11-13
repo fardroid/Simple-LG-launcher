@@ -674,7 +674,11 @@ void Home::draw_tile (const TileModel &m, float x, float y, float f, double now,
 	if (f > 0) gfx::shadow(frame, r, 16 * s, 36 * s, {0, 0, 0, 0.45f * f});
 	gfx::shadow(frame, r, 12 * s, 28 * s, {0, 0, 0, 0.4f});
 	Color box = f > 0.5f ? t.tileBgFocus : t.tileBg;
+	// an input with nothing plugged in: faded (a little less while it has the highlight)
+	float group = gfx::alpha_now();
+	if (m.dimmed) gfx::set_alpha(group * (0.45f + 0.3f * f));
 	draw_tile_art(m, frame, r, s, ts, cfg_.iconScale, t, box);
+	gfx::set_alpha(group);
 	// on the home row the ring layer has only its dark glow (.row--dock .tile__ring replaces the white ring)
 	if (!cfg_.showLabels) return;
 	float label_opacity = cfg_.labelsSelectedOnly ? f : 1;
@@ -683,7 +687,8 @@ void Home::draw_tile (const TileModel &m, float x, float y, float f, double now,
 	TextStyle st{Face::ui, font, 400, 0};
 	float lw = (float)(ts + tile_gap() - 8);
 	float line_h = std::round(font * 1.2f);
-	auto lines = text::wrap(m.label, st, (int)lw, 2);
+	// with a note (the device on an input) the name keeps to one line and the note is the second
+	std::vector<std::string> lines = m.note.empty() ? text::wrap(m.label, st, (int)lw, 2) : std::vector<std::string>{text::ellipsize(m.label, st, (int)lw), text::ellipsize(m.note, st, (int)lw)};
 	Color c = label_on ? t.textPrimary : t.textSecondary;
 	Color mixed{t.textSecondary.r + (t.textPrimary.r - t.textSecondary.r) * f, t.textSecondary.g + (t.textPrimary.g - t.textSecondary.g) * f,
 		t.textSecondary.b + (t.textPrimary.b - t.textSecondary.b) * f, 1};
@@ -692,7 +697,8 @@ void Home::draw_tile (const TileModel &m, float x, float y, float f, double now,
 	for (size_t i = 0; i < lines.size(); i++) {
 		const TextLine &l = text::line(lines[i], st);
 		float lx = std::round(x + ts / 2.f - l.w / 2.f);
-		text::draw(lines[i], st, lx, std::round(ly + i * line_h + (line_h - l.h) / 2), mixed, label_opacity);
+		bool muted = m.dimmed || (i == 1 && !m.note.empty());
+		text::draw(lines[i], st, lx, std::round(ly + i * line_h + (line_h - l.h) / 2), muted ? t.textMuted : mixed, label_opacity);
 	}
 }
 
@@ -718,8 +724,10 @@ void Home::prepare_board () {
 	// the plates: one look for all, from the brightest place behind any of them
 	std::vector<std::array<int, 4>> rects;
 	for (auto &col : board_.columns) for (auto &c : col.cards) rects.push_back({c.x, c.y, c.w, c.h});
-	look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? wp_->glass().map : BrightnessMap(), rects);
-	old_look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? wp_->old_glass().map : BrightnessMap(), rects);
+	// (a dimmed wallpaper is that much darker behind them)
+	auto seen = [this] (BrightnessMap map) { if (wp_) for (auto &v : map) v *= 1 - wp_->dim(); return map; };
+	look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? seen(wp_->glass().map) : BrightnessMap(), rects);
+	old_look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? seen(wp_->old_glass().map) : BrightnessMap(), rects);
 }
 
 void Home::draw_card (const BoardCard &c, double now, const std::tm &clock) {

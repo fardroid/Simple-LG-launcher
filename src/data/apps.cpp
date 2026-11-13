@@ -92,7 +92,7 @@ void list_inputs (const std::string &live_tv_label, const std::string &launcher_
 		}
 		app_exists(LIVE_TV, [=] (bool tuner) {
 			std::vector<InputSource> out;
-			if (tuner) out.push_back({"LIVE_TV", LIVE_TV, live_tv_label, 0, true, "tv.png"});
+			if (tuner) out.push_back({"LIVE_TV", LIVE_TV, live_tv_label, 0, true, "", "tv.png"});
 			out.insert(out.end(), external.begin(), external.end());
 			done(out);
 		});

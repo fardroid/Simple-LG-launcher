@@ -249,6 +249,8 @@ void Wallpaper::draw (double now) {
 	float fade = (float)ease(Ease::ease_in_out, f);
 	if (prev_.tex && f < 1) gfx::image(*prev_.tex, screen, 1 - fade);
 	if (cur_.tex) gfx::image(*cur_.tex, screen, fade);
+	// Settings → Wallpaper → Dim the picture
+	if (dim() > 0) gfx::rect(screen, 0, {0, 0, 0, dim()});
 	if (f >= 1) { prev_.tex.reset(); prev_.glass = Glass(); prev_.small.reset(); }
 	// .wallpaper__scrim
 	GradientStop scrim[] = {{{0, 0, 0, 0.22f}, 0}, {{0, 0, 0, 0.08f}, 0.35f}, {{0, 0, 0, 0}, 0.55f}, {{0, 0, 0, 0.5f}, 1}};

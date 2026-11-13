@@ -247,7 +247,7 @@ const double PEEK_MS = 2200;          // how long the home screen stays after th
 // The settings that show on the home screen as soon as they change
 bool shows_on_home (const std::string &id) {
 	static const char *ids[] = {"iconScale", "showLabels", "sideMargin", "bottomMargin", "cardSize", "plates", "glass", "frost", "shadows",
-		"clockFont", "clockFormat", "clockSize", "clockWeight", "clockColor", "showDate", "dateSize", "theme", "weatherUnit"};
+		"clockFont", "clockFormat", "clockSize", "clockWeight", "clockColor", "showDate", "dateSize", "theme", "weatherUnit", "dim", "dimStrength"};
 	for (const char *i : ids) if (id == i) return true;
 	return false;
 }

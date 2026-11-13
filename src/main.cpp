@@ -10,11 +10,15 @@
 #include "data/order.h"
 #include "data/prefs.h"
 #include "data/homemode.h"
+#include "data/inputs.h"
 #include "data/quick.h"
 #include "data/uninstall.h"
+#include "data/storage.h"
+#include "data/sun.h"
 #include "data/update.h"
 #include "data/weather.h"
 #include "data/calendar.h"
+#include "data/cities.h"
 #include "data/feeds.h"
 #include "data/quote.h"
 #include "gfx/gfx.h"
@@ -48,6 +52,8 @@
 #include <utime.h>
 
 #include <chrono>
+#include <cmath>
+#include <map>
 #include <mutex>
 #include <thread>
 #include <cstring>
@@ -69,9 +75,13 @@ struct App {
 	SDL_Window *win = nullptr;
 	UserConfig cfg;
 	std::string lang = "en", tv_lang = "en", tv_tag;
+	std::string tv_country;                    // the country set on the TV ("IT"), for the order of the cities
 	bool h24 = true, tv_h24 = true;
 	std::vector<AppEntry> apps;
 	std::vector<InputSource> inputs;
+	std::map<int, std::string> device_names;   // HDMI port -> the name of the device on it (read_device_names)
+	std::string devices_for;                   // the plugged-in inputs those names were read for
+	bool devices_busy = false;
 	Home home;
 	Wallpaper wallpaper;
 	// what is on the screen: the home screen, Settings, or a sheet opened from Settings over it
@@ -106,6 +116,7 @@ struct App {
 	double weather_next = 0;
 	int weather_fails = 0;
 	bool weather_busy = false;
+	int weather_host_saved = 0;      // the Open-Meteo host in the file weather-host (the one that answered last)
 	std::optional<CalendarData> calendar;
 	double cal_next = 0;
 	int cal_fails = 0;
@@ -146,7 +157,7 @@ void apply_lang () {
 	app.home.set_lang(app.lang, app.h24);
 }
 
-TileModel app_tile (const AppEntry &a) { return {a.id, a.title, a.iconPath, "", "", a.color}; }
+TileModel app_tile (const AppEntry &a) { return {a.id, a.title, a.iconPath, "", "", a.color, false, ""}; }
 // An input's picture from the kind of device the TV names for it (the name of LG's own icon file): the native version's own line
 // icons on one colour for all the inputs
 std::string input_glyph (const std::string &lg_icon) {
@@ -160,7 +171,13 @@ std::string input_glyph (const std::string &lg_icon) {
 }
 
 const char *INPUT_COLOR = "#1B8FA6";
-TileModel input_tile (const InputSource &in) { return {in.appId, in.label, "", "", input_glyph(in.icon), INPUT_COLOR}; }
+TileModel input_tile (const InputSource &in) {
+	TileModel m{in.appId, in.label, "", "", input_glyph(in.icon), INPUT_COLOR, false, ""};
+	m.dimmed = !in.connected;
+	// the device's own name, unless the TV's label for the input already says it
+	if (in.connected && !in.device.empty() && in.device != in.label) m.note = in.device;
+	return m;
+}
 
 /** The hide-list in use: settings from an older version listed the apps to show instead. */
 std::vector<std::string> hidden_ids () {
@@ -192,17 +209,18 @@ std::vector<TileModel> ordered_tiles () {
 }
 
 void refresh_settings ();
+void rebuild_items ();
 
 void rebuild_items () {
 	std::vector<TileModel> tiles = ordered_tiles();
 	// the fixed tiles at the end: each on its own colour, as the sections of Settings
 	// with the Swap on, LG Home's id opens the launcher itself: no tile for it then
-	if (!AS_HOME) tiles.push_back({"lg-home", "LG Home", "", "", "sys-home", "#A50034"});
+	if (!AS_HOME) tiles.push_back({"lg-home", "LG Home", "", "", "sys-home", "#A50034", false, ""});
 	// a new version of the launcher: its tile opens Settings on the update row (and starts the download)
 	// (not on a TV that cannot install it: the row says to update in the Homebrew Channel)
-	if (app.cfg.checkUpdates && app.update.step != UpdateState::Step::none && app.root != Root::no) tiles.push_back({"update", tr("Update the launcher", "Обновить лаунчер"), "", "", "sys-update", "#248A3D"});
-	tiles.push_back({"system-settings", tr("TV settings", "Настройки ТВ"), "", "", "sys-gear", "#636366"});
-	tiles.push_back({"settings", tr("Launcher settings", "Настройки лаунчера"), "", "", "sys-launcher", "#5245D0"});      // the app icon's colour
+	if (app.cfg.checkUpdates && app.update.step != UpdateState::Step::none && app.root != Root::no) tiles.push_back({"update", tr("Update the launcher", "Обновить лаунчер"), "", "", "sys-update", "#248A3D", false, ""});
+	tiles.push_back({"system-settings", tr("TV settings", "Настройки ТВ"), "", "", "sys-gear", "#636366", false, ""});
+	tiles.push_back({"settings", tr("Launcher settings", "Настройки лаунчера"), "", "", "sys-launcher", "#5245D0", false, ""});      // the app icon's colour
 	app.home.set_items(tiles);
 	refresh_settings();
 	app.dirty = true;
@@ -215,6 +233,30 @@ void rebuild_items () {
 
 void forget_splash () { remove(join_path(DATA_DIR, "splash.key").c_str()); remove(join_path(DATA_DIR, "splash.jpg").c_str()); }
 
+// How much the wallpaper is dimmed now (Settings → Wallpaper → Dim the picture): the chosen strength, always or by how far into the
+// night it is: by the sun over the weather's city, or by the clock (19:00 to 7:00) when no city is chosen.
+float wallpaper_dim () {
+	const WallpaperConfig &w = app.cfg.wallpaper;
+	if (w.mode == "gradient" || w.dim == "off") return 0;
+	double level = 1;
+	if (w.dim == "night") {
+		if (app.cfg.weather.city) level = night_level(sun_elevation(wall_ms() / 1000.0, app.cfg.weather.city->lat, app.cfg.weather.city->lon));
+		else {
+			std::time_t tt = std::time(nullptr);
+			std::tm lt;
+			localtime_r(&tt, &lt);
+			level = night_level_by_clock(lt);
+		}
+	}
+	return (float)(std::round(w.dimStrength * level) / 100.0);
+}
+
+void apply_dim () {
+	if (!app.wallpaper.set_dim(wallpaper_dim())) return;
+	app.home.mark_board();
+	app.dirty = true;
+}
+
 void load_config () {
 	std::string raw;
 	if (read_file(join_path(DATA_DIR, "config.json"), raw)) logf("config: own");
@@ -226,7 +268,57 @@ void load_config () {
 		logf("config: could not save");
 	app.home.set_config(app.cfg);
 	app.wallpaper.configure(app.cfg.wallpaper, app.cfg.theme, app.cfg.frost);
+	apply_dim();
 	apply_lang();
+}
+
+// The names the devices on the HDMI inputs announce (HDMI-CEC). The TV's list of them is not open to apps: it is asked through the
+// root shell, and only when what is plugged in has changed. A TV that cannot be asked (no root, another webOS) shows no names.
+void read_device_names (const std::string &plugged) {
+	if (app.devices_busy || plugged == app.devices_for) return;
+	app.devices_busy = true;
+	run_background([plugged] {
+		bool ok = false;
+		std::string why;
+		std::string reply = hbc_exec(std::string("luna-send -n 1 ") + CEC_LIST_URI + " '{}'", 6000, &ok, &why);
+		post_main([plugged, ok, why, reply] {
+			app.devices_busy = false;
+			app.devices_for = plugged;
+			auto names = ok ? device_names(reply) : std::map<int, std::string>();
+			// the reply's start goes to the log once per change: what this TV answers is how the names are known to work on it
+			logf("input devices: %s%s -> %d named", ok ? "" : "not read: ", (ok ? reply : why).substr(0, 300).c_str(), (int)names.size());
+			if (names == app.device_names) return;
+			app.device_names = names;
+			for (auto &in : app.inputs) {
+				auto it = in.id.rfind("HDMI", 0) == 0 ? names.find(in.port) : names.end();
+				in.device = it != names.end() ? it->second : "";
+			}
+			rebuild_items();
+		});
+	});
+}
+
+// The inputs with what is plugged in: read at the start and each time the launcher comes back to the front (a console switched
+// on meanwhile). The row is built again only when something changed.
+void refresh_inputs () {
+	list_inputs(tr("Live TV", "Прямой эфир"), tr("Launcher", "Лаунчер"), [] (std::vector<InputSource> inputs) {
+		std::string plugged, now_text, was_text;
+		for (auto &in : inputs) {
+			bool hdmi = in.id.rfind("HDMI", 0) == 0;
+			auto it = hdmi ? app.device_names.find(in.port) : app.device_names.end();
+			if (in.connected && it != app.device_names.end()) in.device = it->second;
+			if (hdmi && in.connected) plugged += in.id + " ";
+			now_text += in.appId + "|" + in.label + "|" + in.icon + "|" + (in.connected ? "1" : "0") + "|" + in.device + "\n";
+		}
+		for (auto &in : app.inputs) was_text += in.appId + "|" + in.label + "|" + in.icon + "|" + (in.connected ? "1" : "0") + "|" + in.device + "\n";
+		if (now_text != was_text) {
+			logf("inputs: %d, plugged in: %s", (int)inputs.size(), plugged.empty() ? "none" : plugged.c_str());
+			app.inputs = inputs;
+			rebuild_items();
+		}
+		if (plugged.empty()) app.devices_for.clear();
+		else read_device_names(plugged);
+	});
 }
 
 void refresh_apps () {
@@ -250,10 +342,7 @@ void refresh_apps () {
 		cache_apps(join_path(DATA_DIR, "apps.json"), apps);
 		rebuild_items();
 	});
-	list_inputs(tr("Live TV", "Прямой эфир"), tr("Launcher", "Лаунчер"), [] (std::vector<InputSource> inputs) {
-		app.inputs = inputs;
-		rebuild_items();
-	});
+	refresh_inputs();
 }
 
 void ask_tv () {
@@ -266,6 +355,15 @@ void ask_tv () {
 		if (!ui.empty()) { app.tv_tag = ui; app.tv_lang = lang_from_tag(ui); logf("TV language %s -> %s", ui.c_str(), app.tv_lang.c_str()); }
 		apply_lang();
 		rebuild_items();
+	});
+	// the country the TV is set to (it can differ from its language's: a Russian TV in Italy)
+	luna_call("luna://com.webos.settingsservice/getSystemSettings", R"({"category":"option","keys":["smartServiceCountryCode2"]})", [] (const std::string &r) {
+		json j = json::parse(r, nullptr, false);
+		std::string c = j.is_object() && j["settings"].is_object() ? j["settings"].value("smartServiceCountryCode2", std::string()) : "";
+		if (c.size() == 2 && isalpha((unsigned char)c[0]) && isalpha((unsigned char)c[1])) {
+			app.tv_country = {(char)toupper((unsigned char)c[0]), (char)toupper((unsigned char)c[1])};
+			logf("TV country %s", app.tv_country.c_str());
+		}
 	});
 	// an OLED panel? its model name says so (OLED65C1PUB…), lib/panel.ts
 	luna_call("luna://com.webos.service.tv.systemproperty/getSystemInfo", R"({"keys":["modelName"]})", [] (const std::string &r) {
@@ -309,6 +407,12 @@ void weather_tick (double now) {
 			app.weather = d;
 			app.weather_next = now + WEATHER_FRESH_MS;
 			write_file(join_path(DATA_DIR, "weather.json"), weather_json(*d));
+			// the host that answered is tried first after a restart too
+			if (weather_host() != app.weather_host_saved) {
+				logf("weather: from %s", FORECAST_HOSTS[weather_host()].c_str());
+				app.weather_host_saved = weather_host();
+				write_file(join_path(DATA_DIR, "weather-host"), std::to_string(app.weather_host_saved));
+			}
 			app.home.set_weather(app.weather);
 			app.dirty = true;
 		});
@@ -464,6 +568,7 @@ void load_news_and_quote () {
 
 void load_weather () {
 	std::string raw;
+	if (read_file(join_path(DATA_DIR, "weather-host"), raw, 16)) { set_weather_host(atoi(raw.c_str())); app.weather_host_saved = weather_host(); }
 	if (!app.cfg.weather.city || !read_file(join_path(DATA_DIR, "weather.json"), raw)) return;
 	app.weather = usable_weather(weather_from_json(raw), app.cfg.weather.city->lat, app.cfg.weather.city->lon, wall_ms());
 	app.home.set_weather(app.weather);
@@ -731,16 +836,37 @@ void update_pressed () {
 	check_update(app.update.step == Step::none ? AfterCheck::nothing : AfterCheck::go_on);
 }
 
+/** The settings written to disk. A write that fails (the TV's storage is full) is tried again after the files the launcher can
+ *  make again are removed; the file on disk is replaced only by a complete new one (write_file), so a failure leaves the settings
+ *  saved before, never half a file. When it still fails, the screen says so: the change lasts until the launcher is loaded anew. */
+void save_config (const UserConfig &cfg) {
+	std::string file = join_path(DATA_DIR, "config.json"), text = config_json(cfg);
+	if (write_file(file, text)) return;
+	long long before = free_bytes(DATA_DIR);
+	bool keep_update = app.update.step == UpdateState::Step::downloading || app.update.step == UpdateState::Step::ready;
+	long long freed = clear_rebuildable(DATA_DIR, keep_update);
+	logf("config: could not save (%lld bytes free); %lld bytes of saved copies removed", before, freed);
+	if (write_file(file, text)) {
+		app.toast.show(tr("The TV's storage is full. The launcher removed its saved copies to keep your settings.", "Память ТВ заполнена. Лаунчер удалил свои сохранённые копии, чтобы записать настройки."), true, now_ms());
+		return;
+	}
+	logf("config: still could not save (%lld bytes free)", free_bytes(DATA_DIR));
+	app.toast.show(before >= 0 && before < 65536
+		? tr("The TV's storage is full: the setting was not saved. Free some space on the TV.", "Память ТВ заполнена: настройка не сохранена. Освободите место на ТВ.")
+		: tr("The setting could not be saved", "Не удалось сохранить настройку"), true, now_ms());
+}
+
 /** New settings: kept on disk and put to use (the screens, the wallpaper, the language, and the widgets read again when what they
  *  show changed). */
 void update_config (const UserConfig &next) {
 	UserConfig old = app.cfg;
 	app.cfg = next;
-	if (!write_file(join_path(DATA_DIR, "config.json"), config_json(next))) logf("config: could not save");
+	save_config(next);
 	app.home.set_config(next);
 	const auto &a = old.wallpaper, &b = next.wallpaper;
 	if (a.mode != b.mode || a.path != b.path || a.paths != b.paths || a.intervalSec != b.intervalSec || a.shuffle != b.shuffle || old.theme != next.theme || old.frost != next.frost)
 		app.wallpaper.configure(next.wallpaper, next.theme, next.frost);
+	apply_dim();
 	if (old.language != next.language || old.clockFormat != next.clockFormat) apply_lang();
 	if (old.checkUpdates != next.checkUpdates) {
 		app.update_next = next.checkUpdates ? now_ms() : -1;
@@ -772,6 +898,8 @@ void update_config (const UserConfig &next) {
 
 void open_picker (Picker::Kind kind) {
 	std::vector<std::string> list = kind == Picker::Kind::calendars ? app.cfg.calendar.sources : kind == Picker::Kind::feeds ? app.cfg.news.feeds : std::vector<std::string>();
+	// the country set on the TV; the region of its language when it did not say
+	app.picker.set_tv_country(!app.tv_country.empty() ? app.tv_country : region_of(app.tv_tag));
 	app.picker.open(kind, country_of(app.cfg.news.country, app.tv_tag, app.lang), list, app.cfg.useHomebrew, now_ms());
 	app.screen = App::Screen::picker;
 	app.dirty = true;
@@ -1496,7 +1624,7 @@ int main (int argc, char **argv) {
 		std::time_t tt = std::time(nullptr);
 		std::tm lt;
 		localtime_r(&tt, &lt);
-		if (lt.tm_min != app.last_minute) { app.last_minute = lt.tm_min; app.dirty = true; app.home.mark_board(); }
+		if (lt.tm_min != app.last_minute) { app.last_minute = lt.tm_min; app.dirty = true; app.home.mark_board(); apply_dim(); }
 		weather_tick(now);
 		calendar_tick(now);
 		news_tick(now);
@@ -1607,6 +1735,7 @@ int main (int argc, char **argv) {
 							hbc_exec("( setsid nohup sh -c 'sleep 1; luna-send -n 1 luna://com.webos.applicationManager/launch \"{\\\"id\\\":\\\"" + RUN_ID + "\\\"}\"' </dev/null >/dev/null 2>&1 & ); echo ok", 5000);
 							app.running = false;
 						}
+						if (!app.front) refresh_inputs();
 						app.front = true;
 						app.home.set_front(true);
 						app.wallpaper.set_paused(false, now);

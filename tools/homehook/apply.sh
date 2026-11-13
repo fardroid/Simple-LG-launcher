@@ -10,6 +10,19 @@ PIDFILE="${PIDFILE:-/tmp/launcher-homehook-watch.pid}"
 LOG="${LOG:-/tmp/launcher-homehook.log}"
 
 log () { echo "$(date '+%H:%M:%S') $*" >> "$LOG"; }
+# A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
+# stays running keeps them open, which can hold that service up (Hearth 2.2.0, its pull request 54). fdclean closes every
+# descriptor above 2 in the shell that runs it: called in the ( ... ) that starts a background script, just before it.
+# A shell that cannot name a two-digit descriptor (dash) closes 3 to 9 only.
+fdclean () {
+    _w=0; ( eval "exec 10>&-" ) 2>/dev/null && _w=1
+    for _f in /proc/self/fd/*; do
+        _n=${_f##*/}
+        case "$_n" in ''|*[!0-9]*|0|1|2) continue ;; esac
+        [ "${#_n}" -gt 1 ] && [ "$_w" = 0 ] && continue
+        eval "exec $_n>&-" 2>/dev/null
+    done
+}
 
 # Earlier versions put a stand-in over LG Home's QML. Take it off if it is still there.
 if [ -z "$DRY_RUN" ]; then
@@ -53,7 +66,7 @@ if [ -f "$HOOK/homekey.py" ]; then
         log "python3 not found: the Home key helper is not started"
     elif ! { [ -f "$KEYPID" ] && kill -0 "$(cat "$KEYPID")" 2>/dev/null; }; then
         if [ -z "$DRY_RUN" ]; then
-            ( nohup python3 "$HOOK/homekey.py" >/dev/null 2>&1 </dev/null & )
+            ( fdclean; nohup python3 "$HOOK/homekey.py" >/dev/null 2>&1 </dev/null & )
         fi
         log "Home key helper started"
     fi
@@ -67,7 +80,7 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
 fi
 
 if [ -z "$DRY_RUN" ]; then
-    ( nohup sh "$HOOK/watch.sh" >/dev/null 2>&1 </dev/null & )
+    ( fdclean; nohup sh "$HOOK/watch.sh" >/dev/null 2>&1 </dev/null & )
 fi
 log "watcher started"
 echo applied

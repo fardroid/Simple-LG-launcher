@@ -68,6 +68,8 @@ void gradient (Rect r, float angle, const GradientStop *stops, int count, float 
 
 /** Everything drawn from now on is faded by this much too (1: as it is), as a CSS opacity on a whole group. */
 void set_alpha (float a);
+/** The value set by set_alpha. */
+float alpha_now ();
 /** A whole screen faded by this much, over the groups' own set_alpha (1: as it is). */
 void set_outer_alpha (float a);
 /** The value set by set_outer_alpha. */

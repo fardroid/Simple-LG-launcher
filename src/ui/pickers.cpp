@@ -113,7 +113,7 @@ std::vector<Picker::Row> Picker::rows () const {
 	if (kind_ == Kind::city) {
 		if (!searching_) {
 			out.push_back({"search", "search", tr("Search for a city…", "Найти город…"), tr("Type the name with the on-screen keyboard", "Введите название на экранной клавиатуре")});
-			auto cities = preset_cities();
+			auto cities = preset_cities(tv_country_, lang());
 			for (size_t i = 0; i < cities.size(); i++) out.push_back({"city", "pin", cities[i].name, cities[i].detail, (int)i});
 		} else {
 			out.push_back({"search", "search", tr("Search again…", "Искать снова…"), ""});
@@ -233,7 +233,7 @@ void Picker::activate (int i) {
 	if (row.key == "search" || row.key == "type") start_typing();
 	else if (row.key == "back") { searching_ = false; results_.clear(); index_ = 0; search_id_++; }
 	else if (row.key == "city") {
-		auto cities = searching_ ? results_ : preset_cities();
+		auto cities = searching_ ? results_ : preset_cities(tv_country_, lang());
 		if (row.index < (int)cities.size() && on_city) on_city(cities[row.index]);
 	} else if (row.key == "country") { if (on_country) on_country(countries_[row.index]); }
 	else if (row.key == "file") read_file();
