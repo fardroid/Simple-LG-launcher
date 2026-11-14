@@ -17,6 +17,7 @@ struct SystemInfo {
 	UpdateState update;          // a new version of the launcher (data/update.h)
 	int root = 0;                // can the TV run commands as root (Root in data/homemode.h: 0 unknown, 1 yes, 2 no)
 	std::string root_detail;     // what it said when it could not
+	std::string picture_title;   // the wallpaper's one picture by its name in the collection (empty: not one of it, or not known yet)
 };
 
 /** How a key press changes a setting: OK steps and wraps round; ← → nudge and stop at the ends. */

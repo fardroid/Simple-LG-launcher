@@ -1,5 +1,6 @@
 #include "ui/home.h"
 
+#include "core/log.h"
 #include "data/apps.h"
 #include "gfx/text.h"
 #include "i18n/i18n.h"
@@ -728,6 +729,11 @@ void Home::prepare_board () {
 	auto seen = [this] (BrightnessMap map) { if (wp_) for (auto &v : map) v *= 1 - wp_->dim(); return map; };
 	look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? seen(wp_->glass().map) : BrightnessMap(), rects);
 	old_look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? seen(wp_->old_glass().map) : BrightnessMap(), rects);
+	// each change of the plates' colour goes to the log, with what it was chosen from
+	char why[160];
+	snprintf(why, sizeof why, "plates %s: %s %.2f (dim %.2f, brightest %.3f)", cfg_.plates.c_str(), look_.bg.r == 1 ? "light" : "dark", look_.bg.a,
+		wp_ ? wp_->dim() : 0.f, wp_ ? brightest_of(seen(wp_->glass().map), rects) : -1.f);
+	if (why != logged_plates_) { logged_plates_ = why; logf("%s", why); }
 }
 
 void Home::draw_card (const BoardCard &c, double now, const std::tm &clock) {

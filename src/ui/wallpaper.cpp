@@ -158,7 +158,9 @@ void Wallpaper::configure (const WallpaperConfig &c, const std::string &theme, i
 	});
 }
 
-void Wallpaper::files_changed () {
+void Wallpaper::files_changed (const std::string &arrived) {
+	// the picture on screen came again (a newer version of a photo of the collection): shown again, with the new file
+	if (!arrived.empty() && arrived == shown_) { load(arrived); if (cfg_.mode == "image") return; }
 	if (cfg_.mode == "image") { if (shown_ != cfg_.path) load(cfg_.path); return; }
 	if (cfg_.mode != "pictures") return;
 	int gen = generation_;

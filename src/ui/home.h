@@ -159,6 +159,7 @@ private:
 	int news_per_page () const;
 	bool news_key (bool left, bool right, bool up, bool down, bool back, bool ok, double now);
 	bool calendar_key (bool left, bool right, bool up, bool down, bool back, bool ok, double now);
+	std::string logged_plates_;   // the plates' colour last written to the log
 	Tween row_dim_;          // 0: the row has the focus, 1: the remote is on the cards (.row__viewport opacity 0.55)
 	Tween card_focus_[3];    // the weather, the calendar, the news: their focus layer
 	Tween card_grow_[3];     // and their growth by 1.02
