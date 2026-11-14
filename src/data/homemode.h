@@ -32,7 +32,6 @@ std::string tools_dir (const std::string &app_id);
 std::string status_command (const std::string &app_id);
 std::string run_command (const std::string &app_id, const std::string &mode);
 std::string refresh_command (const std::string &app_id);
-std::string point_command (const std::string &app_id);
 std::string result_file (const std::string &app_id);
 /** The move from the web version (tools/migrate.sh): what it put on the TV turned into this version's. */
 std::string migrate_command (const std::string &app_id);

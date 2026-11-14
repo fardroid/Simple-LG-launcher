@@ -49,11 +49,11 @@ int release_major (const std::string &release) { return atoi(release.c_str()); }
 ModeText mode_text (const std::string &mode) {
 	if (mode == "default") return {
 		tr("Home app: the TV opens the launcher", "Штатно: ТВ сам открывает лаунчер"),
-		tr("The launcher becomes the TV's Home app. For waking up, the TV opens its last input (the launcher) and keeps the launcher loaded in standby.", "Лаунчер становится домашним приложением ТВ. Для выхода из сна ТВ открывает последний вход (лаунчер) и не выгружает лаунчер во сне."),
-		{tr("Home and waking up open the launcher, in about a second after standby", "Home и выход из сна открывают лаунчер, после сна — примерно за секунду"),
+		tr("The launcher becomes the TV's Home app. Switching the TV on shows what was on before: LG's start with Home is switched off.", "Лаунчер становится домашним приложением ТВ. При включении ТВ показывается то, что было до выключения: «Запуск с Home» от LG выключается."),
+		{tr("Home and Back out of the last app open the launcher", "Home и выход из последнего приложения открывают лаунчер"),
 			tr("LG Home is not replaced and keeps its tile", "LG Home не подменяется и остаётся на своей плитке")},
 		{tr("Only where the TV lets you choose a Home app (webOS 25)", "Только где ТВ даёт выбрать домашнее приложение (webOS 25)"),
-			tr("After a full restart the launcher shows up about a minute later", "После полной перезагрузки лаунчер появляется примерно через минуту"),
+			tr("After standby the launcher takes 2–3 seconds to open", "После сна лаунчер открывается за 2–3 секунды"),
 			tr("Changes two TV settings (put back when switched off)", "Меняет две настройки ТВ (при выключении возвращаются)"),
 			tr("Switch this off before uninstalling the launcher", "Перед удалением лаунчера выключите этот способ")}};
 	if (mode == "mount") return {
@@ -95,7 +95,6 @@ std::string takeover_refresh_command (const std::string &app_id) { return "sh '"
 std::string helper_refresh_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/helper.sh' refresh; true"; }
 std::string stock_command (const std::string &app_id) { return "sh '" + hook_dir(app_id) + "/stock.sh' >/dev/null 2>&1; true"; }
 std::string refresh_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/defaulthome.sh' refresh; true"; }
-std::string point_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/defaulthome.sh' point; true"; }
 // scripts/gen-tools.sh moves the state of a launcher with another id than the web version's to launcher-native-…
 std::string result_file (const std::string &app_id) { return is_web(app_id) ? "/tmp/launcher-homemode.result" : "/tmp/launcher-native-homemode.result"; }
 std::string hook_dir (const std::string &app_id) { return is_web(app_id) ? "/media/developer/launcher-homehook" : "/media/developer/launcher-native-homehook"; }

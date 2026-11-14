@@ -12,10 +12,11 @@
 # The same happens on such an event for LG Home, so it is cancelled before it shows. Starts in the background (preloads) show no
 # splash and are left alone.
 #
-# LG's own "start with Home" is switched off (homeAutoLaunch), so LG Home does not start at all when the TV comes back from standby;
-# the TV shows its last input instead (the tuner: black without an aerial). The helper follows the TV's power state and opens the
-# launcher as soon as the TV is back on, whatever was on screen before, except an HDMI input (a console that switched the TV on).
-# Once just after a full start of the TV, LG Home or the tuner in front is replaced by the launcher.
+# Switching the TV on is left to the TV: it shows what was on before, an input, or Home (LG Home, replaced as above) when the
+# launcher was on the screen (tools/lastinput.sh names Home as the last input then). Up to 2.2.0 the helper opened the launcher
+# over the input whenever the TV came on, and over the tuner just after a full start; that is gone (issue 16: the launcher over
+# Live TV half a minute into a start). Once just after a full start, LG Home already in front before the helper started is
+# replaced by the launcher.
 #
 # Started by apply.sh next to watch.sh; stopped with it. Needs python3 (the TV has it). Writes to /tmp/launcher-homehook.log.
 
@@ -41,8 +42,6 @@ EVSIZE = struct.calcsize(EVENT)
 CLOSE_AT = (0.05, 0.10, 0.16, 0.24, 0.34, 0.46, 0.60, 0.78, 1.0, 1.3)   # seconds after the key: ask for LG Home to be closed
 LUNA = 'luna://com.webos.applicationManager/'
 LIFE_EVENTS = 'luna://com.webos.service.applicationmanager/getAppLifeEvents'
-POWER = 'luna://com.webos.service.tvpower/power/getPowerState'
-TAKE_OVER = (HOME_APP, 'com.webos.app.livetv')      # in front after the TV comes on: the launcher takes their place
 
 last_press = [0.0]               # when the launcher was last asked for (the key and an LG Home start can both report one press)
 
@@ -127,57 +126,18 @@ def foreground():
 
 
 def open_if_idle(why):
-    """Opens the launcher when LG Home or the TV tuner is in front (not when nothing is: just after a wake-up the TV reports
-    nothing in front for a moment)."""
+    """Opens the launcher when LG Home is in front (never over an input or another app)."""
     if not wanted():
         return False
     front = foreground()
-    if front in TAKE_OVER:
+    if front == HOME_APP:
         pressed('%s, %s in front' % (why, front))
         return True
     return False
 
 
-def watch_power():
-    """Follows the TV's power state and opens the launcher when the TV comes back on."""
-    awake = True
-    while True:
-        try:
-            proc = subprocess.Popen(['luna-send', '-i', POWER, '{"subscribe":true}'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True)
-            for line in proc.stdout:
-                found = re.search(r'"state"\s*:\s*"([^"]*)"', line)
-                if not found:
-                    continue
-                state = found.group(1)
-                if state == 'Screen Off' or 'Screen Saver' in state:
-                    continue                  # the picture off with the sound on (music): not a standby
-                off = state != 'Active' or any(word in line for word in ('Power Off', 'Suspend', 'Standby', 'Reboot'))
-                if off:
-                    awake = False
-                elif not awake:
-                    awake = True
-                    threading.Thread(target=woke_up, daemon=True).start()
-            proc.wait()
-        except OSError:
-            pass
-        time.sleep(2.0)
-
-
-def woke_up():
-    """The TV is back on: the launcher, unless an HDMI input is in front. Checked a few times, as apps come back one by one."""
-    for wait in (0.2, 1.5, 3.0):
-        time.sleep(wait)
-        if not wanted():
-            return
-        front = foreground()
-        if front == LAUNCHER_ID or front.startswith('com.webos.app.hdmi'):
-            return
-        last_press[0] = 0.0                    # a fresh request each time
-        pressed('TV switched on, %s in front' % (front or 'nothing'))
-
-
 def after_boot():
-    """Just after a full start of the TV (the helper starts some 40 s in): the TV may be showing its tuner."""
+    """Just after a full start of the TV (the helper starts some 40 s in): LG Home may be in front already."""
     try:
         with open('/proc/uptime') as f:
             up = float(f.read().split()[0])
@@ -196,7 +156,6 @@ def main():
         pass
     log('started (pid %d)' % os.getpid())
     threading.Thread(target=watch_starts, daemon=True).start()
-    threading.Thread(target=watch_power, daemon=True).start()
     threading.Thread(target=after_boot, daemon=True).start()
     fds = {}
     last_scan = 0.0
