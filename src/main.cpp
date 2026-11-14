@@ -91,7 +91,6 @@ struct App {
 	HomeMethod home_method;
 	std::optional<HomeModeInfo> home_mode;     // how the launcher opens on Home (tools/homemode.sh), read when Settings opens
 	std::string mode_busy;                     // the way being switched to
-	double point_at = -1;                      // when to name the launcher as the last input again (defaulthome.sh point)
 	double name_at = -1;                       // the Swap and the Helper: when to name it the last input (it came to the front)
 	bool default_home = false;                 // the official way is on (defaulthome.sh refresh said so, or a switch to it)
 	bool helper_on = false;                    // the helper is on (helper.sh refresh said so, or a switch to it)
@@ -1459,12 +1458,17 @@ bool screen_moving (double now) {
 // ecklf/lg-luma does on webOS 10/11). Without it Home still opens the launcher, but the app manager starts it afresh at each
 // Home press. The helper ends with this process (PR_SET_PDEATHSIG); losing the registration later ends the launcher too, so
 // that the app manager starts Home again.
-void register_as_home () {
+FILE *home_reg = nullptr;           // the registration's messages (register_as_home)
+pid_t home_reg_pid = -1;
+bool home_reg_seen = false;         // a message of it has come
+
+/** Starts the registration (the luna-send that holds it); its messages are read from home_reg. */
+bool start_home_registration () {
 	int out[2];
-	if (pipe(out) != 0) { logf("home registration: no pipe"); return; }
+	if (pipe(out) != 0) { logf("home registration: no pipe"); return false; }
 	pid_t parent = getpid();
 	pid_t pid = fork();
-	if (pid < 0) { logf("home registration: no fork"); close(out[0]); close(out[1]); return; }
+	if (pid < 0) { logf("home registration: no fork"); close(out[0]); close(out[1]); return false; }
 	if (pid == 0) {
 		prctl(PR_SET_PDEATHSIG, SIGKILL);
 		if (getppid() != parent) _exit(1);
@@ -1476,30 +1480,59 @@ void register_as_home () {
 	}
 	close(out[1]);
 	logf("home registration: luna-send %d", (int)pid);
-	std::thread([fd = out[0], pid] {
-		FILE *f = fdopen(fd, "r");
-		char line[4096];
-		bool registered = false;
-		while (f && fgets(line, sizeof line, f)) {
-			std::string m(line);
-			size_t b = m.find('{');
-			if (b == std::string::npos) continue;
-			m = m.substr(b);
-			json j = json::parse(m, nullptr, false);
-			if (!j.is_object()) continue;
-			if (j.value("returnValue", true) == false) {
-				logf("home registration refused: %s", m.substr(0, 160).c_str());
-				if (registered) post_main([] { app.running = false; });     // lost: the app manager starts Home again
-				break;
-			}
+	home_reg = fdopen(out[0], "r");
+	home_reg_pid = pid;
+	if (!home_reg) { close(out[0]); kill(pid, SIGKILL); waitpid(pid, nullptr, 0); return false; }
+	return true;
+}
+
+/** One message of the registration ("" when it ended or was refused). */
+std::string home_reg_message () {
+	char line[4096];
+	while (home_reg && fgets(line, sizeof line, home_reg)) {
+		std::string m(line);
+		size_t b = m.find('{');
+		if (b == std::string::npos) continue;
+		m = m.substr(b);
+		json j = json::parse(m, nullptr, false);
+		if (!j.is_object()) continue;
+		if (j.value("returnValue", true) == false) { logf("home registration refused: %s", m.substr(0, 160).c_str()); return ""; }
+		home_reg_seen = true;
+		return m;
+	}
+	return "";
+}
+
+/** Started in the background as Home (preload): registered, and nothing shown until Home is really asked for (a relaunch that
+ *  is not only {"keepAlive": true}). False when the registration ended first (the app manager closed it). */
+bool wait_as_preloaded_home () {
+	if (!start_home_registration()) return false;
+	for (std::string m; !(m = home_reg_message()).empty(); ) {
+		logf("lifecycle (preloaded): %s", m.substr(0, 160).c_str());
+		json j = json::parse(m, nullptr, false);
+		std::string event = j.value("event", j.value("message", std::string()));
+		bool keep_alive = j["parameters"].is_object() && j["parameters"].value("keepAlive", false) == true;
+		if (event == "relaunch" && !keep_alive) return true;
+		if (event == "close") break;
+	}
+	logf("home registration ended while preloaded");
+	return false;
+}
+
+void register_as_home () {
+	if (!home_reg && !start_home_registration()) return;
+	std::thread([f = home_reg, pid = home_reg_pid] {
+		// registered once a message has come (a preloaded Home has had its first ones already)
+		bool registered = home_reg_seen;
+		for (std::string m; !(m = home_reg_message()).empty(); ) {
 			registered = true;
 			post_main([m] { lifecycle(m); });
 		}
-		if (f) fclose(f);
+		fclose(f);
 		kill(pid, SIGKILL);
 		waitpid(pid, nullptr, 0);
 		logf("home registration ended (was registered: %s)", registered ? "yes" : "no");
-		if (registered) post_main([] { app.running = false; });
+		if (registered) post_main([] { app.running = false; });     // lost: the app manager starts Home again
 	}).detach();
 }
 
@@ -1529,6 +1562,18 @@ int main (int argc, char **argv) {
 	}
 	if (RUN_ID != APP_ID) logf("running as %s (installed as %s), from %s", RUN_ID.c_str(), APP_ID, cwd);
 	AS_HOME = RUN_ID == "com.webos.app.home";
+	// A start in the background ({"preload":"full"}): the TV's preload manager starts Home about 80 s into a full start, so
+	// that LG Home is ready. LG Home stays out of sight; the launcher made a window and came in front of Live TV or an HDMI
+	// input (the Swap, seen on webOS 10.3.2; issue 16). Nothing is shown: it ends here, and the Home key starts it as usual.
+	// A start in the background ({"preload":"full"}) as Home: the TV's preload manager starts Home about 80 s into a full start,
+	// so that LG Home is ready. LG Home stays out of sight; the launcher made its window and came in front of Live TV or an HDMI
+	// input (the Swap, seen on webOS 10.3.2; issue 16). It registers as Home and waits, with no window, until Home is asked for.
+	// (Ending at once instead made the preload manager start it again every 7 s.)
+	if (AS_HOME && argc > 1 && strstr(argv[1], "\"preload\":")) {
+		logf("started in the background (preload): no window until Home is asked for");
+		if (!wait_as_preloaded_home()) return 0;
+		logf("Home asked for: starting");
+	}
 	if (AS_HOME) {
 		// SDL-webOS names its window from APPID (and WMCLASS): the compositor shows it as Home's. Before SDL and any thread.
 		setenv("APPID", RUN_ID.c_str(), 1);
@@ -1604,8 +1649,8 @@ int main (int argc, char **argv) {
 	rebuild_items();
 	ask_tv();
 	refresh_apps();
-	// While the official way is on, its copy on the TV is brought up to this version's and the TV is set to wake up into the
-	// launcher (tools/defaulthome.sh refresh): once at each start, a few seconds in, so an update needs nothing more
+	// While the official way is on, its copy on the TV is brought up to this version's and LG's "start with Home" kept off
+	// (tools/defaulthome.sh refresh): once at each start, a few seconds in, so an update needs nothing more
 	run_background([] {
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 		bool ok = false;
@@ -1683,12 +1728,6 @@ int main (int argc, char **argv) {
 		if (app.screen == App::Screen::settings && app.settings.tick(now)) app.dirty = true;
 		if (app.toast.tick(now)) app.dirty = true;
 		if (app.update_next >= 0 && now >= app.update_next && !app.update_busy) check_update();
-		if (app.point_at >= 0 && now >= app.point_at) {
-			// the official way on: the launcher named as the TV's last input again (switching to an input names that one), so
-			// waking up opens it (tools/defaulthome.sh point; nothing happens while that way is off)
-			app.point_at = -1;
-			run_background([] { hbc_exec(point_command(APP_ID), 10000); });
-		}
 		if (app.name_at >= 0 && now >= app.name_at) {
 			// the Swap or the Helper on, and the launcher in front: Home is the TV's last input now, so a full start opens Home, as it
 			// opens an input that was the last thing on the screen (tools/lastinput.sh). Home and not the launcher's own id: started
@@ -1713,7 +1752,7 @@ int main (int argc, char **argv) {
 			if (app.update_next >= 0 && !app.update_busy) until = std::min(until, std::max(1.0, app.update_next - now));
 			double page = app.home.next_event(now);
 			if (page >= 0) until = std::min(until, page + 1);
-			for (double t : {app.toast.next_event(now), app.screen == App::Screen::settings ? app.settings.next_event(now) : -1.0, app.point_at >= 0 ? std::max(0.0, app.point_at - now) : -1.0, app.name_at >= 0 ? std::max(0.0, app.name_at - now) : -1.0})
+			for (double t : {app.toast.next_event(now), app.screen == App::Screen::settings ? app.settings.next_event(now) : -1.0, app.name_at >= 0 ? std::max(0.0, app.name_at - now) : -1.0})
 				if (t >= 0) until = std::min(until, t + 1);
 			if (demo && demo_step < demo_keys.size()) until = std::min(until, std::max(1.0, demo_next - now));
 			timeout = (int)std::max(1.0, std::min(until, 60000.0));
@@ -1779,7 +1818,7 @@ int main (int argc, char **argv) {
 					break;
 				case SDL_WINDOWEVENT:
 					if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED || ev.window.event == SDL_WINDOWEVENT_SHOWN) {
-						if (!app.front) { app.point_at = now + 3000; mark_alive(); if (AS_HOME || app.helper_on) app.name_at = now + 3000; }
+						if (!app.front) { mark_alive(); if (AS_HOME || app.helper_on) app.name_at = now + 3000; }
 						if (!app.front && updated_on_disk()) {
 							logf("an update is installed: starting again as the new version");
 							hbc_exec("( setsid nohup sh -c 'sleep 1; luna-send -n 1 luna://com.webos.applicationManager/launch \"{\\\"id\\\":\\\"" + RUN_ID + "\\\"}\"' </dev/null >/dev/null 2>&1 & ); echo ok", 5000);
@@ -1790,7 +1829,6 @@ int main (int argc, char **argv) {
 						app.home.set_front(true);
 						app.wallpaper.set_paused(false, now);
 					} else if (ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST || ev.window.event == SDL_WINDOWEVENT_HIDDEN) {
-						if (app.front) app.point_at = now + 8000;
 						app.front = false;
 						app.home.set_front(false);
 						app.wallpaper.set_paused(true, now);

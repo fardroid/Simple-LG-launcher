@@ -105,7 +105,7 @@ case "$1" in
 	enable) enable ;;
 	refresh)
 		[ -L "$HOOK_LINK" ] || { echo "off"; exit 0; }
-		# the boot link of an earlier version (to apply.sh): to boot.sh, which also opens the launcher over the input at a full start
+		# the boot link of an earlier version (to apply.sh): to boot.sh
 		[ "$(readlink "$HOOK_LINK")" = "$HOOK/boot.sh" ] || { [ -f "$HERE/homehook/boot.sh" ] && ln -sf "$HOOK/boot.sh" "$HOOK_LINK"; }
 		if ! same; then
 			stop

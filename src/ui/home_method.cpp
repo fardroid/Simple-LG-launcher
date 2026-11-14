@@ -98,7 +98,7 @@ void HomeMethod::draw (double now) {
 	const Theme &t = theme_named(theme_);
 	gfx::rect({0, 0, 1920, 1080}, 0, t.screen.with_alpha(t.screen.a * SCREEN_OPACITY));      // the wallpaper a little through it
 	put(tr("How the launcher opens", "Как открывается лаунчер"), TextStyle{Face::ui, 46, 600, -0.46f}, X, TOP, 56, t.textPrimary);
-	put(tr("What the Home button, Back out of the last app and waking the TV open. One way at a time.", "Что открывают кнопка Home, выход из последнего приложения и включение ТВ. Работает один способ за раз."),
+	put(tr("What the Home button and Back out of the last app open. Switching the TV on shows what was on before. One way at a time.", "Что открывают кнопка Home и выход из последнего приложения. При включении ТВ показывается то, что было до выключения. Работает один способ за раз."),
 		TextStyle{Face::ui, 21, 400, 0}, X, TOP + 66, 28, t.textMuted);
 	float y0 = TOP + 66 + 28 + 40;
 	std::string current = info_ ? info_->mode : "";

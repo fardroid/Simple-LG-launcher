@@ -53,13 +53,13 @@ Needs SSH turned on in the Homebrew Channel's settings. In the commands below, r
 Copy the package to the TV:
 
 ```bash
-scp -O tld.my.simplelauncher_2.2.0_arm.ipk root@<tv-ip>:/tmp/
+scp -O tld.my.simplelauncher_2.2.1_arm.ipk root@<tv-ip>:/tmp/
 ```
 
 Install it (one line, copy it whole):
 
 ```bash
-ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.0_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
+ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.1_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
 ```
 
 When it is done it prints a long line that contains `"state":"installed"`. Then open Simple LG launcher from the TV's app list.
@@ -80,7 +80,7 @@ Install the `.ipk` with [webOS Dev Manager](https://github.com/webosbrew/dev-man
 
 ### Coming from version 1
 
-Install 2.2.0 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
+Install 2.2.1 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
 
 ### Updates: once you turn it on, nothing more to install by hand
 
@@ -100,16 +100,17 @@ It adds one permission to the launcher (the group `org.webosbrew.hbchannel.servi
 
 On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back. No SSH needed.
 
-**1. Home app** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. Waking from standby does not ask for the Home app: the TV opens LG Home by name when its *start with Home* setting is on, and otherwise its last input. So this way switches *start with Home* off and names the launcher as the last input (the trick of [openhome-webos](https://github.com/devic021/openhome-webos)). Both settings are put back when you switch this way off. When the TV goes to standby, its app manager closes every app but a short list (LG Home is on it); this way adds the launcher to that list (`keepAliveApps`, a copy of the TV's config file mounted over it in RAM at every start), so it is back about a second after waking. Nothing of LG's is replaced, and LG Home stays on its own tile. Things to know:
+**1. Home app** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. Switching the TV on shows what was on before (an HDMI input, Live TV): this way switches LG's *start with Home* off, which would open LG Home over it, and puts it back when you switch this way off. When what was on before was Home, the TV opens LG Home by its ID; a small watcher (started at every full start) opens the launcher instead, and never touches an input or an app. Nothing of LG's is replaced, and LG Home stays on its own tile. Things to know:
 
 - Only on TVs that offer the choice (webOS 25 and newer).
-- After a full restart (not standby) the TV shows no webOS logo, and the launcher settles about a minute later: the app manager has to be restarted once to take the list.
+- After standby the launcher starts from scratch when you press Home, in 2–3 seconds.
+- Up to 2.2.0 this way named the launcher as the TV's last input, so that waking up opened it, and kept it loaded through standby by restarting the app manager at every full start. Both are gone: with the launcher as the last input, a full restart left the HDMI inputs and Live TV black ("no signal") until the next restart ([issue 16](https://github.com/fardroid/Simple-LG-launcher/issues/16)), and the restart of the app manager opened the launcher over Live TV half a minute into a start.
 - If you uninstall the launcher while this is on, the Home button opens nothing until a full restart, after which LG Home is back by itself. Switch to *Off* first.
 - The method is from [Lumen](https://github.com/ammar027/lumen-webos).
 
-**2. Swap** (for TVs that can't choose a Home app). A small folder is mounted over LG Home's app folder: in it are links to the launcher's program and a manifest with LG Home's ID, so the TV starts the launcher thinking it is LG Home. Nothing on the read-only system is changed (it all lives in memory), and *Off* undoes it. After a full restart the TV opens the launcher straight away. The method comes from [Luma](https://github.com/ecklf/lg-luma) and [Glasshouse](https://github.com/rorygallagher2024/glasshouse).
+**2. Swap** (for TVs that can't choose a Home app). A small folder is mounted over LG Home's app folder: in it are links to the launcher's program and a manifest with LG Home's ID, so the TV starts the launcher thinking it is LG Home. Nothing on the read-only system is changed (it all lives in memory), and *Off* undoes it. Switching the TV on shows what was on before; when that was the launcher, it opens straight away. The method comes from [Luma](https://github.com/ecklf/lg-luma) and [Glasshouse](https://github.com/rorygallagher2024/glasshouse).
 
-**3. Helper.** A small script on the TV watches for LG Home and opens the launcher over it, from the moment the TV starts. Nothing is mounted or replaced, but LG Home can flash for a moment, and the script keeps running.
+**3. Helper.** A small script on the TV watches for LG Home and opens the launcher over it, from the moment the TV starts. Nothing is mounted or replaced, but LG Home can flash for a moment, and the script keeps running. Switching the TV on shows what was on before; the launcher is never opened over an input or Live TV.
 
 **4. Off.** The launcher is an ordinary app with its own tile; Home opens LG Home.
 
@@ -162,7 +163,7 @@ For the weather the launcher sends the coordinates of your city to Open-Meteo, p
 
 - [Hearth](https://github.com/rudra-avatar/Hearth) by rudra-avatar, which this is a fork of (and the idea for the pixel shift). If you'd rather have the original (more fonts, a recent apps panel, a quiet mode, no calendar), go there.
 - [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), which Hearth itself grew out of.
-- [Lumen](https://github.com/ammar027/lumen-webos), for the official way to be the TV's Home app, and [openhome-webos](https://github.com/devic021/openhome-webos), for waking up into it.
+- [Lumen](https://github.com/ammar027/lumen-webos), for the official way to be the TV's Home app, and [openhome-webos](https://github.com/devic021/openhome-webos), for waking up into it (used up to 2.2.0).
 - [Luma](https://github.com/ecklf/lg-luma) and [Glasshouse](https://github.com/rorygallagher2024/glasshouse), for the way to take LG Home's place, and Luma for the start-up picture.
 - [webos-debloat](https://gist.github.com/lucataco/7c303b443934008a9031a55cfca552ec) by lucataco, for the TV tweaks.
 - [SDL-webOS](https://github.com/webosbrew/SDL-webOS) and the [native toolchain](https://github.com/webosbrew/native-toolchain) by webosbrew, [nlohmann/json](https://github.com/nlohmann/json), [pugixml](https://pugixml.org) and [QR Code generator](https://www.nayuki.io/page/qr-code-generator-library) by Nayuki.

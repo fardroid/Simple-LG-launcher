@@ -3,8 +3,12 @@
 # a folder with an appinfo.json of LG Home's id (com.webos.app.home, type native) and links to the installed launcher's files
 # is bind-mounted over LG Home's app folder, and the TV's app manager is made to read that one app again (blockSystemApp,
 # then releaseBlockSystemApp). From then on everything that means "Home" starts the launcher: the Home key, Back out of the
-# last app, waking up. LG's files are not changed: unmounting (disable, or a full restart without the boot link) gives LG Home
-# back.
+# last app. LG's files are not changed: unmounting (disable, or a full restart without the boot link) gives LG Home back.
+#
+# Switching the TV on is left to the TV: it shows what was on before (lastinput.sh names Home as the last input while the
+# launcher is in front). LG's "start with Home" is left as it is (up to 2.2.0 enable switched it on). About 80 s into a full
+# start the TV's preload manager starts Home in the background; the launcher ends at once then (src/main.cpp), instead of
+# coming in front of Live TV or an HDMI input (issue 16).
 #
 #   sh takeover.sh enable    put the launcher in place now, and again at every full start (boot link)
 #   sh takeover.sh disable   LG Home back, boot link removed
@@ -30,6 +34,7 @@ HOOK=/media/developer/launcher-homehook
 HOOK_LINK=/var/lib/webosbrew/init.d/48-launcher-homehook
 LOG=/tmp/launcher-homehook.log
 SAM=luna://com.webos.applicationManager
+HERE=$(cd "$(dirname "$0")" && pwd)
 
 log () { echo "$(date '+%H:%M:%S') takeover: $*" | tee -a "$LOG"; }
 
@@ -171,8 +176,6 @@ case "$1" in
 		chmod +x "$LINK" "$DIR/takeover.sh"
 		# the helper is not needed at start-up any more
 		[ -L "$HOOK_LINK" ] && mv -f "$HOOK_LINK" "$DIR/48-launcher-homehook.off"
-		# with the launcher as Home, LG's "start with Home" is what makes waking up open it
-		luna-send -n 1 luna://com.webos.settingsservice/setSystemSettings '{"category":"general","settings":{"homeAutoLaunch":"on"}}' >/dev/null 2>&1
 		take || { rm -f "$FLAG" "$LINK"; exit 1; }
 		;;
 	apply)
@@ -193,8 +196,7 @@ case "$1" in
 		# at each start of the launcher, while it is on: the copy the boot link runs brought up to the installed launcher's (an
 		# update reaches the next full start), and the links of the stage made again (a file the update added)
 		[ -f "$FLAG" ] || { echo "off"; exit 0; }
-		here=$(cd "$(dirname "$0")" && pwd)
-		if [ "$here" != "$DIR" ] && ! cmp -s "$0" "$DIR/takeover.sh"; then
+		if [ "$HERE" != "$DIR" ] && ! cmp -s "$0" "$DIR/takeover.sh"; then
 			cp -f "$0" "$DIR/takeover.sh" && chmod +x "$DIR/takeover.sh" && log "updated its copy from the installed launcher"
 		fi
 		stage >/dev/null 2>&1
