@@ -64,6 +64,7 @@ void CollectionStore::read_list (std::function<void()> done) {
 			photos_ = photos;
 			list_failed_at_ = photos.empty() ? now_ms_() : -1;
 			logf("collection: %d pictures listed", (int)photos.size());
+			drop_outdated();
 			auto waiters = std::move(list_waiters_);
 			list_waiters_.clear();
 			for (auto &w : waiters) w();
@@ -109,14 +110,29 @@ int CollectionStore::missing () const {
 	return n;
 }
 
+void CollectionStore::scan () {
+	if (scanned_) return;
+	// the photos on the TV now (looked up once; each download adds its own)
+	scanned_ = true;
+	for (auto &e : list_dir(collection_dir(data_dir_)))
+		if (!e.dir) on_tv_.insert(join_path(collection_dir(data_dir_), e.name));
+}
+
+// A photo the list now has in another version (made again, e.g. sharper) is downloaded again: the file on the TV is not the size
+// the list gives. It stays on the TV, and in the wallpaper, until the new one has come.
+void CollectionStore::drop_outdated () {
+	scan();
+	for (auto &p : photos_) {
+		std::string path = collection_file(data_dir_, p.id);
+		if (p.size <= 0 || !on_tv_.count(path) || file_size(path) == p.size) continue;
+		on_tv_.erase(path);
+		logf("collection: %s is new in the list: downloading it again", p.id.c_str());
+	}
+}
+
 void CollectionStore::pump () {
 	if (data_dir_.empty()) return;
-	if (!scanned_) {
-		// the photos on the TV now (looked up once; each download adds its own)
-		scanned_ = true;
-		for (auto &e : list_dir(collection_dir(data_dir_)))
-			if (!e.dir) on_tv_.insert(join_path(collection_dir(data_dir_), e.name));
-	}
+	scan();
 	auto order = wanted_order();
 	// the one downloading is no longer wanted: it stops (and the next one starts when it has)
 	if (!active_.empty()) {
@@ -126,7 +142,11 @@ void CollectionStore::pump () {
 	std::string next;
 	for (auto &id : order)
 		if (!on_tv_.count(collection_file(data_dir_, id)) && !failed_at_.count(id)) { next = id; break; }
-	if (next.empty()) return;
+	if (next.empty()) {
+		// all on the TV: the list is still read once, for the photos that changed in it since
+		if (photos_.empty() && !order.empty() && list_failed_at_ < 0) read_list();
+		return;
+	}
 	if (photos_.empty()) { if (list_failed_at_ < 0) read_list(); return; }     // the list comes first (pump runs again when it has)
 	const CollectionPhoto *p = photo(next);
 	if (!p) { failed_at_[next] = now_ms_(); pump(); return; }   // not in the list (any more)
@@ -150,9 +170,9 @@ void CollectionStore::pump () {
 				return !*stop;
 			}, 120, 16l << 20);
 			if (!r.ok) why = r.error;
-			else if (sha256_file(file) != ph.sha256) why = "the file came damaged";
+			// (a download that did not finish leaves the file on the TV as it was: an older version of the photo stays)
+			else if (sha256_file(file) != ph.sha256) { why = "the file came damaged"; unlink(file.c_str()); }
 		}
-		if (!why.empty()) unlink(file.c_str());
 		post_main([this, ph, file, why, no_room, stop] {
 			active_.clear();
 			stop_.reset();

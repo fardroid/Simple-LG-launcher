@@ -186,8 +186,9 @@ std::vector<Pref> base_prefs () {
 
 	// ----- Wallpaper -----
 	out.push_back(action("wallpaper", "wallpaper", tr("Picture", "Картинка"), tr("One picture, or a folder of pictures as a slideshow, from a USB drive or the TV's storage.", "Одна картинка или папка с картинками для слайд-шоу, с USB-накопителя или из памяти ТВ."),
-		[] (const UserConfig &c, const SystemInfo &) {
-			return c.wallpaper.mode == "gradient" ? tr("None", "Нет") : c.wallpaper.mode == "pictures" ? count((long)c.wallpaper.paths.size(), "picture", "pictures", "картинка", "картинки", "картинок") : base_name(c.wallpaper.path);
+		[] (const UserConfig &c, const SystemInfo &info) {
+			return c.wallpaper.mode == "gradient" ? tr("None", "Нет") : c.wallpaper.mode == "pictures" ? count((long)c.wallpaper.paths.size(), "picture", "pictures", "картинка", "картинки", "картинок")
+				: !info.picture_title.empty() ? info.picture_title : base_name(c.wallpaper.path);
 		}));
 	append(out, group(tr("Slideshow", "Слайд-шоу"), {
 		only(slideshow, choice<int>("interval", "wallpaper", tr("Change every", "Менять каждые"), tr("How long each picture stays on screen.", "Сколько каждая картинка остаётся на экране."),

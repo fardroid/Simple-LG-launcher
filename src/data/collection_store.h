@@ -38,6 +38,8 @@ public:
 	void set_ticked (const std::vector<std::string> &paths);
 	bool on_tv (const std::string &path) const { return on_tv_.count(path) > 0; }
 	State state (const std::string &id) const;
+	/** The id of a photo by its file in the collection folder; empty for any other file. */
+	std::string id_of (const std::string &path) const;
 	/** 0-1 while it downloads. */
 	double fraction (const std::string &id) const;
 	/** Pictures wanted and not on the TV yet. */
@@ -54,7 +56,6 @@ public:
 	std::function<void()> on_no_room;
 
 private:
-	std::string id_of (const std::string &path) const;
 	std::vector<std::string> wanted_order () const;
 	void pump ();
 
@@ -66,6 +67,8 @@ private:
 	std::vector<std::string> wanted_, ticked_;
 	std::set<std::string> on_tv_;
 	bool scanned_ = false;
+	void scan ();
+	void drop_outdated ();
 	std::string active_;                            // the id downloading now
 	double active_fraction_ = 0;
 	std::shared_ptr<std::atomic<bool>> stop_;       // set when the one downloading is no longer wanted

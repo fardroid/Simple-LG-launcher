@@ -161,7 +161,7 @@ std::vector<Gallery::Row> Gallery::rows () const {
 		}
 		for (auto &p : store_->photos()) {
 			if (p.group != group) continue;
-			std::string detail = p.author + " · " + p.licence;
+			std::string detail;      // (the authors and licences are in THIRD_PARTY_NOTICES.md)
 			CollectionStore::State st = store_->state(p.id);
 			if (st == CollectionStore::State::downloading) detail = fmt(tr("Downloading… {0}%", "Скачивается… {0}%"), std::to_string((int)(store_->fraction(p.id) * 100)));
 			else if (st == CollectionStore::State::waiting) detail = tr("Waiting to download", "Ждёт загрузки");

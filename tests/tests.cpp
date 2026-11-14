@@ -233,9 +233,11 @@ static void plates () {
 	eq(region_brightness(map, weather) > 0.8f, true, "the weather is over the bright half");
 	eq(region_brightness(map, calendar) == 0.f, true, "the calendar is over the dark half");
 	eq(A(look_for(0)), std::string("255,255,255,0.11"), "a dark background gets a light plate");
-	eq(A(look_for(1)), std::string("14,18,40,0.66"), "a bright background gets a dark plate");
-	eq(A(look_for(0.5f)) + " " + A(look_for(0.34f)) + " " + A(look_for(0.35f)), std::string("14,18,40,0.44 255,255,255,0.11 14,18,40,0.31"), "in between");
-	eq(A(plate_look("auto", "dusk", map, {clock, weather, calendar})), std::string("14,18,40,0.66"), "auto: one bright part makes all dark");
+	eq(A(look_for(1)), std::string("12,18,46,0.55"), "a bright background gets a dark plate");
+	eq(A(look_for(0.5f)) + " " + A(look_for(0.34f)) + " " + A(look_for(0.35f)), std::string("12,18,46,0.55 255,255,255,0.11 12,18,46,0.55"), "in between: light or dark, nothing else");
+	eq(A(look_for(0.9f, "black")) == A(plate_look("dark", "black", {}, {clock})), true, "auto's dark is Dark's, on any theme");
+	eq(look_for(1).focus.r == 1 && look_for(1).focus.a > 0, true, "a dark card in focus lights up");
+	eq(A(plate_look("auto", "dusk", map, {clock, weather, calendar})), std::string("12,18,46,0.55"), "auto: one bright part makes all dark");
 	auto dark_left = map;
 	for (int i = 0; i < 144; i++) if (i % 16 < 8) dark_left[i] = 0;
 	eq(A(plate_look("auto", "dusk", dark_left, {clock, weather, calendar})), std::string("255,255,255,0.11"), "auto: all over dark, all light");
@@ -563,6 +565,10 @@ static void settings () {
 	bool glass = false;
 	for (auto &o : options_for("look", pic, info)) glass = glass || o.id == "glass";
 	eq(glass, true, "frosted glass appears with a picture");
+	auto picture_text = [&] (const SystemInfo &si) { for (auto &o : options_for("wallpaper", pic, si)) if (o.id == "wallpaper") return o.valueText; return std::string(); };
+	SystemInfo titled = info;
+	titled.picture_title = "Matterhorn from Lake Grindji";
+	eq(picture_text(info) + " | " + picture_text(titled), std::string("a.jpg | Matterhorn from Lake Grindji"), "the picture by its file name, a photo of the collection by its title");
 	auto l1 = apply_pref(c0, "showLabels", Press::ok), l2 = apply_pref(l1, "showLabels", Press::ok);
 	eq(S{show(l1.showLabels), show(l1.labelsSelectedOnly), show(l2.showLabels)}, S{"true", "true", "false"}, "App names: all, then only the selected one, then none");
 	S ids, hg;
@@ -923,6 +929,22 @@ void collection () {
 	run_posted();
 	eq(!file_exists(collection_file(data, "b")) && !file_exists(collection_file(data, "old")) && file_exists(collection_file(data, "a")), true,
 		"store: what is not wanted is deleted, the wallpaper's picture stays");
+
+	// a photo made again (another size in the list) is downloaded again at the next start; the others stay as they are
+	write_file(src + "/a.jpg", "picture a, sharper");
+	std::string again = entry("a");
+	again.replace(again.find("\"size\":9"), 8, "\"size\":18");
+	write_file(data + "/list.json", "{\"photos\":[" + again + "," + entry("b") + "]}");
+	CollectionStore next;
+	next.set_data_dir(data);
+	arrived.clear();
+	next.on_arrived = [&] (const std::string &path) { arrived.push_back(base_name(path)); };
+	next.set_wanted({collection_file(data, "a")});
+	eq(next.missing(), 0, "store: the wallpaper's picture is on the TV");
+	for (int i = 0; i < 5; i++) run_posted();
+	std::string got;
+	read_file(collection_file(data, "a"), got);
+	eq(show(arrived) + " " + got, std::string("[a.jpg] picture a, sharper"), "store: the list is read even so, and a photo that changed in it comes again");
 	system(("rm -rf " + data + " " + src).c_str());
 }
 

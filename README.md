@@ -53,13 +53,13 @@ Needs SSH turned on in the Homebrew Channel's settings. In the commands below, r
 Copy the package to the TV:
 
 ```bash
-scp -O tld.my.simplelauncher_2.2.1_arm.ipk root@<tv-ip>:/tmp/
+scp -O tld.my.simplelauncher_2.2.2_arm.ipk root@<tv-ip>:/tmp/
 ```
 
 Install it (one line, copy it whole):
 
 ```bash
-ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.1_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
+ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.2_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
 ```
 
 When it is done it prints a long line that contains `"state":"installed"`. Then open Simple LG launcher from the TV's app list.
@@ -80,7 +80,7 @@ Install the `.ipk` with [webOS Dev Manager](https://github.com/webosbrew/dev-man
 
 ### Coming from version 1
 
-Install 2.2.1 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
+Install 2.2.2 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
 
 ### Updates: once you turn it on, nothing more to install by hand
 
@@ -146,7 +146,7 @@ Settings → Widgets → Quote of the day. The quote comes from [Wikiquote](http
 
 Settings → Wallpaper → Picture opens a gallery of USB drives and the TV's storage (`/media/developer`): folders and pictures as tiles, each picture with its preview. OK ticks pictures, in any folders, and leaving the gallery shows them (one picture, or a slideshow of the ticked ones); the *Slideshow* tile plays a whole folder. JPG or PNG at 1920×1080 to 3840×2160 work best. Anything over 8 MB or 25 megapixels is skipped, with a message.
 
-**The collection.** The gallery's first place after the default background is *Collection*: 84 photos of mountains, nature and space from Wikimedia Commons, under open licences, and the thirteen abstract pictures of the [`wallpapers`](wallpapers) folder, all at 1920×1080 (a photo is about 0.7 MB). Nothing is downloaded until you tick a picture. OK ticks it at once and it downloads in the background; the first tile of each group, *Choose all*, ticks the whole group (OK on it again clears it), and ticks in different groups and folders make one slideshow. You can leave the gallery straight away: the pictures go on downloading one after another, the slideshow takes each in as it comes, and after a restart the launcher finishes what was left. When you leave the gallery, the collection's pictures that are not part of the wallpaper are deleted, so the TV keeps only the ones in use. Each photo shows its author and licence; the full list is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md#wallpaper-collection).
+**The collection.** The gallery's first place after the default background is *Collection*: 84 photos of mountains, nature and space from Wikimedia Commons, under open licences, and the thirteen abstract pictures of the [`wallpapers`](wallpapers) folder, all at 1920×1080 (a photo is about 1 MB). Nothing is downloaded until you tick a picture. OK ticks it at once and it downloads in the background; the first tile of each group, *Choose all*, ticks the whole group (OK on it again clears it), and ticks in different groups and folders make one slideshow. You can leave the gallery straight away: the pictures go on downloading one after another, the slideshow takes each in as it comes, and after a restart the launcher finishes what was left. When you leave the gallery, the collection's pictures that are not part of the wallpaper are deleted, so the TV keeps only the ones in use. The authors and licences of the photos are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md#wallpaper-collection).
 
 The [`wallpapers`](wallpapers) folder has the thirteen abstract ones: soft gradients, dunes, auroras and a sea at dawn, all drawn for this launcher and free to use. They are in the collection too; to copy them all to the TV instead:
 

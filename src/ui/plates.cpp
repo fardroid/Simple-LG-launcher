@@ -29,6 +29,14 @@ Rgba tint_of (const std::string &theme, float a) {
 
 const PlateLook LIGHT{{1, 1, 1, 0.11f}, {1, 1, 1, 0.06f}};
 
+// The dark plate: the theme's colour (dusk keeps the web version's own). The card in focus lights up, as a light plate does: a
+// darker tint over it made the chosen card the darkest of all.
+PlateLook dark_look (const std::string &theme) {
+	const Rgba focus{1, 1, 1, 0.1f};
+	if (theme == "dusk") return {{12 / 255.f, 18 / 255.f, 46 / 255.f, 0.55f}, focus};
+	return {tint_of(theme, 0.55f), focus};
+}
+
 }  // namespace
 
 BrightnessMap map_from_pixels (const unsigned char *data) {
@@ -77,21 +85,19 @@ float region_brightness (const BrightnessMap &map, const std::array<int, 4> &r) 
 }
 
 PlateLook look_for (float b, const std::string &theme) {
-	if (b <= 0.34f) return LIGHT;
-	// the web version writes the alphas with two decimals; a dark plate takes the theme's colour
-	float alpha = std::round(std::min(0.66f, 0.3f + (b - 0.34f) * 0.9f) * 100) / 100;
-	float focus = std::round(std::min(0.3f, 0.05f + alpha * 0.25f) * 100) / 100;
-	return {tint_of(theme, alpha), tint_of(theme, focus)};
+	// one of the two looks, the same as Light and Dark: in between ones read as a third colour
+	return b <= 0.34f ? LIGHT : dark_look(theme);
 }
 
 PlateLook plate_look (const std::string &mode, const std::string &theme, const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects) {
 	if (mode == "light") return LIGHT;
-	if (mode == "dark") {
-		if (theme == "dusk") return {{12 / 255.f, 18 / 255.f, 46 / 255.f, 0.55f}, {14 / 255.f, 22 / 255.f, 54 / 255.f, 0.18f}};     // the web version's
-		return {tint_of(theme, 0.55f), tint_of(theme, 0.18f)};
-	}
-	BrightnessMap m = map.empty() ? theme_map(theme) : map;
-	float brightest = -1;
-	for (auto &r : rects) if (r[3] > 0) brightest = std::max(brightest, region_brightness(m, r));
+	if (mode == "dark") return dark_look(theme);
+	float brightest = brightest_of(map.empty() ? theme_map(theme) : map, rects);
 	return brightest < 0 ? LIGHT : look_for(brightest, theme);
+}
+
+float brightest_of (const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects) {
+	float brightest = -1;
+	for (auto &r : rects) if (r[3] > 0) brightest = std::max(brightest, region_brightness(map, r));
+	return brightest;
 }

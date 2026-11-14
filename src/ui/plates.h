@@ -19,6 +19,8 @@ BrightnessMap map_from_pixels (const unsigned char *rgba64x36);
 BrightnessMap theme_map (const std::string &theme);
 /** Average brightness under a rectangle of the 1920 x 1080 screen. */
 float region_brightness (const BrightnessMap &map, const std::array<int, 4> &rect);
+/** The brightest place under any of `rects` (-1: none). */
+float brightest_of (const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects);
 /** The plate's colour for a background of this brightness. */
 PlateLook look_for (float brightness, const std::string &theme = "dusk");
 /** The one look of all the plates: `rects` the cards on the screen, `map` the wallpaper's grid (empty: the theme's). */

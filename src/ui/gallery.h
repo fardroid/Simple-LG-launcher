@@ -25,6 +25,9 @@ class Gallery {
 public:
 	std::function<void(const WallpaperChoice &)> on_choose;
 	std::function<void()> on_close;
+	/** Leaves the gallery: the ticks, when they changed, are the new wallpaper (on_choose), else on_close. Back from its top does it,
+	 *  and so does Home or the launcher going out of sight. */
+	void leave ();
 
 	/** `chosen`: the pictures chosen now (one picture, or the ticked ones), ticked when it opens. */
 	void open (const std::vector<std::string> &chosen, double now);
@@ -44,7 +47,6 @@ private:
 	void load (int attempt);
 	void go_to (const std::string &path, bool top, int restore);
 	void go_up ();
-	void leave ();
 	void activate (int i);
 	void next_thumb ();
 	// the collection: path_ is "collection:" for its groups and "collection:<group>" for a group's photos

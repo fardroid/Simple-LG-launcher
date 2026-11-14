@@ -23,8 +23,9 @@ public:
 	/** `frost`: % of the glass's full blur (Settings → Frost). */
 	void configure (const WallpaperConfig &c, const std::string &theme, int frost);
 	/** Pictures it shows came onto the TV (the wallpaper collection downloads them in the background): a picture not shown yet
-	 *  is shown, and a slideshow takes the new ones in. */
-	void files_changed ();
+	 *  is shown, and a slideshow takes the new ones in. `arrived`: the file that came; when it is the one on screen (a newer
+	 *  version of it), it is shown again. */
+	void files_changed (const std::string &arrived = "");
 	/** Moves the slideshow on when its time came. Returns true while something on it is changing (a fade). */
 	bool update (double now);
 	void draw (double now);

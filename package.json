@@ -1,6 +1,6 @@
 {
   "name": "simple-lg-launcher",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "private": true,
   "description": "Simple LG launcher: a native home screen for LG webOS TVs. Node is used only to package the app (ares-package) and to generate some of its data files.",
   "license": "MIT",

@@ -45,11 +45,11 @@ back to a plain text tile without its icon, so removal doesn't break anything.
 ## Wallpaper collection
 
 The photos of the wallpaper collection (Settings → Wallpaper → Picture → *Collection*) are not in this repository or in the
-package: they are files of the [`wallpapers-1`](https://github.com/fardroid/Simple-LG-launcher/releases/tag/wallpapers-1) release,
+package: they are files of the [`wallpapers-2`](https://github.com/fardroid/Simple-LG-launcher/releases/tag/wallpapers-2) release (their previews, of `wallpapers-1`),
 listed in [`repo/wallpapers.json`](repo/wallpapers.json), and the TV downloads only the ones you tick. They come from
 [Wikimedia Commons](https://commons.wikimedia.org/) (its featured pictures) and keep their own licences, below. They were
-scaled and cropped to 1920×1080; the licences marked SA ask that these copies stay under the same licence. The launcher's
-gallery shows each photo's author and licence. None of the authors endorses this project. The collection's fourth group, *Abstract*,
+scaled and cropped to 1920×1080 and sharpened a little (an unsharp mask); the licences marked SA ask that these copies stay under the same licence. Each one's
+author, licence and source are listed below. None of the authors endorses this project. The collection's fourth group, *Abstract*,
 holds this project's own pictures from the [`wallpapers`](wallpapers) folder, under its MIT licence.
 
 ### Mountains

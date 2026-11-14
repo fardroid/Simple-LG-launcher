@@ -1,6 +1,6 @@
 {
   "id": "tld.my.simplelauncher",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "vendor": "tld.my.simplelauncher",
   "type": "native",
   "main": "simplelauncher",

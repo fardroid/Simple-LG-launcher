@@ -352,6 +352,10 @@ void refresh_apps () {
 			}
 			app.toast.show(added > 0 ? fmt(tr("Found: {0}", "Найдено: {0}"), count(added, "new app", "new apps", "новое приложение", "новых приложения", "новых приложений")) : tr("The app list is up to date", "Список приложений актуален"), false, now_ms());
 		}
+		// read again each time the launcher comes back to the front: the row is built again only when the list changed
+		auto same = [] (const AppEntry &a, const AppEntry &b) { return a.id == b.id && a.title == b.title && a.iconPath == b.iconPath && a.removable == b.removable; };
+		if (!manual && std::equal(apps.begin(), apps.end(), app.apps.begin(), app.apps.end(), same)) return;
+		if (!manual) logf("apps: %d (the list changed)", (int)apps.size());
 		app.apps = apps;
 		cache_apps(join_path(DATA_DIR, "apps.json"), apps);
 		rebuild_items();
@@ -624,6 +628,9 @@ SystemInfo system_info () {
 	info.root = (int)app.root;
 	info.root_detail = app.root_detail;
 	if (app.home_mode) info.home_mode = app.home_mode->mode;
+	// a photo of the collection goes by its title, not its file name (m246aac5f.jpg)
+	if (app.cfg.wallpaper.mode == "image")
+		if (const CollectionPhoto *p = app.collection.photo(app.collection.id_of(app.cfg.wallpaper.path))) info.picture_title = p->title;
 	return info;
 }
 
@@ -1313,7 +1320,8 @@ void close_screens () {
 	if (app.menu.open()) { app.menu.close(); app.dirty = true; }
 	if (app.quick.is_open()) { app.quick.close(now_ms()); app.dirty = true; }
 	if (app.screen == App::Screen::home) return;
-	if (app.screen == App::Screen::gallery) app.gallery.release();
+	// the gallery is left as by Back: what was ticked is the wallpaper (Home used to drop it, though the photos downloaded)
+	if (app.screen == App::Screen::gallery) app.gallery.leave();
 	if (app.picker.typing()) SDL_StopTextInput();
 	app.screen = App::Screen::home;
 	app.home.mark_board();
@@ -1622,7 +1630,7 @@ int main (int argc, char **argv) {
 	// the collection is set up before the settings are read: they say which of its pictures to download (what a restart left)
 	app.collection.set_data_dir(DATA_DIR);
 	// a picture of the collection came: the wallpaper takes it in (a slideshow grows as they come)
-	app.collection.on_arrived = [] (const std::string &) { app.wallpaper.files_changed(); app.dirty = true; };
+	app.collection.on_arrived = [] (const std::string &path) { app.wallpaper.files_changed(path); app.dirty = true; };
 	app.collection.on_no_room = [] {
 		app.toast.show(tr("Not enough room on the TV for the wallpaper collection", "На ТВ не хватает места для обоев из коллекции"), true, now_ms());
 		app.dirty = true;
@@ -1824,7 +1832,9 @@ int main (int argc, char **argv) {
 							hbc_exec("( setsid nohup sh -c 'sleep 1; luna-send -n 1 luna://com.webos.applicationManager/launch \"{\\\"id\\\":\\\"" + RUN_ID + "\\\"}\"' </dev/null >/dev/null 2>&1 & ); echo ok", 5000);
 							app.running = false;
 						}
-						if (!app.front) refresh_inputs();
+						// the apps and inputs again: the TV adds an app of its own for a device switched on over HDMI (its CEC
+						// name, e.g. com.webos.app.hdmi2 "Xiaomi OTT") and takes it away when the device goes
+						if (!app.front) refresh_apps();
 						app.front = true;
 						app.home.set_front(true);
 						app.wallpaper.set_paused(false, now);
