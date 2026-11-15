@@ -49,13 +49,13 @@ int release_major (const std::string &release) { return atoi(release.c_str()); }
 ModeText mode_text (const std::string &mode) {
 	if (mode == "default") return {
 		tr("Home app: the TV opens the launcher", "Штатно: ТВ сам открывает лаунчер"),
-		tr("The launcher becomes the TV's Home app. Switching the TV on shows what was on before: LG's start with Home is switched off.", "Лаунчер становится домашним приложением ТВ. При включении ТВ показывается то, что было до выключения: «Запуск с Home» от LG выключается."),
+		tr("The launcher becomes the TV's Home app, and the TV opens it when switched on: the TV's start-up rules name it.", "Лаунчер становится домашним приложением ТВ, и ТВ открывает его при включении: его называют правила запуска ТВ."),
 		{tr("Home and Back out of the last app open the launcher", "Home и выход из последнего приложения открывают лаунчер"),
 			tr("LG Home is not replaced and keeps its tile", "LG Home не подменяется и остаётся на своей плитке")},
 		{tr("Only where the TV lets you choose a Home app (webOS 25)", "Только где ТВ даёт выбрать домашнее приложение (webOS 25)"),
 			tr("After standby the launcher takes 2–3 seconds to open", "После сна лаунчер открывается за 2–3 секунды"),
-			tr("Changes two TV settings (put back when switched off)", "Меняет две настройки ТВ (при выключении возвращаются)"),
-			tr("Switch this off before uninstalling the launcher", "Перед удалением лаунчера выключите этот способ")}};
+			tr("Changes the TV's Home app and start-up rules (put back when switched off)", "Меняет домашнее приложение и правила запуска ТВ (при выключении возвращаются)"),
+			tr("Switch this off before updating the TV's firmware", "Перед обновлением прошивки ТВ выключите этот способ")}};
 	if (mode == "mount") return {
 		tr("Swap: the launcher in LG Home's folder", "Подмена: лаунчер в папке LG Home"),
 		tr("The TV still thinks it is opening LG Home, but the launcher is put in LG Home's folder for it to find.", "Телевизор по-прежнему думает, что открывает LG Home, но в его папку подложен лаунчер."),
@@ -93,12 +93,16 @@ std::string name_last_input_command (const std::string &app_id, const std::strin
 std::string restore_last_input_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/lastinput.sh' restore; true"; }
 std::string takeover_refresh_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/takeover.sh' refresh; true"; }
 std::string helper_refresh_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/helper.sh' refresh; true"; }
+std::string guard_sync_command (const std::string &app_id, bool wipe) { return "sh '" + tools_dir(app_id) + "/guard.sh' sync " + (wipe ? "on" : "off") + "; true"; }
+std::string guard_reset_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/guard.sh' reset"; }
+std::string guard_uninstall_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/guard.sh' uninstall"; }
 std::string stock_command (const std::string &app_id) { return "sh '" + hook_dir(app_id) + "/stock.sh' >/dev/null 2>&1; true"; }
 std::string refresh_command (const std::string &app_id) { return "sh '" + tools_dir(app_id) + "/defaulthome.sh' refresh; true"; }
 // scripts/gen-tools.sh moves the state of a launcher with another id than the web version's to launcher-native-…
 std::string result_file (const std::string &app_id) { return is_web(app_id) ? "/tmp/launcher-homemode.result" : "/tmp/launcher-native-homemode.result"; }
 std::string hook_dir (const std::string &app_id) { return is_web(app_id) ? "/media/developer/launcher-homehook" : "/media/developer/launcher-native-homehook"; }
 std::string alive_file (const std::string &app_id) { return is_web(app_id) ? "/tmp/launcher-alive" : "/tmp/launcher-native-alive"; }
+std::string rules_mark_file (const std::string &app_id) { return is_web(app_id) ? "/tmp/launcher-rules-loaded" : "/tmp/launcher-native-rules-loaded"; }
 
 std::optional<HomeModeInfo> read_home_mode (const std::string &app_id, bool *root, std::string *why) {
 	bool ok = false;
@@ -107,7 +111,7 @@ std::optional<HomeModeInfo> read_home_mode (const std::string &app_id, bool *roo
 	return ok ? parse_mode_status(out) : std::nullopt;
 }
 
-const std::vector<std::string> ROOT_OPTIONS = {"homeMethod", "homeCleanup", "restartTv"};
+const std::vector<std::string> ROOT_OPTIONS = {"homeMethod", "wipeOnUninstall", "uninstallLauncher", "restartTv"};
 
 std::string root_reason (Root root, const std::string &detail) {
 	if (root != Root::no) return "";

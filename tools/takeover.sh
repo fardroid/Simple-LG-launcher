@@ -26,6 +26,7 @@ STAGE=$DIR/app
 FLAG=$DIR/enabled
 APP_ID=tld.my.simplelauncher
 LAUNCHER=/media/developer/apps/usr/palm/applications/tld.my.simplelauncher
+GUARD=/media/developer/launcher-guard/guard.sh
 PROGRAM=simplelauncher                   # the launcher's program (appinfo.json "main")
 HOME_ID=com.webos.app.home
 APPDIR=/usr/palm/applications/$HOME_ID
@@ -182,7 +183,11 @@ case "$1" in
 		[ -f "$FLAG" ] || exit 0
 		# at a full start: wait until the app manager answers
 		i=0; until luna-send -n 1 "$SAM/getAppInfo" "{\"id\":\"$HOME_ID\"}" 2>/dev/null | grep -q returnValue || [ "$i" -ge 30 ]; do sleep 1; i=$((i + 1)); done
+		# the launcher's folder empty: an uninstall is guard.sh's to decide (it takes this way back too: exit 3)
+		if [ ! -f "$LAUNCHER/appinfo.json" ] && [ -f "$GUARD" ]; then sh "$GUARD" check; [ $? = 3 ] && exit 0; fi
 		take
+		# the watcher for an uninstall (guard.sh): the Swap is taken back at once, not at the next full start
+		[ -f "$GUARD" ] && sh "$GUARD" watch-start
 		;;
 	disable)
 		rm -f "$FLAG" "$LINK"

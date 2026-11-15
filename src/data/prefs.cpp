@@ -58,6 +58,13 @@ Pref action (const char *id, const char *tab, std::string label, std::string des
 	return p;
 }
 
+/** A row that deletes or uninstalls: drawn in red, with its glyph at the end. */
+Pref danger (Pref p, const char *icon) {
+	p.danger = true;
+	p.icon = icon;
+	return p;
+}
+
 std::string pct (int v) { return std::to_string(v) + "%"; }
 std::string px (int v) { return std::to_string(v) + " px"; }
 
@@ -212,10 +219,21 @@ std::vector<Pref> base_prefs () {
 		[] (const UserConfig &, const SystemInfo &) { return std::string(); }, false));
 	append(out, group(tr("Opening the launcher", "Запуск лаунчера"), {
 		action("homeMethod", "home", tr("How the launcher opens", "Как открывается лаунчер"), tr("Whether the Home button and Back out of the last app open the launcher, and in which way. Each way with its pros and cons.", "Открывают ли лаунчер кнопка Home и выход из последнего приложения, и каким способом. У каждого способа свои плюсы и минусы."),
-			[] (const UserConfig &, const SystemInfo &info) { return mode_short(info.home_mode); }),
-		action("homeCleanup", "home", tr("Remove everything from the TV", "Убрать всё с ТВ"), tr("Switches off whichever way opens the launcher and takes off the TV what it put there: the start-up links, the guards, keeping the launcher loaded and the copies of its scripts. The Home button opens LG Home again.",
-			"Выключает способ открытия лаунчера и убирает с ТВ всё, что для него ставилось: автозапуск, стражи, удержание лаунчера в памяти и копии его скриптов. Кнопка Home снова открывает LG Home."),
-			[] (const UserConfig &, const SystemInfo &) { return std::string(); }, false)
+			[] (const UserConfig &, const SystemInfo &info) { return mode_short(info.home_mode); })
+	}));
+	append(out, group(tr("Reset and removal", "Сброс и удаление"), {
+		toggle("wipeOnUninstall", "home", tr("Delete the data when the launcher is uninstalled", "Удалять данные при удалении лаунчера"),
+			tr("When the launcher is uninstalled other than with the button below, its settings, downloaded photos, calendar links and wallpapers folder are deleted at the TV's next full start. Off: only what the TV needs to work as before is taken back.",
+				"Если лаунчер удалят не кнопкой ниже, при следующем полном старте ТВ удалятся его настройки, скачанные фото, ссылки календарей и папка обоев. Если выключено, вернётся только то, что нужно ТВ для нормальной работы."),
+			[] (const UserConfig &c) { return c.wipeOnUninstall; }, [] (UserConfig c, bool v) { c.wipeOnUninstall = v; return c; }),
+		danger(action("resetLauncher", "home", tr("Reset the launcher", "Сбросить лаунчер"),
+			tr("Everything back to as just installed: settings, calendar links, the wallpapers folder and downloaded photos are deleted, and the way of opening is switched off. Without root, only the launcher's own data.",
+				"Всё как после установки: удаляются настройки, ссылки календарей, папка обоев и скачанные фото, способ открытия выключается. Без рута только данные самого лаунчера."),
+			[] (const UserConfig &, const SystemInfo &) { return std::string(); }, false), "reset"),
+		danger(action("uninstallLauncher", "home", tr("Uninstall the launcher", "Удалить лаунчер"),
+			tr("Switches off the way of opening, uninstalls the launcher and deletes everything it put on the TV, with its data, the calendar links and the wallpapers folder.",
+				"Выключает способ открытия, удаляет лаунчер и всё, что он поставил на ТВ, вместе с данными, ссылками календарей и папкой обоев."),
+			[] (const UserConfig &, const SystemInfo &) { return std::string(); }, false), "trash")
 	}));
 	Pref about;
 	about.id = "about"; about.tab = "home"; about.label = "Simple LG launcher"; about.kind = "info";
@@ -333,7 +351,7 @@ std::vector<OptionItem> options_for (const std::string &tab, const UserConfig &c
 	for (auto &p : prefs()) {
 		if (p.tab != tab || (p.when && !p.when(c)) || (p.shown && !p.shown(c, info))) continue;
 		OptionItem o;
-		o.id = p.id; o.label = p.label; o.description = p.description; o.group = p.group; o.kind = p.kind; o.opens = p.opens; o.icon = p.icon;
+		o.id = p.id; o.label = p.label; o.description = p.description; o.group = p.group; o.kind = p.kind; o.opens = p.opens; o.icon = p.icon; o.danger = p.danger;
 		if (p.kind == "toggle" && p.on) o.value = p.on(c) ? 1 : 0;
 		if (p.kind != "toggle" && p.text) o.valueText = p.text(c, info);
 		o.stepper = p.kind == "choice";

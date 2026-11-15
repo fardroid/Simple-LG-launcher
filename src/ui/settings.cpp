@@ -31,6 +31,8 @@ const float GRID_VIEW = 688;          // Grid.tsx VIEWPORT_HEIGHT
 const float TILE = layout::TILE_SIZE, TILE_STEP = layout::TILE_SIZE + layout::TILE_GAP;
 const float GRID_LABEL = std::round(layout::TILE_LABEL * 2.4f) + 14, GRID_ROW_STEP = layout::TILE_SIZE + GRID_LABEL + 40;
 const Color PILL = Color::hex("#F2F2F7"), ON_PILL = Color::hex("#111216"), ON_PILL_VALUE = Color::hex("#3C3F47");
+// the rows that delete or uninstall (OptionItem::danger): the system red, deeper on the light pill
+const Color RED = Color::hex("#FF6961"), RED_ON_PILL = Color::hex("#D70015");
 
 struct Icon { const char *id, *color; };
 const Icon ICONS[] = {{"apps", "#0A84FF"}, {"inputs", "#30B0C7"}, {"look", "#5E5CE6"}, {"widgets", "#FF9F0A"}, {"wallpaper", "#BF5AF2"}, {"home", "#30D158"}};
@@ -546,7 +548,7 @@ void Settings::draw_options (double now, float top) {
 		if (pill > 0) gfx::rect(row, 22, PILL.with_alpha(pill));
 		float dim = o.disabled.empty() ? 1 : 0.4f;
 		TextStyle lst{Face::ui, 27, 400, 0}, vst{Face::ui, 25, 400, 0};
-		Color label_c = mix(t.textPrimary, ON_PILL, pill), value_c = mix(t.textSecondary, ON_PILL_VALUE, pill);
+		Color label_c = o.danger ? mix(RED, RED_ON_PILL, pill) : mix(t.textPrimary, ON_PILL, pill), value_c = mix(t.textSecondary, ON_PILL_VALUE, pill);
 		float right = row.x + row.w - 24, value_left = right;
 		if (o.value >= 0) {
 			// an iOS-style switch, its knob sliding over

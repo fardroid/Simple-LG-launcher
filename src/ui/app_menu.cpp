@@ -14,6 +14,8 @@
 namespace {
 
 const Color PILL = Color::hex("#F2F2F7"), ON_PILL = Color::hex("#111216"), ON_PILL_DETAIL = Color::hex("#3C3F47");
+// what deletes or uninstalls: the system red, deeper on the light pill
+const Color RED = Color::hex("#FF6961"), RED_ON_PILL = Color::hex("#D70015");
 
 void put (const std::string &s, const TextStyle &st, float x, float top, float line, Color c, float opacity = 1) {
 	const TextLine &l = text::line(s, st);
@@ -34,6 +36,7 @@ void AppMenu::open (const std::string &title, Moves moves, const std::string &hi
 	step_ = Step::menu;
 	confirm_only_ = false;
 	q_fn_ = nullptr;
+	q_danger_ = false;
 	w_text_.clear();
 	ok_armed_ = false;
 	index_ = first_enabled();
@@ -47,12 +50,13 @@ void AppMenu::open_confirm (const std::string &title, double now) {
 	confirm_only_ = true;
 }
 
-void AppMenu::open_question (const std::string &title, const std::string &text, const std::string &yes, std::function<void()> fn, double now) {
+void AppMenu::open_question (const std::string &title, const std::string &text, const std::string &yes, std::function<void()> fn, double now, bool danger) {
 	open_confirm(title, now);
 	q_title_ = title;
 	q_text_ = text;
 	q_yes_ = yes;
 	q_fn_ = fn;
+	q_danger_ = danger;
 }
 
 void AppMenu::open_working (const std::string &title, const std::string &text, double now) {
@@ -159,7 +163,7 @@ void AppMenu::draw (const std::string &theme, double now) {
 		: step_ == Step::working ? tr("Please wait, this can take a few seconds.", "Подождите, это может занять несколько секунд.") : "";
 	TextStyle tst{Face::ui, 40, 600, 0}, xst{Face::ui, 20, 400, 0}, lst{Face::ui, 26, 400, 0}, dst{Face::ui, 20, 400, 0};
 	float w = 900, inner = w - 88;
-	auto text_lines = text.empty() ? std::vector<std::string>() : text::wrap(text, xst, (int)inner, 3);
+	auto text_lines = text.empty() ? std::vector<std::string>() : text::wrap(text, xst, (int)inner, 4);
 	float h = 40 + 48 + 8 + (text_lines.empty() ? 0 : text_lines.size() * 28.f + 22) + r.size() * (84.f + 8) + 32;
 	Rect box{(1920 - w) / 2, std::round((1080 - h) / 2), w, std::round(h)};
 	gfx::shadow(box, 36, 30, 80, {0, 0, 0, 0.6f});
@@ -183,7 +187,9 @@ void AppMenu::draw (const std::string &theme, double now) {
 		gfx::set_alpha(opacity);
 		gfx::rect(row, 22, mix(Color{1, 1, 1, 0.075f}, PILL, pill));
 		float th = 34 + (r[i].detail.empty() ? 0 : 4 + 26), ty = y + (84 - th) / 2;
-		put(text::ellipsize(r[i].label, lst, (int)inner - 56), lst, x + 28, ty, 34, mix(t.textPrimary, ON_PILL, pill));
+		// the button that deletes (an uninstall, or a question asked as dangerous) in red
+		bool red = r[i].key == "yes" && (q_fn_ ? q_danger_ : step_ == Step::confirm);
+		put(text::ellipsize(r[i].label, lst, (int)inner - 56), lst, x + 28, ty, 34, red ? mix(RED, RED_ON_PILL, pill) : mix(t.textPrimary, ON_PILL, pill));
 		if (!r[i].detail.empty()) put(text::ellipsize(r[i].detail, dst, (int)inner - 56), dst, x + 28, ty + 38, 26, mix(t.textSecondary, ON_PILL_DETAIL, pill));
 		gfx::set_alpha(1);
 		y += 84;

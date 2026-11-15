@@ -21,6 +21,10 @@ TAKEOVER_DIR=/media/developer/launcher-takeover
 DEFAULT_DIR=/media/developer/launcher-defaulthome
 HOOK=/media/developer/launcher-homehook
 HOOK_LINK=/var/lib/webosbrew/init.d/48-launcher-homehook
+DEFAULT_LINK=/var/lib/webosbrew/init.d/45-launcher-defaulthome
+TAKEOVER_LINK=/var/lib/webosbrew/init.d/46-launcher-takeover
+RULES=/var/luna/preferences/bootd.json
+APP_ID=tld.my.simplelauncher
 RESULT=/tmp/launcher-homemode.result
 LOCK=/tmp/launcher-homemode.lock
 LOG=/tmp/launcher-homehook.log
@@ -73,9 +77,14 @@ helper_off () {
 
 all_off () {
 	[ -f "$TAKEOVER_DIR/enabled" ] && sh "$HERE/takeover.sh" disable >/dev/null 2>&1
-	[ -f "$DEFAULT_DIR/enabled" ] && sh "$HERE/defaulthome.sh" disable >/dev/null 2>&1
+	[ -f "$DEFAULT_DIR/enabled" ] && KEEP_FRONT=1 sh "$HERE/defaulthome.sh" disable >/dev/null 2>&1
 	# takeover.sh disable starts the helper again if it had been on before; it is not wanted now
 	helper_off
+	# what a way left without being on (an interrupted switch, a power cut, a hand-made change): its boot link, and the
+	# start-up rules when they name the launcher (LG's own never do)
+	[ -f "$DEFAULT_DIR/enabled" ] || rm -f "$DEFAULT_LINK"
+	[ -f "$TAKEOVER_DIR/enabled" ] || rm -f "$TAKEOVER_LINK"
+	if [ -f "$RULES" ] && grep -q "\"$APP_ID\"" "$RULES"; then rm -f "$RULES" "$DEFAULT_DIR/bootd.stock.md5"; sync; log "start-up rules: LG's again"; fi
 	[ "$(mode)" = none ]
 }
 
@@ -95,6 +104,8 @@ set_mode () {
 	if [ "$was" = "$want" ]; then
 		# chosen again: the official way sets itself up again, which also brings the wake-up guard of a newer launcher
 		[ "$want" = default ] && sh "$HERE/defaulthome.sh" enable >/dev/null 2>&1
+		# Off chosen again (and "Remove everything"): what was left without being on goes too
+		[ "$want" = none ] && all_off
 		echo "ok $want"; return 0
 	fi
 	log "switching from $was to $want"
@@ -114,6 +125,9 @@ set_mode () {
 	esac
 }
 
+# the clean-up check for an uninstall (guard.sh): kept while a way is on, removed when none is
+guard_sync () { [ -f "$HERE/guard.sh" ] && sh "$HERE/guard.sh" sync >/dev/null 2>&1; true; }
+
 case "$1" in
 	status)
 		echo "mode=$(mode)"
@@ -122,7 +136,9 @@ case "$1" in
 		;;
 	set)
 		case "$2" in none|default|mount) ;; *) echo "usage: sh $0 set none|default|mount"; exit 1 ;; esac
-		set_mode "$2"
+		set_mode "$2"; r=$?
+		guard_sync
+		exit $r
 		;;
 	run)
 		case "$2" in none|default|mount) ;; *) echo "failed $2: unknown mode" > "$RESULT"; exit 1 ;; esac
@@ -130,7 +146,7 @@ case "$1" in
 		if [ -f "$LOCK" ] && [ $(( $(date +%s) - $(cat "$LOCK" 2>/dev/null || echo 0) )) -lt 120 ]; then echo "busy"; exit 0; fi
 		date +%s > "$LOCK"
 		rm -f "$RESULT"
-		( fdclean; set_mode "$2" > "$RESULT.new" 2>&1; tail -n 1 "$RESULT.new" > "$RESULT"; rm -f "$RESULT.new" "$LOCK"; log "result: $(cat "$RESULT")" ) </dev/null >/dev/null 2>&1 &
+		( fdclean; set_mode "$2" > "$RESULT.new" 2>&1; guard_sync; tail -n 1 "$RESULT.new" > "$RESULT"; rm -f "$RESULT.new" "$LOCK"; log "result: $(cat "$RESULT")" ) </dev/null >/dev/null 2>&1 &
 		echo started
 		;;
 	*) echo "usage: sh $0 status | set <none|default|mount> | run <none|default|mount>"; exit 1 ;;

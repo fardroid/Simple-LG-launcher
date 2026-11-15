@@ -19,7 +19,8 @@ public:
 	/** Straight to the question "Uninstall …?" (the trash button over a tile being moved). */
 	void open_confirm (const std::string &title, double now);
 	/** A question of its own: Cancel, or `yes` which runs `fn` (Restart the TV). */
-	void open_question (const std::string &title, const std::string &text, const std::string &yes, std::function<void()> fn, double now);
+	/** A question with Cancel and `yes`; `danger`: `yes` is drawn red (it deletes or uninstalls). */
+	void open_question (const std::string &title, const std::string &text, const std::string &yes, std::function<void()> fn, double now, bool danger = false);
 	/** "Please wait" with a title and a line of its own, no buttons (Restart the TV, a switch of the way of opening on Home);
 	 *  closed with close(). */
 	void open_working (const std::string &title, const std::string &text, double now);
@@ -47,6 +48,7 @@ private:
 	int index_ = 0;
 	std::string q_title_, q_text_, q_yes_;
 	std::function<void()> q_fn_;     // set: the question of open_question
+	bool q_danger_ = false;
 	std::string w_text_;             // set: the "please wait" of open_working
 	bool confirm_only_ = false;   // opened as the question alone: Back closes it
 	bool ok_armed_ = false;      // OK acts on its release; the release of the hold that opened the menu is not a press

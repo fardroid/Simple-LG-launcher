@@ -164,6 +164,7 @@ UserConfig parse_config (const std::string &raw) {
 	c.closeHome = not_false(field(p, "closeHome"));
 	c.replaceHome = is_true(field(p, "replaceHome"));
 	c.checkUpdates = not_false(field(p, "checkUpdates"));
+	c.wipeOnUninstall = not_false(field(p, "wipeOnUninstall"));
 	c.hookBoot = not_false(field(p, "hookBoot"));
 	std::string theme = str(field(p, "theme"));
 	c.theme = theme_colors(theme).id;          // an unknown theme: the first, Evening sky
@@ -234,7 +235,7 @@ std::string config_json (const UserConfig &c) {
 	}
 	json j = {
 		{"language", c.language}, {"appIds", list(c.appIds)}, {"hiddenIds", list(c.hiddenIds)}, {"sourceIds", c.sourceIds},
-		{"tileOrder", list(c.tileOrder)}, {"useHomebrew", c.useHomebrew}, {"closeHome", c.closeHome}, {"replaceHome", c.replaceHome}, {"checkUpdates", c.checkUpdates},
+		{"tileOrder", list(c.tileOrder)}, {"useHomebrew", c.useHomebrew}, {"closeHome", c.closeHome}, {"replaceHome", c.replaceHome}, {"checkUpdates", c.checkUpdates}, {"wipeOnUninstall", c.wipeOnUninstall},
 		{"hookBoot", c.hookBoot}, {"theme", c.theme}, {"iconScale", c.iconScale}, {"showLabels", c.showLabels},
 		{"labelsSelectedOnly", c.labelsSelectedOnly}, {"rows", c.rows}, {"sideMargin", c.sideMargin},
 		{"bottomMargin", c.bottomMargin}, {"cardSize", c.cardSize}, {"plates", c.plates}, {"glass", c.glass}, {"frost", c.frost},

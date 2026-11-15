@@ -573,8 +573,11 @@ static void settings () {
 	eq(S{show(l1.showLabels), show(l1.labelsSelectedOnly), show(l2.showLabels)}, S{"true", "true", "false"}, "App names: all, then only the selected one, then none");
 	S ids, hg;
 	for (auto &o : options_for("home", c0, info)) { ids.push_back(o.id); hg.push_back(o.group); }
-	eq(ids, S{"language", "resetLook", "homeMethod", "homeCleanup", "about", "checkUpdates", "update", "restartTv"}, "Home screen: language, reset, how the launcher opens, remove everything, about, the update check and its row, and Restart the TV last");
-	eq(hg, S{"", "", "Запуск лаунчера", "Запуск лаунчера", "О лаунчере", "О лаунчере", "О лаунчере", ""}, "Home screen: the launch rows, and About with the update check, in their groups");
+	eq(ids, S{"language", "resetLook", "homeMethod", "wipeOnUninstall", "resetLauncher", "uninstallLauncher", "about", "checkUpdates", "update", "restartTv"}, "Home screen: language, reset, how the launcher opens, reset and removal, about, the update check and its row, and Restart the TV last");
+	eq(hg, S{"", "", "Запуск лаунчера", "Сброс и удаление", "Сброс и удаление", "Сброс и удаление", "О лаунчере", "О лаунчере", "О лаунчере", ""}, "Home screen: the launch row, reset and removal, and About with the update check, in their groups");
+	std::string reds;
+	for (auto &o : options_for("home", c0, info)) if (o.danger) reds += o.id + ":" + o.icon + " ";
+	eq(reds, std::string("resetLauncher:reset uninstallLauncher:trash "), "Reset and Uninstall drawn in red, with their glyphs; nothing else");
 	// the update row: only while there is a new version (and the check is on), worded by its step, with a bar while it downloads
 	auto update_row = [&] (const UserConfig &c, const SystemInfo &si) -> std::optional<OptionItem> {
 		for (auto &o : options_for("home", c, si)) if (o.id == "update") return o;
@@ -609,7 +612,7 @@ static void settings () {
 	nr.root = (int)Root::no; nr.root_detail = "timeout";
 	S grey;
 	for (auto &o : options_for("home", c0, nr)) if (!o.disabled.empty()) grey.push_back(o.id);
-	eq(grey, S{"homeMethod", "homeCleanup", "restartTv"}, "no root: How the launcher opens, Remove everything and Restart the TV greyed out");
+	eq(grey, S{"homeMethod", "wipeOnUninstall", "uninstallLauncher", "restartTv"}, "no root: How the launcher opens, Delete the data, Uninstall and Restart the TV greyed out; Reset stays (the launcher's own data)");
 	bool none_grey = true;
 	for (auto &o : options_for("home", c0, info)) if (!o.disabled.empty()) none_grey = false;
 	eq(none_grey, true, "root not known yet: nothing greyed out");
@@ -624,6 +627,8 @@ static void settings () {
 	nu.update.step = UpdateState::Step::none;
 	eq(update_row(c0, nu)->disabled.empty(), true, "no root: looking by hand still works");
 	eq(apply_pref(c0, "checkUpdates", Press::ok).checkUpdates == !c0.checkUpdates && c0.checkUpdates, true, "the check is on at first, OK switches it");
+	eq(c0.wipeOnUninstall && !apply_pref(c0, "wipeOnUninstall", Press::ok).wipeOnUninstall, true, "Delete the data when the launcher is uninstalled: on at first, OK switches it");
+	eq(parse_config(config_json(apply_pref(c0, "wipeOnUninstall", Press::ok))).wipeOnUninstall, false, "and it is kept off");
 	UserConfig iv = c0; iv.wallpaper.intervalSec = 900;
 	eq(apply_pref(iv, "interval", Press::ok).wallpaper.intervalSec, 1800, "the slideshow interval goes 15 minutes -> 30 minutes");
 	eq(interval_text(1800), std::string("30 минут"), "the 30-minute interval reads \"30 minutes\"");
@@ -742,11 +747,12 @@ static void homemode () {
 	for (auto &m : HOME_MODES) all = all && !mode_text(m).pros.empty() && !mode_text(m).cons.empty();
 	eq(all, true, "every way has pros and cons");
 	eq(result_file("tld.my.simplelauncher.native"), std::string("/tmp/launcher-native-homemode.result"), "the native launcher keeps its own state (scripts/gen-tools.sh)");
+	eq(rules_mark_file("tld.my.simplelauncher") + " " + rules_mark_file("tld.my.simplelauncher.native"), std::string("/tmp/launcher-rules-loaded /tmp/launcher-native-rules-loaded"), "the mark of start-up rules in memory: the one tools/guard.sh and defaulthome.sh write, per build");
 	// the scripts in the native package: its own id and its own state, nothing left that names the web version's
 	char dir[] = "/tmp/gen-tools-XXXXXX";
 	if (mkdtemp(dir)) {
 		std::string d = dir, cmd = "sh scripts/gen-tools.sh tld.my.simplelauncher.native " + d + "/t > /dev/null && "
-			"grep -h 'simplelauncher\\|launcher-' " + d + "/t/*.sh " + d + "/t/homehook/* | grep -v 'simplelauncher\\.native\\|launcher-native-' | grep -v '^ *#' | grep -v '\\[l\\]auncher-native-' | grep -v '^PROGRAM=\\|launcher-missing\\|48-launcher-homehook.off' > " + d + "/left; "
+			"grep -h 'simplelauncher\\|launcher-' " + d + "/t/*.sh " + d + "/t/homehook/* | grep -v 'simplelauncher\\.native\\|launcher-native-' | grep -v '^ *#' | grep -v '\\[l\\]auncher-native-' | grep -v '^PROGRAM=\\|launcher-missing\\|48-launcher-homehook.off\\|^DATA=/media/developer/simplelauncher-native$' > " + d + "/left; "
 			"for f in " + d + "/t/*.sh " + d + "/t/homehook/*.sh; do sh -n $f || echo bad >> " + d + "/left; done; rm -rf " + d + "/t";
 		eq(system(cmd.c_str()), 0, "gen-tools.sh runs");
 		std::string left;

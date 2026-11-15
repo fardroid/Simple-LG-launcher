@@ -29,6 +29,7 @@ struct Pref {
 	std::string group;           // the heading of its group (rows of one group follow each other)
 	bool opens = false;          // an action that opens another screen
 	std::string icon;            // a glyph at the row's end, in the colour of its text (Restart the TV: "restart")
+	bool danger = false;         // deletes or uninstalls: its text and glyph in red (Reset the launcher, Uninstall the launcher)
 	std::function<bool(const UserConfig &)> when;        // shown only when this says so
 	std::function<bool(const UserConfig &, const SystemInfo &)> shown;     // the same, from the TV's side
 	std::function<std::string(const SystemInfo &)> label_of;     // a label that changes (the update row)
@@ -47,6 +48,7 @@ struct OptionItem {
 	bool stepper = false;        // ← → change it
 	float progress = -1;         // a bar under the label, 0-1 (-1: none): a download
 	std::string disabled;        // greyed out: why
+	bool danger = false;         // drawn in red (Pref::danger)
 };
 
 template <class T>

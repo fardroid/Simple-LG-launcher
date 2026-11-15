@@ -10,13 +10,14 @@ ID=$1
 OUT=$2
 WEB_ID=tld.my.simplelauncher
 mkdir -p "$OUT/homehook"
-for f in homemode.sh defaulthome.sh webos26-access.sh takeover.sh helper.sh migrate.sh lastinput.sh homehook/watch.sh homehook/apply.sh homehook/stock.sh homehook/diagnose.sh homehook/homekey.py homehook/boot.sh; do
+for f in homemode.sh defaulthome.sh webos26-access.sh takeover.sh helper.sh migrate.sh lastinput.sh guard.sh homehook/watch.sh homehook/apply.sh homehook/stock.sh homehook/diagnose.sh homehook/homekey.py homehook/boot.sh; do
 	src=tools/$f
 	if [ "$ID" = "$WEB_ID" ]; then cp "$src" "$OUT/$f"; continue; fi
 	# ([l]auncher-homehook: the pattern that finds the helper's processes without finding itself)
 	sed -e "s/tld\.my\.simplelauncher\$/$ID/" \
 		-e "s/tld\.my\.simplelauncher\([^.a-z]\)/$ID\1/g" \
 		-e 's#/media/developer/launcher-#/media/developer/launcher-native-#g' \
+		-e 's#^DATA=/media/developer/simplelauncher$#DATA=/media/developer/simplelauncher-native#' \
 		-e 's#init\.d/\([0-9][0-9]\)-launcher-#init.d/\1-launcher-native-#g' \
 		-e 's#/tmp/launcher-#/tmp/launcher-native-#g' \
 		-e 's#\[l\]auncher-homehook/#[l]auncher-native-homehook/#g' \

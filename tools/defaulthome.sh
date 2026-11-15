@@ -5,9 +5,12 @@
 # changed, and it lasts across a full restart. The method and its checks follow docs/native-home.md in
 # ammar027/lumen-webos (tried there on webOS 25).
 #
-# Switching the TV on is left to the TV: it opens its last input (the general settings lastInputApp / physicalLastInputApp),
-# what was on the screen before. Only LG's "start with Home" (homeAutoLaunch) is switched off, which would open LG Home by name
-# over it. Its value as it was is kept in $ORIG and put back by disable.
+# Switching the TV on is left to the TV, and so is LG's "start with Home" (homeAutoLaunch): this way does not change it. With
+# it on, the TV opens LG Home by name, and the watcher below opens the launcher instead. With it off, the TV opens its last
+# input (the general settings lastInputApp / physicalLastInputApp), and that is only ever a real input (HDMI, Live TV): after
+# a full start (the plug, a power cut) it opens that input even when the launcher was on the screen (seen on webOS 10.3.2).
+# Up to 2.2.2 this way switched "start with Home" off. Where it did, the value from before (kept in $ORIG) is put back once,
+# at the first refresh or check of this version ($AUTO_LEFT marks it done); after that the setting is the person's alone.
 #
 # The launcher is never named as the last input. Up to 2.2.0 it was (so that waking up opened it), and a full start with the
 # launcher's id as physicalLastInputApp left the HDMI inputs and the tuner black until the app manager was restarted (issue 16,
@@ -23,11 +26,11 @@
 # when LG Home is what came up. An input or an app that came up is left alone.
 #
 #   sh defaulthome.sh enable    the launcher becomes Home (refuses while takeover.sh or the Home key helper is on)
-#   sh defaulthome.sh disable   LG Home becomes Home again, and the three settings are put back
+#   sh defaulthome.sh disable   LG Home becomes Home again (and the last input the TV's own, see above)
 #   sh defaulthome.sh status
 #   sh defaulthome.sh check     what the boot link runs: LG Home back if the launcher is no longer installed
 #   sh defaulthome.sh refresh   what the launcher runs once each time it starts: while this is on, the copy of this script is
-#                               brought up to the installed launcher's (after an update) and the settings are set again
+#                               brought up to the installed launcher's (after an update) and the settings checked again
 #   sh defaulthome.sh point     what the launcher of 2.2.0 ran on coming to the front: the same settings check (nothing else)
 #   sh defaulthome.sh watch     the watcher above (the boot link, enable and refresh start it in the background)
 #
@@ -38,6 +41,7 @@ DIR=/media/developer/launcher-defaulthome
 FLAG=$DIR/enabled
 BEFORE=$DIR/before.json
 ORIG=$DIR/settings.orig
+AUTO_LEFT=$DIR/start-with-home-left
 APP_ID=tld.my.simplelauncher
 LG_HOME=com.webos.app.home
 LAUNCHER=/media/developer/apps/usr/palm/applications/$APP_ID
@@ -54,6 +58,11 @@ COPIES=$DIR/configd
 CONFIG=luna://com.webos.service.config
 POWER=luna://com.webos.service.tvpower/power/getPowerState
 WATCH_PID=/tmp/launcher-wake-watch.pid
+GUARD=/media/developer/launcher-guard/guard.sh
+RULES_MARK=/tmp/launcher-rules-loaded
+STOCK_RULES=/etc/palm/bootd.json
+RULES=/var/luna/preferences/bootd.json
+RULES_SUM=$DIR/bootd.stock.md5
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
 # A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
@@ -120,32 +129,41 @@ own_value () {
 	[ -n "$v" ] && [ "$v" != "$APP_ID" ] && echo "$v" || echo "$LG_HOME"
 }
 
-# Switching on shows what was on before: no "start with Home", and the launcher's id out of the last input (see the top).
-# Only what differs is written.
+# "start with Home" as it was before an older version switched it off (see the top): the value in $ORIG, once, and only
+# while the setting is still off. Empty when there is nothing to put back.
+auto_back () {
+	[ -f "$AUTO_LEFT" ] && return 0
+	[ -s "$ORIG" ] || return 0
+	was=$(setting homeAutoLaunch "$(cat "$ORIG")")
+	[ -n "$was" ] && [ "$was" != off ] && [ "$(setting homeAutoLaunch "$1")" = off ] && echo "$was"
+}
+
+# The launcher's id out of the last input (see the top), and "start with Home" given back once. Only what differs is written.
 settings_check () {
 	now=$(luna-send -n 1 "$SETTINGS/getSystemSettings" "{\"category\":\"general\",\"keys\":[$KEYS]}" 2>/dev/null)
 	echo "$now" | grep -q '"returnValue"[[:space:]]*:[[:space:]]*true' || return 1
-	auto=''; last=''; phys=''
-	[ "$(setting homeAutoLaunch "$now")" = off ] || auto=off
+	auto=$(auto_back "$now"); last=''; phys=''
 	[ "$(setting lastInputApp "$now")" = "$APP_ID" ] && last=$(own_value lastInputApp)
 	[ "$(setting physicalLastInputApp "$now")" = "$APP_ID" ] && phys=$(own_value physicalLastInputApp)
 	set_settings "$auto" "$last" "$phys" || return 1
+	[ -n "$auto" ] && log "start with Home put back as it was ($auto): this way no longer switches it off"
+	touch "$AUTO_LEFT"
 	[ -n "$last$phys" ] && log "the launcher is no longer the last input (now: ${last:-unchanged} / ${phys:-unchanged})"
 	return 0
 }
 
-# disable: "start with Home" as it was; the last input stays the TV's own (the launcher's id taken out, should it be there).
+# disable: the last input stays the TV's own (the launcher's id taken out, should it be there); "start with Home" is put back
+# only if an older version switched it off and this one has not given it back yet.
 put_settings_back () {
-	auto=''
-	[ -s "$ORIG" ] && auto=$(setting homeAutoLaunch "$(cat "$ORIG")")
 	now=$(luna-send -n 1 "$SETTINGS/getSystemSettings" "{\"category\":\"general\",\"keys\":[$KEYS]}" 2>/dev/null)
-	last=''; phys=''
+	auto=$(auto_back "$now"); last=''; phys=''
 	[ "$(setting lastInputApp "$now")" = "$APP_ID" ] && last=$(own_value lastInputApp)
 	[ "$(setting physicalLastInputApp "$now")" = "$APP_ID" ] && phys=$(own_value physicalLastInputApp)
 	if set_settings "$auto" "$last" "$phys"; then
-		rm -f "$ORIG"; log "start with Home put back"
+		[ -n "$auto" ] && log "start with Home put back ($auto)"
+		rm -f "$ORIG" "$AUTO_LEFT"
 	else
-		log "could not put back start with Home (kept in $ORIG)"
+		log "could not put the settings back (kept in $ORIG)"
 	fi
 }
 
@@ -238,10 +256,58 @@ open_home () {
 	return 1
 }
 
+# The boot link: runs "check" at every full start (the watcher, LG Home back if the launcher is gone). Written again when it is
+# missing or not what it should be (on 2026-11-15 the TV lost power a minute after enable, and the link was left empty, so a
+# full start ran nothing), and flushed to the storage at once.
+link_text () {
+	printf '#!/bin/sh\n# Gives LG Home back at start-up if the launcher was uninstalled. Remove with: sh %s disable\nsh %s check >/dev/null 2>&1 &\n' "$DIR/defaulthome.sh" "$DIR/defaulthome.sh"
+}
+link_check () {
+	[ "$(cat "$LINK" 2>/dev/null)" = "$(link_text)" ] && [ -x "$LINK" ] && return 0
+	link_text > "$LINK.new" && chmod +x "$LINK.new" && mv -f "$LINK.new" "$LINK" && sync && log "boot link written" && return 0
+	rm -f "$LINK.new"; log "could not write the boot link $LINK"; return 1
+}
+
 helper_on () {
 	[ -L "$HOOK_LINK" ] && return 0
 	pid=$(cat /tmp/launcher-homehook-watch.pid 2>/dev/null)
 	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+# The start-up rules. At a full start and on waking the TV, its boot manager picks the first app by why the TV was switched
+# on (/etc/palm/bootd.json, "firstAppByPowerOnReason"); it reads /var/luna/preferences/bootd.json instead when that file is
+# there (LG's own override; Hearth's "When the TV turns on, open..." uses it). Our copy is LG's file with the power button,
+# the TV's own button, the plug (lastPowerOn) and a cold start (micomPower) sent to the launcher; it is opened behind LG's
+# start-up cover (an app that is gone is not replaced by the last input there: the TV opens LG's store with "Content
+# unavailable", until guard.sh has taken the rules back). Seen on webOS 10.3.2 (2026-11-15): with it the TV
+# opened the launcher at once after the plug and after standby, and LG Home never showed. The TV reads it at its next full
+# start. Made only from LG's file as this script knows it (refused otherwise), and never over a file that is not ours.
+rules_ours () { [ -f "$RULES" ] && grep -q "\"$APP_ID\"" "$RULES"; }
+rules_make () {   # LG's file with our reasons -> stdout; fails when LG's file is not the one this script knows
+	grep -q '^[[:space:]]*"remoteKey": "{LAST_APP}",$' "$STOCK_RULES" && grep -q '^[[:space:]]*"localKey": "{LAST_APP}",$' "$STOCK_RULES" \
+		&& grep -q '^[[:space:]]*"upDownKey": "{LAST_APP}"$' "$STOCK_RULES" && [ "$(grep -c '"firstAppByPowerOnReason"' "$STOCK_RULES")" = 1 ] || return 1
+	sed -e "s/^\([[:space:]]*\)\"remoteKey\": \"{LAST_APP}\",\$/\1\"remoteKey\": \"$APP_ID\",/" \
+		-e "s/^\([[:space:]]*\)\"localKey\": \"{LAST_APP}\",\$/\1\"localKey\": \"$APP_ID\",/" \
+		-e "s/^\([[:space:]]*\)\"upDownKey\": \"{LAST_APP}\"\$/\1\"upDownKey\": \"{LAST_APP}\",\\
+\1\"micomPower\": \"$APP_ID\",\\
+\1\"lastPowerOn\": \"$APP_ID\"/" "$STOCK_RULES"
+}
+rules_on () {
+	if [ -f "$RULES" ] && ! rules_ours; then log "start-up rules: $RULES is not ours: left alone"; return 1; fi
+	sum=$(md5sum "$STOCK_RULES" 2>/dev/null | cut -d ' ' -f 1)
+	rules_ours && [ "$sum" = "$(cat "$RULES_SUM" 2>/dev/null)" ] && return 0
+	if ! rules_make > "$RULES.new" || [ "$(grep -c "\"$APP_ID\"" "$RULES.new")" != 4 ]; then
+		rm -f "$RULES.new"
+		rules_ours && rm -f "$RULES" && sync
+		log "start-up rules: LG's file is not the one this version knows: not changed (switching the TV on shows LG Home first)"
+		return 1
+	fi
+	mv -f "$RULES.new" "$RULES" && echo "$sum" > "$RULES_SUM" && sync && log "start-up rules: the TV opens the launcher when switched on (from its next full start)"
+}
+rules_off () {
+	rules_ours || return 0
+	rm -f "$RULES" "$RULES_SUM"; sync
+	log "start-up rules: LG's again (from the TV's next full start)"
 }
 
 give_back () {
@@ -249,6 +315,7 @@ give_back () {
 	set_home "$LG_HOME" || log "setDefaultApp for LG Home was not accepted"
 	put_settings_back
 	rm -f "$FLAG" "$LINK"
+	rules_off
 	keepalive_off
 	old_guard_off
 	[ "$(current)" = "$LG_HOME" ] && log "LG Home is the TV's Home again" || log "the TV's Home is now: $(current) (expected $LG_HOME)"
@@ -274,29 +341,46 @@ case "$1" in
 		[ "$here" = "$DIR" ] || cp -f "$0" "$DIR/defaulthome.sh" 2>/dev/null
 		chmod +x "$DIR/defaulthome.sh" 2>/dev/null
 		old_guard_off
-		printf '#!/bin/sh\n# Gives LG Home back at start-up if the launcher was uninstalled. Remove with: sh %s disable\nsh %s check >/dev/null 2>&1 &\n' "$DIR/defaulthome.sh" "$DIR/defaulthome.sh" > "$LINK"
-		chmod +x "$LINK"
-		keep_settings || log "could not read start with Home: it will not be put back by disable"
-		settings_check || log "could not switch off start with Home: switching the TV on may show LG Home"
+		link_check
+		keep_settings || log "could not read the last input: disable will name LG Home there if needed"
+		settings_check || log "could not check the last input settings"
+		rules_on
 		keepalive_off
 		if ! open_home "$APP_ID"; then
 			log "Home did not open the launcher: LG Home put back"; give_back; exit 1
 		fi
 		log "the launcher is the TV's Home (was $was)"
+		sync
 		watch_start
 		;;
 	disable)
 		give_back
-		open_home "$LG_HOME" >/dev/null || true
+		# switched off from the launcher's Settings (homemode.sh): the launcher stays in front, it may have a question to ask
+		[ -n "$KEEP_FRONT" ] || open_home "$LG_HOME" >/dev/null || true
 		;;
 	check)
+		# at a full start: the boot manager has just read the rules there are now (guard.sh restarts the TV after an
+		# uninstall only while it has ours in memory)
+		rules_ours && touch "$RULES_MARK"
 		[ -f "$FLAG" ] || exit 0
 		i=0; until readable || [ "$i" -ge 60 ]; do sleep 1; i=$((i + 1)); done
-		if [ ! -f "$LAUNCHER/appinfo.json" ] || ! has_home_category "$APP_ID"; then
-			log "the launcher is gone or has no home category: LG Home put back"; give_back
+		if [ ! -f "$LAUNCHER/appinfo.json" ] && [ -f "$GUARD" ]; then
+			# an uninstall is guard.sh's to decide (it waits for the TV's app list; the apps folder can come late); it takes this
+			# way back too (exit 3), or says the launcher is there after all
+			log "the launcher is not there (yet): asking guard.sh"
+			sh "$GUARD" check; [ $? = 3 ] && exit 0
+		fi
+		if [ ! -f "$LAUNCHER/appinfo.json" ]; then
+			log "the launcher is not there: nothing done"
+		elif ! has_home_category "$APP_ID"; then
+			log "the launcher has no home category: LG Home put back"; give_back
 		else
 			old_guard_off
 			settings_check
+			# after a firmware update that changed LG's start-up rules: made again from the new file, or taken out
+			rules_on
+			# the watcher for an uninstall (guard.sh)
+			[ -f "$GUARD" ] && sh "$GUARD" watch-start
 			rm -rf "$COPIES"
 			watch_start
 			home_to_launcher "the TV started"
@@ -309,9 +393,12 @@ case "$1" in
 			cp -f "$0" "$DIR/defaulthome.sh" && chmod +x "$DIR/defaulthome.sh" && log "updated its copy from the installed launcher"
 		fi
 		old_guard_off
+		link_check
 		keep_settings
 		settings_check
+		rules_on
 		keepalive_off
+		sync
 		watch_start
 		echo "ok"
 		;;
@@ -331,7 +418,8 @@ case "$1" in
 		echo "LG Home has home category: $(has_home_category "$LG_HOME" && echo yes || echo no)"
 		echo "start with Home: $(setting homeAutoLaunch); last input: $(setting lastInputApp) / $(setting physicalLastInputApp)"
 		echo "settings kept for disable: $([ -s "$ORIG" ] && echo yes || echo no)"
-		echo "boot link: $([ -e "$LINK" ] && echo yes || echo no)"
+		echo "start-up rules: $(rules_ours && echo ours || { [ -f "$RULES" ] && echo "someone else's" || echo "LG's"; })"
+		echo "boot link: $([ "$(cat "$LINK" 2>/dev/null)" = "$(link_text)" ] && echo yes || { [ -e "$LINK" ] && echo "not as it should be" || echo no; })"
 		echo "wake watcher: $(watching && echo running || echo no)"
 		echo "takeover.sh on: $([ -f "$TAKEOVER_FLAG" ] && echo yes || echo no)"
 		echo "helper on: $(helper_on && echo yes || echo no)"
