@@ -85,6 +85,9 @@ enable () {
 	return 1
 }
 
+# the clean-up check for an uninstall (guard.sh): kept while a way is on, removed when none is
+guard_sync () { [ -f "$HERE/guard.sh" ] && sh "$HERE/guard.sh" sync >/dev/null 2>&1; true; }
+
 case "$1" in
 	run)
 		if [ -f "$LOCK" ] && [ $(( $(date +%s) - $(cat "$LOCK" 2>/dev/null || echo 0) )) -lt 120 ]; then echo "busy"; exit 0; fi
@@ -98,11 +101,12 @@ case "$1" in
 				"ok none") enable > "$RESULT.new" 2>&1 ;;
 				*) echo "failed helper: the way that was on could not be switched off (${out#failed none: })" > "$RESULT.new" ;;
 			esac
+			guard_sync
 			tail -n 1 "$RESULT.new" > "$RESULT"; rm -f "$RESULT.new" "$LOCK"; log "result: $(cat "$RESULT")"
 		) </dev/null >/dev/null 2>&1 &
 		echo started
 		;;
-	enable) enable ;;
+	enable) enable; r=$?; guard_sync; exit $r ;;
 	refresh)
 		[ -L "$HOOK_LINK" ] || { echo "off"; exit 0; }
 		# the boot link of an earlier version (to apply.sh): to boot.sh

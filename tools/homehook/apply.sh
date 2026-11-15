@@ -45,6 +45,11 @@ if [ -f "${DEFAULTHOME:-/media/developer/launcher-defaulthome/enabled}" ]; then
     exit 0
 fi
 
+# The launcher's folder empty: an uninstall is guard.sh's to decide (it takes the helper back too: exit 3).
+GUARD="${GUARD:-/media/developer/launcher-guard/guard.sh}"
+if [ ! -f "$LAUNCHER/appinfo.json" ] && [ -f "$GUARD" ]; then
+    sh "$GUARD" check; [ $? = 3 ] && exit 2
+fi
 # The launcher must be installed (if it was uninstalled, LG Home is left alone).
 if [ ! -f "$LAUNCHER/appinfo.json" ]; then
     log "launcher not installed: not starting the watcher"

@@ -112,6 +112,7 @@ struct App {
 	std::string version;
 	bool manual_refresh = false;     // the "Refresh list" button: say what was found
 	bool dirty = true, running = true, front = true;
+	bool wipe_on_exit = false;   // Settings → Reset the launcher without root: its data goes as it closes
 	int last_minute = -1;
 	// the weather: what is shown, when to fetch next, and how many tries have failed in a row
 	std::optional<WeatherData> weather;
@@ -890,6 +891,10 @@ void update_config (const UserConfig &next) {
 	if (a.mode != b.mode || a.path != b.path || a.paths != b.paths) sync_collection(app.screen != App::Screen::gallery);
 	apply_dim();
 	if (old.language != next.language || old.clockFormat != next.clockFormat) apply_lang();
+	if (old.wipeOnUninstall != next.wipeOnUninstall) {
+		bool wipe = next.wipeOnUninstall;
+		run_background([wipe] { std::string g = hbc_exec(guard_sync_command(APP_ID, wipe), 15000); logf("guard sync: %s", g.c_str()); });
+	}
 	if (old.checkUpdates != next.checkUpdates) {
 		app.update_next = next.checkUpdates ? now_ms() : -1;
 		if (!next.checkUpdates && app.update.step != UpdateState::Step::downloading) app.update = {};
@@ -945,7 +950,11 @@ void read_mode () {
 	});
 }
 
-void cleanup_home ();
+void reset_launcher ();
+void restart_tv ();
+/** Does the TV keep the Home app way's start-up rules in memory (it read them at its last full start)? */
+bool rules_in_memory () { return file_exists(rules_mark_file(APP_ID)); }
+void uninstall_launcher ();
 
 void change_option (const std::string &id, Press press) {
 	const Pref *pref = find_pref(id);
@@ -962,22 +971,10 @@ void change_option (const std::string &id, Press press) {
 		else if (id == "newsCountry") open_picker(Picker::Kind::country);
 		else if (id == "restartTv") {
 			app.menu.open_question(tr("Restart the TV?", "Перезагрузить ТВ?"), tr("The TV switches off and starts again, which takes about a minute.", "Телевизор выключится и запустится снова, это займёт около минуты."),
-				tr("Restart", "Перезагрузить"), [] {
-					logf("restart the TV");
-					app.menu.open_working(tr("Restarting the TV…", "Перезагрузка ТВ…"), tr("The TV switches off in a few seconds and starts again in about a minute.",
-						"Через несколько секунд телевизор выключится и примерно через минуту запустится снова."), now_ms());
-					run_background([] {
-						// a full restart (not standby) through the TV's power service, as its own menu does, which shows the TV's logo
-						// as it starts again; the plain "reboot" of the root shell if it says no
-						bool ok = false;
-						std::string out = hbc_exec("luna-send -n 1 luna://com.webos.service.tvpower/power/reboot '{\"reason\":\"reset\"}'", 10000, &ok);
-						logf("restart: %s", out.substr(0, 160).c_str());
-						if (!ok || !reply_ok(out)) { ok = false; hbc_exec("reboot", 10000, &ok); }
-						if (!ok) post_main([] { app.menu.close(); app.toast.show(tr("Could not restart the TV. This needs the Homebrew Channel (root)", "Не удалось перезагрузить ТВ. Нужен Homebrew Channel (рут)"), true, now_ms()); app.dirty = true; });
-					});
-				}, now);
+				tr("Restart", "Перезагрузить"), [] { restart_tv(); }, now);
 			app.dirty = true;
 		}
+
 		else if (id == "update") update_pressed();
 		else if (id == "resetLook") { update_config(reset_look(app.cfg)); app.toast.show(tr("Look and clock reset", "Вид и часы сброшены"), false, now); }
 		else if (id == "wallpaper") {
@@ -986,10 +983,25 @@ void change_option (const std::string &id, Press press) {
 			app.screen = App::Screen::gallery;
 			app.dirty = true;
 		}
-		else if (id == "homeCleanup") {
-			app.menu.open_question(tr("Remove everything from the TV?", "Убрать всё с ТВ?"), tr("The way of opening the launcher is switched off and what it put on the TV is removed. The launcher itself stays installed.",
-				"Способ открытия лаунчера выключится, а всё, что он ставил на ТВ, будет удалено. Сам лаунчер останется установленным."),
-				tr("Remove", "Убрать"), [] { cleanup_home(); }, now);
+		else if (id == "resetLauncher") {
+			app.menu.open_question(tr("Reset the launcher?", "Сбросить лаунчер?"), app.root == Root::yes
+				? (rules_in_memory()
+					? tr("Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. Then the TV restarts, to forget the launcher's start-up rules.",
+						"Удалятся его настройки, ссылки календарей, папка обоев и скачанные фото, способ открытия выключится. Потом ТВ перезагрузится, чтобы забыть правила запуска лаунчера.")
+					: tr("Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. The launcher then starts again as if just installed.",
+						"Удалятся его настройки, ссылки календарей, папка обоев и скачанные фото, способ открытия выключится. Потом лаунчер запустится как после установки."))
+				: tr("Its settings and the downloaded photos are deleted, and it closes. Open it again from its tile.",
+					"Удалятся его настройки и скачанные фото, и он закроется. Откройте его снова с его плитки."),
+				tr("Reset", "Сбросить"), [] { reset_launcher(); }, now, true);
+			app.dirty = true;
+		}
+		else if (id == "uninstallLauncher") {
+			app.menu.open_question(tr("Uninstall the launcher?", "Удалить лаунчер?"), rules_in_memory()
+				? tr("The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.",
+					"Способ открытия выключится, лаунчер удалится, а с ним всё, что он поставил на ТВ, вместе с настройками, ссылками календарей и папкой обоев. Потом ТВ перезагрузится, чтобы забыть правила запуска лаунчера.")
+				: tr("The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. The Home button then opens LG Home.",
+					"Способ открытия выключится, лаунчер удалится, а с ним всё, что он поставил на ТВ, вместе с настройками, ссылками календарей и папкой обоев. Потом кнопка Home будет открывать LG Home."),
+				tr("Uninstall", "Удалить"), [] { uninstall_launcher(); }, now, true);
 			app.dirty = true;
 		}
 		else if (id == "homeMethod") {
@@ -1168,27 +1180,63 @@ void setup_gallery_and_menu () {
 
 /** Removes everything the ways of opening put on the TV: the way switched off (homemode.sh, as "Off"), then the folders of
  *  their state and copies (scripts/gen-tools.sh: launcher-… for the web version's id, launcher-native-… for the native one). */
-void cleanup_home () {
-	app.menu.open_working(tr("Removing…", "Убираю…"), tr("This takes a few seconds.", "Это займёт несколько секунд."), now_ms());
-	app.dirty = true;
-	logf("home mode: cleaning up");
+/** A full restart (not standby) through the TV's power service, as its own menu does, which shows the TV's logo as it starts
+ *  again; the plain "reboot" of the root shell if it says no. */
+void restart_tv () {
+	logf("restart the TV");
+	app.menu.open_working(tr("Restarting the TV…", "Перезагрузка ТВ…"), tr("The TV switches off in a few seconds and starts again in about a minute.",
+		"Через несколько секунд телевизор выключится и примерно через минуту запустится снова."), now_ms());
 	run_background([] {
-		hbc_exec(restore_last_input_command(APP_ID), 10000);
-		SwitchResult r = switch_home_mode(APP_ID, "none");
-		std::string prefix = std::string(APP_ID) == "tld.my.simplelauncher" ? "/media/developer/launcher-" : "/media/developer/launcher-native-";
 		bool ok = false;
-		std::string out;
-		if (r.ok) out = hbc_exec("rm -rf " + shell_quote(prefix + "defaulthome") + " " + shell_quote(prefix + "homehook") + " && echo removed", 15000, &ok);
-		auto info = read_home_mode(APP_ID);
-		logf("home mode: cleanup %s%s%s", r.ok ? "ok" : "failed: ", r.why.c_str(), r.ok ? (" " + out).c_str() : "");
-		bool done = r.ok && ok;
-		post_main([r, info, done] {
+		std::string out = hbc_exec("luna-send -n 1 luna://com.webos.service.tvpower/power/reboot '{\"reason\":\"reset\"}'", 10000, &ok);
+		logf("restart: %s", out.substr(0, 160).c_str());
+		if (!ok || !reply_ok(out)) { ok = false; hbc_exec("reboot", 10000, &ok); }
+		if (!ok) post_main([] { app.menu.close(); app.toast.show(tr("Could not restart the TV. This needs the Homebrew Channel (root)", "Не удалось перезагрузить ТВ. Нужен Homebrew Channel (рут)"), true, now_ms()); app.dirty = true; });
+	});
+}
+
+/** Settings → Reset the launcher. With root: tools/guard.sh reset, detached (every way off, the launcher's data and the person's
+ *  files deleted, then the launcher started again as if new). Without root (no way can be on, no calendar file of root's): the
+ *  launcher's own data, deleted as it closes; it is opened again from its tile. */
+void reset_launcher () {
+	logf("reset the launcher (%s)", app.root == Root::yes ? "everything" : "its own data");
+	if (app.root != Root::yes) {
+		app.menu.open_working(tr("Resetting…", "Сбрасываю…"), tr("The launcher closes now. Open it again from its tile.", "Лаунчер сейчас закроется. Откройте его снова с его плитки."), now_ms());
+		app.wipe_on_exit = true;
+		app.running = false;
+		return;
+	}
+	app.menu.open_working(tr("Resetting…", "Сбрасываю…"), tr("The launcher closes and in a few seconds starts again as if just installed.", "Лаунчер закроется и через несколько секунд запустится как после установки."), now_ms());
+	app.dirty = true;
+	run_background([] {
+		bool ok = false;
+		std::string out = hbc_exec(guard_reset_command(APP_ID), 15000, &ok);
+		bool started = ok && out.find("started") != std::string::npos;
+		logf("reset: %s", started ? "started" : "the Homebrew Channel did not answer");
+		post_main([started] {
+			if (started) { app.running = false; return; }
 			app.menu.close();
-			app.home_mode = info;
-			if (info) { app.default_home = info->mode == "default"; app.helper_on = info->mode == "helper"; }
-			refresh_settings();
-			app.toast.show(done ? tr("Everything is removed. Home opens LG Home", "Всё убрано. Home открывает LG Home")
-				: fmt(tr("Could not remove everything: {0}", "Не удалось убрать всё: {0}"), r.why.empty() ? tr("the Homebrew Channel did not answer", "Homebrew Channel не ответил") : r.why), !done, now_ms());
+			app.toast.show(tr("Could not reset: the Homebrew Channel did not answer", "Не удалось сбросить: Homebrew Channel не ответил"), true, now_ms());
+			app.dirty = true;
+		});
+	});
+}
+
+/** Settings → Uninstall the launcher: tools/guard.sh uninstall, detached (every way off, the launcher uninstalled, then
+ *  everything it put on the TV deleted, with the data). Root only (the row is greyed out without it). */
+void uninstall_launcher () {
+	logf("uninstall the launcher");
+	app.menu.open_working(tr("Uninstalling…", "Удаляю…"), tr("The launcher closes in a few seconds. Then the Home button opens LG Home.", "Через несколько секунд лаунчер закроется. Потом кнопка Home будет открывать LG Home."), now_ms());
+	app.dirty = true;
+	run_background([] {
+		bool ok = false;
+		std::string out = hbc_exec(guard_uninstall_command(APP_ID), 15000, &ok);
+		bool started = ok && out.find("started") != std::string::npos;
+		logf("uninstall: %s", started ? "started" : "the Homebrew Channel did not answer");
+		post_main([started] {
+			if (started) { app.running = false; return; }
+			app.menu.close();
+			app.toast.show(tr("Could not uninstall: the Homebrew Channel did not answer", "Не удалось удалить: Homebrew Channel не ответил"), true, now_ms());
 			app.dirty = true;
 		});
 	});
@@ -1206,11 +1254,13 @@ void setup_home_method () {
 			: tr("This takes a few seconds. The screen blinks once: the launcher starts again.", "Это займёт несколько секунд. Экран один раз моргнёт: лаунчер запустится заново."), now_ms());
 		app.dirty = true;
 		logf("home mode: switching to %s", mode.c_str());
-		run_background([mode] {
+		bool wipe = app.cfg.wipeOnUninstall;
+		run_background([mode, wipe] {
 			// off the Swap and the Helper: the TV's own last input back first (so the official way keeps that one to put back, and
 			// names the launcher there itself)
 			if (mode != "mount" && mode != "helper") hbc_exec(restore_last_input_command(APP_ID), 10000);
 			SwitchResult r = switch_home_mode(APP_ID, mode);
+			hbc_exec(guard_sync_command(APP_ID, wipe), 15000);
 			auto info = read_home_mode(APP_ID);
 			post_main([mode, r, info] {
 				logf("home mode: %s %s%s%s", r.ok ? "ok" : "failed", mode.c_str(), r.why.empty() ? "" : ": ", r.why.c_str());
@@ -1223,6 +1273,11 @@ void setup_home_method () {
 				refresh_settings();
 				std::string name = mode_text(mode).name;
 				app.toast.show(r.ok ? fmt(tr("Done: {0}", "Готово: {0}"), name) : fmt(tr("Could not switch: {0}", "Не удалось переключить: {0}"), r.why), !r.ok, now_ms());
+				// Off while the TV keeps the Home app way's start-up rules: it would still open the launcher when switched on
+				if (r.ok && mode == "none" && rules_in_memory())
+					app.menu.open_question(tr("Restart the TV now?", "Перезагрузить ТВ сейчас?"), tr("Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.",
+						"До полной перезагрузки ТВ ещё будет открывать лаунчер при включении: правила запуска лаунчера он прочитал при последнем старте."),
+						tr("Restart", "Перезагрузить"), [] { restart_tv(); }, now_ms());
 				app.dirty = true;
 			});
 		});
@@ -1657,9 +1712,10 @@ int main (int argc, char **argv) {
 	rebuild_items();
 	ask_tv();
 	refresh_apps();
-	// While the official way is on, its copy on the TV is brought up to this version's and LG's "start with Home" kept off
+	// While the official way is on, its copy on the TV is brought up to this version's and the last input checked
 	// (tools/defaulthome.sh refresh): once at each start, a few seconds in, so an update needs nothing more
-	run_background([] {
+	bool wipe = app.cfg.wipeOnUninstall;
+	run_background([wipe] {
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 		bool ok = false;
 		// first what the web version (1.x) left on the TV, after the update from it (tools/migrate.sh; nothing once it is done)
@@ -1680,6 +1736,10 @@ int main (int argc, char **argv) {
 		while (!h.empty() && isspace((unsigned char)h.back())) h.pop_back();
 		logf("helper refresh: %s", ok ? h.c_str() : "the Homebrew Channel did not answer");
 		bool helper = ok && h.size() >= 2 && h.compare(h.size() - 2, 2, "ok") == 0;
+		// the check for an uninstall, in step with the ways that are on and the setting (also after an update from an older version)
+		std::string g = hbc_exec(guard_sync_command(APP_ID, wipe), 15000, &ok);
+		while (!g.empty() && isspace((unsigned char)g.back())) g.pop_back();
+		logf("guard sync: %s", ok ? g.c_str() : "the Homebrew Channel did not answer");
 		post_main([helper] { app.helper_on = helper; if (helper) mark_alive(); if ((helper || AS_HOME) && app.front) app.name_at = now_ms(); });
 	});
 	// When the last app closes, the TV opens its "last input" through LG Home's own handler (last_input_handler), which opens
@@ -1942,6 +2002,8 @@ int main (int argc, char **argv) {
 	SDL_GL_DeleteContext(gl);
 	SDL_DestroyWindow(app.win);
 	SDL_Quit();
+	// Settings → Reset the launcher without root: its own data goes as it closes (nothing writes it after this)
+	if (app.wipe_on_exit) { std::string rm = "rm -rf " + shell_quote(DATA_DIR); if (system(rm.c_str()) != 0) logf("reset: could not delete %s", DATA_DIR.c_str()); }
 	// out at once, without waiting for the jobs in the background: one may be waiting up to 90 s for a home-mode switch, whose
 	// script restarts SAM, and SAM's restart waits for this process to end (it is in SAM's own cgroup): each held the other up
 	_exit(0);

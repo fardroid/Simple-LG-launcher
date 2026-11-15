@@ -43,11 +43,20 @@ std::string restore_last_input_command (const std::string &app_id);
 std::string takeover_refresh_command (const std::string &app_id);
 /** The helper (tools/helper.sh): its files brought up to the package's and it started, while it is on. */
 std::string helper_refresh_command (const std::string &app_id);
+/** tools/guard.sh sync on|off: the check for an uninstall as it should be (in the ways' start-up scripts, its own boot link while
+ *  none is on and the data is to be deleted, or nothing), with Settings → "Delete the data when the launcher is uninstalled". */
+std::string guard_sync_command (const std::string &app_id, bool wipe);
+/** tools/guard.sh reset and uninstall: run detached on the TV (the launcher closes first); print "started". */
+std::string guard_reset_command (const std::string &app_id);
+std::string guard_uninstall_command (const std::string &app_id);
 /** The helper stands back while LG's own Home is opened from its tile. */
 std::string stock_command (const std::string &app_id);
 std::string hook_dir (const std::string &app_id);
 /** Touched by the launcher whenever it comes on screen: the helper checks for it after opening the launcher. */
 std::string alive_file (const std::string &app_id);
+/** Written at a full start while the Home app way's start-up rules are there (tools/defaulthome.sh check): the TV keeps them in
+ *  memory until its next full start (and /tmp is emptied at each), so it still opens the launcher when switched on. */
+std::string rules_mark_file (const std::string &app_id);
 
 // Run on worker threads, through the Homebrew Channel's shell.
 /** `root`, when given: whether the Homebrew Channel ran the command (the TV can run commands as root); `why`: what it said if not. */

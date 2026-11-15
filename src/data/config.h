@@ -60,6 +60,7 @@ struct UserConfig {
 	bool useHomebrew = true;
 	bool closeHome = true;
 	bool replaceHome = false;
+	bool wipeOnUninstall = true; // when the launcher is uninstalled other than from Settings, its data and the person's files go too (tools/guard.sh)
 	bool checkUpdates = true;    // look for new versions on GitHub now and then (Settings → Home screen → About)
 	bool hookBoot = true;
 	std::string theme = "dusk";      // black grey dusk

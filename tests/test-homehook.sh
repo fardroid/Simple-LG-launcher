@@ -30,6 +30,7 @@ check "stock.sh reports itself done" "$(DRY_RUN=1 ALLOW="$T/allow" sh "$S/stock.
 check "stock.sh asks the watcher to stand down" "$([ -f "$T/allow" ] && echo yes)" "yes"
 rm -f "$T/allow"
 for f in watch.sh apply.sh stock.sh diagnose.sh; do check "$f is valid shell" "$(sh -n "$S/$f" && echo ok)" "ok"; done
+for f in defaulthome.sh lastinput.sh takeover.sh; do check "$f is valid shell" "$(sh -n "$S/../$f" && echo ok)" "ok"; done
 
 # ---- watch.sh: when does it open the launcher? ----
 cat > "$T/luna.sh" <<'LUNA'
@@ -137,6 +138,49 @@ echo "$$" > "$T/pid"
 run_timeout 10 env LUNA_SEND="$T/quiet.sh" PIDFILE="$T/pid" LOG="$T/log" LAUNCHER="$T/launcher" ALLOW="$T/allow" sh "$S/watch.sh"
 check "a second watcher exits at once when one is already running" "$(grep -c 'another watcher is already running' "$T/log")" "1"
 check "and leaves the first one's pid file alone" "$(cat "$T/pid")" "$$"
+
+# ---- guard.sh: the clean-up check for an uninstall (DRY_RUN: it only says what it would do) ----
+G="$(cd "$(dirname "$0")/../tools" && pwd)/guard.sh"
+mkdir -p "$T/bin" "$T/apps/tld.my.simplelauncher"
+cat > "$T/bin/luna-send" <<'LUNA'
+#!/bin/sh
+case "$*" in *listApps*) cat "$LIST_FILE" ;; *) echo '{"returnValue":true}' ;; esac
+LUNA
+chmod +x "$T/bin/luna-send"
+runguard () { PATH="$T/bin:$PATH" LIST_FILE="$T/list" DRY_RUN=1 WAIT_ROUNDS=2 NAP=0 RECHECK=0 GUARD_APPS="$T/apps" GUARD_LOG="$T/glog" GUARD_LOCK="$T/lock" GUARD_WIPE="$T/wipe" GUARD_MARK="$T/rulesmark" sh "$G" check 2>&1; }
+echo '{"returnValue":true,"apps":[{"id":"com.webos.app.home"},{"id":"tld.my.simplelauncher"}]}' > "$T/list"
+touch "$T/apps/tld.my.simplelauncher/appinfo.json"
+check "guard: the launcher in the list and in its folder is installed" "$(runguard | tail -n 1)" "installed"
+echo '{"returnValue":true,"apps":[{"id":"com.webos.app.home"}]}' > "$T/list"
+check "guard: in its folder but not in the list still counts as installed" "$(runguard | tail -n 1)" "installed"
+rm -f "$T/apps/tld.my.simplelauncher/appinfo.json"
+out=$(runguard)
+check "guard: in neither is gone, and everything is taken back" "$(echo "$out" | tail -n 1)" "done: nothing of the launcher runs on the TV any more"
+check "guard: the launcher's data is deleted" "$(echo "$out" | grep -c 'would run: rm -rf .*/media/developer/simplelauncher')" "1"
+check "guard: the calendar links and the wallpapers too" "$(echo "$out" | grep -c 'would run: rm -rf /media/developer/calendar.txt /media/developer/cals /media/developer/wallpapers')" "1"
+check "guard: and last its own boot link and folder" "$(echo "$out" | grep -c 'would run: rm -rf /media/developer/launcher-guard')" "1"
+check "guard: no restart when the TV has not read the launcher's start-up rules" "$(echo "$out" | grep -c 'restart the TV')" "0"
+touch "$T/rulesmark"
+check "guard: a restart when it has them in memory" "$(runguard | grep -c 'would restart the TV')" "1"
+rm -f "$T/rulesmark"
+echo off > "$T/wipe"
+out=$(runguard)
+check "guard: Delete the data off: the ways and the start-up links still go" "$(echo "$out" | grep -c 'would run: rm -rf /media/developer/launcher-defaulthome')" "1"
+check "guard: but the launcher's data stays" "$(echo "$out" | grep -c 'media/developer/simplelauncher')" "0"
+check "guard: and the person's files stay" "$(echo "$out" | grep -c 'calendar.txt')" "0"
+rm -f "$T/wipe"
+mkdir "$T/lock"
+check "guard: a second check at the same time does nothing" "$(runguard | grep -c 'would run')" "0"
+rmdir "$T/lock"
+echo '{"returnValue":true,"apps":[{"id":"com.webos.app.home"},{"id":"tld.my.simplelauncher.native"}]}' > "$T/list"
+check "guard: with the native build installed the person's files stay" "$(runguard | grep -c 'calendar links and the wallpapers stay')" "1"
+echo '{"returnValue":true,"apps":[{"id":"tld.my.simplelauncher.native"}]}' > "$T/list"
+check "guard: a list without LG Home is not complete: nothing done" "$(runguard | grep -c 'would run')" "0"
+echo '{"returnValue":false}' > "$T/list"
+check "guard: no list: nothing done" "$(runguard | grep -c 'did not come')" "1"
+rmdir "$T/apps/tld.my.simplelauncher"; mv "$T/apps" "$T/apps.x"
+echo '{"returnValue":true,"apps":[{"id":"com.webos.app.home"}]}' > "$T/list"
+check "guard: no apps folder at all (not mounted yet) is not an uninstall" "$(runguard | tail -n 1)" "installed"
 
 rm -rf "$T"
 exit $fail

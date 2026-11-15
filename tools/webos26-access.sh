@@ -29,6 +29,7 @@ APP_ID=tld.my.simplelauncher
 GROUP=org.webosbrew.hbchannel.service.group
 PERMS=/var/luna-service2-dev/client-permissions.d/$APP_ID.app.json
 LAUNCHER=/media/developer/apps/usr/palm/applications/$APP_ID
+GUARD=/media/developer/launcher-guard/guard.sh
 DIR=/media/developer/launcher-access
 COPY=$DIR/webos26-access.sh
 LINK=/var/lib/webosbrew/init.d/44-launcher-access
@@ -124,6 +125,8 @@ case "$1" in
 		# a watcher that is already running has the old copy of this script: start it again
 		if watching; then kill "$(cat "$PID")" 2>/dev/null; rm -f "$PID"; fi
 		( fdclean; setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
+		# the clean-up check for an uninstall (guard.sh, beside this script in the installed launcher)
+		G="$(dirname "$0")/guard.sh"; [ -f "$G" ] && sh "$G" sync >/dev/null 2>&1
 		echo "installed: the launcher keeps its access to the Homebrew Channel, also after updates"
 		;;
 	remove)
@@ -131,6 +134,7 @@ case "$1" in
 		watching && kill "$(cat "$PID")" 2>/dev/null
 		rm -f "$PID"
 		rm -rf "$DIR"
+		G="$(dirname "$0")/guard.sh"; [ -f "$G" ] && sh "$G" sync >/dev/null 2>&1
 		echo "removed"
 		;;
 	status)
@@ -144,6 +148,8 @@ case "$1" in
 		# the startup folder runs its scripts without arguments: start the watcher, never hold up the TV's start
 		case "$0" in */init.d/*) ;; *) echo "usage: sh $0 install|remove|status"; exit 0 ;; esac
 		needed || exit 0
+		# the launcher's folder empty: an uninstall is guard.sh's to decide, in the background (it removes this script too)
+		if [ ! -f "$LAUNCHER/appinfo.json" ] && [ -f "$GUARD" ]; then sh "$GUARD" boot; exit 0; fi
 		watching || ( fdclean; setsid nohup sh "$COPY" watch </dev/null >/dev/null 2>&1 & )
 		;;
 	watch)
