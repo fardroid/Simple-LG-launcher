@@ -230,8 +230,6 @@
 	"Cards": "Cartes",
 	"Text size": "Taille du texte",
 	"All the text on the weather and calendar cards.": "Tout le texte des cartes météo et calendrier.",
-	"Frosted glass": "Verre dépoli",
-	"The cards blur the picture behind them.": "Les cartes floutent l’image derrière elles.",
 	"Shadows": "Ombres",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Une ombre douce sous l’horloge et les cartes. Sans elle, le téléviseur a un peu moins à dessiner.",
 	"Font": "Police",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· mettez-le à jour dans Homebrew Channel",
 	"Clock weight": "Épaisseur des chiffres",
 	"Card background": "Fond des widgets",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Clair ou foncé, dans la teinte du thème de couleurs. Auto : tous les widgets deviennent clairs ou foncés ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Clair ou foncé, dans la teinte du thème de couleurs. Auto : tous les widgets deviennent clairs ou foncés ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun.",
+	"Glass": "Verre",
+	"Frosted": "Dépoli",
+	"Liquid": "Liquide",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Dépoli : les widgets floutent l'image derrière eux. Liquide : ils la courbent aussi sur leurs bords, comme un verre épais."
 }

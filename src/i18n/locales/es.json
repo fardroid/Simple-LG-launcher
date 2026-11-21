@@ -230,8 +230,6 @@
 	"Cards": "Tarjetas",
 	"Text size": "Tamaño del texto",
 	"All the text on the weather and calendar cards.": "Todo el texto de las tarjetas del tiempo y del calendario.",
-	"Frosted glass": "Cristal esmerilado",
-	"The cards blur the picture behind them.": "Las tarjetas desenfocan la imagen que tienen detrás.",
 	"Shadows": "Sombras",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Una sombra suave bajo el reloj y las tarjetas. Sin ella, el televisor tiene algo menos que dibujar.",
 	"Font": "Fuente",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· actualízalo en Homebrew Channel",
 	"Clock weight": "Grosor de los dígitos",
 	"Card background": "Fondo de los widgets",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Claro u oscuro, en el tono del tema de color. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Claro u oscuro, en el tono del tema de color. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno.",
+	"Glass": "Cristal",
+	"Frosted": "Esmerilado",
+	"Liquid": "Líquido",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Esmerilado: los widgets difuminan la imagen de detrás. Líquido: además la curvan en sus bordes, como un cristal grueso."
 }

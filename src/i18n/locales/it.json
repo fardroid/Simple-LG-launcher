@@ -230,8 +230,6 @@
 	"Cards": "Schede",
 	"Text size": "Dimensione del testo",
 	"All the text on the weather and calendar cards.": "Tutto il testo sulle schede del meteo e del calendario.",
-	"Frosted glass": "Vetro smerigliato",
-	"The cards blur the picture behind them.": "Le schede sfocano l'immagine dietro di esse.",
 	"Shadows": "Ombre",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Un'ombra morbida sotto l'orologio e le schede. Senza, il TV ha un po' meno da disegnare.",
 	"Font": "Carattere",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· aggiornalo nell'Homebrew Channel",
 	"Clock weight": "Spessore delle cifre",
 	"Card background": "Sfondo dei widget",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Chiaro o scuro, nella tinta del tema di colori. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Chiaro o scuro, nella tinta del tema di colori. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno.",
+	"Glass": "Vetro",
+	"Frosted": "Smerigliato",
+	"Liquid": "Liquido",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Smerigliato: i widget sfocano l'immagine dietro. Liquido: la piegano anche ai bordi, come un vetro spesso."
 }

@@ -230,8 +230,6 @@
 	"Cards": "卡片",
 	"Text size": "文字大小",
 	"All the text on the weather and calendar cards.": "天气和日历卡片上的所有文字。",
-	"Frosted glass": "磨砂玻璃",
-	"The cards blur the picture behind them.": "卡片会模糊其身后的图片。",
 	"Shadows": "阴影",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "时钟和卡片下方的柔和阴影。关闭后电视的绘制负担会稍小。",
 	"Font": "字体",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· 在 Homebrew Channel 中更新",
 	"Clock weight": "时钟数字粗细",
 	"Card background": "小部件背景",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "浅色或深色，采用配色主题的色调。自动：所有小部件会根据背后的图片一起变浅或变深，让每个小部件上的文字都清晰可读。"
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "浅色或深色，采用配色主题的色调。自动：所有小部件会根据背后的图片一起变浅或变深，让每个小部件上的文字都清晰可读。",
+	"Glass": "玻璃",
+	"Frosted": "磨砂",
+	"Liquid": "液态",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "磨砂：小部件会模糊背后的图片。液态：还会像厚玻璃一样在边缘折射图片。"
 }

@@ -78,6 +78,7 @@ std::string labels_of (const UserConfig &c) { return !c.showLabels ? "none" : c.
 std::string labels_text (std::string v) { return v == "none" ? tr("None", "Нет") : v == "selected" ? tr("Selected only", "Только у выбранной") : tr("All", "У всех"); }
 std::string shift_text (std::string v) { return v == "on" ? tr("On", "Вкл.") : v == "off" ? tr("Off", "Выкл.") : tr("Auto", "Авто"); }
 std::string dim_text (std::string v) { return v == "night" ? tr("At night", "Ночью") : v == "always" ? tr("Always", "Всегда") : tr("Off", "Выкл."); }
+std::string glass_text (std::string v) { return v == "liquid" ? tr("Liquid", "Жидкое") : v == "frost" ? tr("Frosted", "Матовое") : tr("Off", "Выкл."); }
 std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлая") : v == "dark" ? tr("Dark", "Тёмная") : tr("Auto", "Авто"); }
 std::string theme_text (std::string v) { const ThemeColors &t = theme_colors(v); return tr(t.en, t.ru); }
 std::vector<std::string> theme_list () {
@@ -162,8 +163,9 @@ std::vector<Pref> base_prefs () {
 		choice<std::string>("plates", "look", tr("Card background", "Подложка виджетов"), tr("Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Светлая или тёмная, в оттенке цветовой темы. Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
 			SV{"auto", "light", "dark"}, [] (const UserConfig &c) { return c.plates; }, [] (UserConfig c, std::string v) { c.plates = v; return c; }, plate_text),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient"; },
-			toggle("glass", "look", tr("Frosted glass", "Матовое стекло"), tr("The cards blur the picture behind them.", "Виджеты размывают картинку под собой."),
-				[] (const UserConfig &c) { return c.glass; }, [] (UserConfig c, bool v) { c.glass = v; return c; })),
+			choice<std::string>("glass", "look", tr("Glass", "Стекло"), tr("Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Матовое: виджеты размывают картинку под собой. Жидкое: ещё и преломляют её у краёв, как толстое стекло."),
+				SV{"off", "frost", "liquid"}, [] (const UserConfig &c) { return c.glass ? c.glassKind : std::string("off"); },
+				[] (UserConfig c, std::string v) { c.glass = v != "off"; if (v != "off") c.glassKind = v; return c; }, glass_text)),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient" && c.glass; },
 			range("frost", "look", tr("Frost", "Матовость"), tr("How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Насколько стекло размывает картинку под собой: 100% — сильнее всего, на 30% картинка видна чётче всего."),
 				ranges::frost, [] (const UserConfig &c) { return c.frost; }, [] (UserConfig c, int v) { c.frost = v; return c; }, pct)),
@@ -304,6 +306,7 @@ UserConfig reset_look (const UserConfig &c) {
 	out.cardSize = d.cardSize;
 	out.plates = "auto";
 	out.glass = true;
+	out.glassKind = "frost";
 	out.frost = d.frost;
 	out.shadows = true;
 	out.clockFormat = "24h";

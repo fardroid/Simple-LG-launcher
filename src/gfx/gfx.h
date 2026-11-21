@@ -63,6 +63,15 @@ void ring (Rect r, float radius, float spread, Color c);
  *  `across`: the tint goes from `tint` on the left to this colour on the right (text filled with a gradient). */
 void image (const Texture &t, Rect r, float opacity = 1, float radius = 0, Color tint = {1, 1, 1, 1}, float brightness = 1, Rect src = {},
 	const Color *across = nullptr);
+/** The shape of the liquid glass: its convex bevel's width and the glass's thickness (px), how much the colours part (0-1), and
+ *  the bevel's profile (smooth: a squircle, steep only at the very edge; otherwise a quarter circle). */
+struct LiquidGlass { float bevel = 54, thickness = 84, dispersion = 1; bool smooth = true; };
+/** The frosted wallpaper `frost` (over the whole screen) seen through liquid glass shaped as the rounded box `r`. */
+void liquid (const Texture &frost, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g);
+/** The light on that glass (its bevel's highlights and the line round it), over what is drawn there. */
+void liquid_light (Rect r, float radius, const LiquidGlass &g, float opacity);
+/** The GPU built the liquid glass's shader (false: the cards keep the frosted glass). */
+bool liquid_available ();
 /** A CSS linear-gradient(angle, stops) over `r` (angle in degrees, 180 = top to bottom), clipped to a rounded rectangle. */
 void gradient (Rect r, float angle, const GradientStop *stops, int count, float opacity = 1, float radius = 0);
 

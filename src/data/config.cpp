@@ -177,6 +177,7 @@ UserConfig parse_config (const std::string &raw) {
 	std::string plates = str(field(p, "plates"));
 	c.plates = plates == "light" || plates == "dark" ? plates : "auto";
 	c.glass = not_false(field(p, "glass"));
+	c.glassKind = str(field(p, "glassKind")) == "liquid" ? "liquid" : "frost";
 	c.frost = ranged(field(p, "frost"), ranges::frost);
 	c.shadows = not_false(field(p, "shadows"));
 	std::string shift = str(field(p, "pixelShift"));
@@ -235,7 +236,7 @@ std::string config_json (const UserConfig &c) {
 		{"tileOrder", list(c.tileOrder)}, {"useHomebrew", c.useHomebrew}, {"closeHome", c.closeHome}, {"replaceHome", c.replaceHome}, {"checkUpdates", c.checkUpdates}, {"wipeOnUninstall", c.wipeOnUninstall},
 		{"hookBoot", c.hookBoot}, {"theme", c.theme}, {"iconScale", c.iconScale}, {"showLabels", c.showLabels},
 		{"labelsSelectedOnly", c.labelsSelectedOnly}, {"rows", c.rows}, {"sideMargin", c.sideMargin},
-		{"bottomMargin", c.bottomMargin}, {"cardSize", c.cardSize}, {"plates", c.plates}, {"glass", c.glass}, {"frost", c.frost},
+		{"bottomMargin", c.bottomMargin}, {"cardSize", c.cardSize}, {"plates", c.plates}, {"glass", c.glass}, {"glassKind", c.glassKind}, {"frost", c.frost},
 		{"shadows", c.shadows}, {"pixelShift", c.pixelShift}, {"clockFormat", c.clockFormat},
 		{"clock", {{"size", c.clock.size}, {"weight", c.clock.weight}, {"font", c.clock.font},
 			{"opacity", c.clock.opacity}, {"showDate", c.clock.showDate}, {"dateSize", c.clock.dateSize}, {"showPeriod", c.clock.showPeriod}}},

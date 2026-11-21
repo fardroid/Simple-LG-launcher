@@ -141,20 +141,86 @@ void main () {
 }
 )";
 
+// Liquid glass (gfx::liquid): the frosted wallpaper seen through a slab of glass whose edge is a convex bevel. The flat middle shows
+// what is under it as it is; a ray coming straight down into the bevel is bent inwards (Snell's law, n about 1.5) and lands that
+// far inside, so the picture from inside is stretched out to the edge, each colour a little differently (blue bends more). u_part 1
+// draws the light on the glass instead: the side of the bevel facing the light (top left), a weaker one opposite, and a thin line
+// round the silhouette, as white over what is there (which is a screen blend).
+const char *LIQUID_HEAD = R"(
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+float box (vec2 p, vec2 b, float r) {
+	vec2 q = abs(p) - b + vec2(r);
+	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+)";
+const char *LIQUID = R"(
+uniform sampler2D u_tex;
+uniform vec2 u_half;
+uniform float u_radius;
+uniform float u_opacity;
+uniform float u_bright;
+uniform vec2 u_origin;      // the shape's centre on the screen (layout px): the frost covers the whole screen
+uniform vec2 u_screen;      // the layout's size
+uniform vec4 u_glass;       // bevel width, thickness (px), dispersion (0-1), profile (0 round, 1 smooth)
+uniform int u_part;
+varying vec2 v_p;
+float slope (float x) {
+	x = clamp(x, 0.004, 1.0);
+	if (u_glass.w < 0.5) return (1.0 - x) / sqrt(1.0 - (1.0 - x) * (1.0 - x));
+	float a = 1.0 - pow(1.0 - x, 4.0);
+	return pow(a, -0.75) * pow(1.0 - x, 3.0);
+}
+float inward (float x, float n) {
+	if (x >= 1.0) return 0.0;
+	float i = atan(slope(x) * u_glass.y / u_glass.x);
+	float t = asin(sin(i) / n);
+	return u_glass.y * tan(i - t);
+}
+vec3 frost (vec2 p) { return texture2D(u_tex, clamp(u_origin + p, vec2(0.0), u_screen) / u_screen).rgb; }
+void main () {
+	float d = box(v_p, u_half, u_radius);
+	float cover = clamp(0.5 - d, 0.0, 1.0);
+	if (cover <= 0.0) discard;
+	// the bevel follows a shape rounded at least as much as it is wide, or it would turn sharply along the corners' diagonals
+	float rr = min(max(u_radius, u_glass.x), min(u_half.x, u_half.y));
+	vec2 e = vec2(1.0, 0.0);
+	vec2 n = normalize(vec2(box(v_p + e.xy, u_half, rr) - box(v_p - e.xy, u_half, rr), box(v_p + e.yx, u_half, rr) - box(v_p - e.yx, u_half, rr)) + 1e-5);
+	float x = clamp(-box(v_p, u_half, rr) / u_glass.x, 0.0, 1.0);
+	if (u_part == 0) {
+		float k = u_glass.z;
+		vec3 c = vec3(frost(v_p - n * inward(x, 1.5 - 0.10 * k)).r, frost(v_p - n * inward(x, 1.5)).g, frost(v_p - n * inward(x, 1.5 + 0.12 * k)).b);
+		float a = cover * u_opacity;
+		gl_FragColor = vec4(min(c * u_bright, vec3(1.0)) * a, a);
+	} else {
+		vec2 L = normalize(vec2(-0.5, -0.866));
+		float f = dot(n, L), steep = pow(1.0 - x, 2.5);
+		float line = 1.0 - smoothstep(0.0, 1.6, -d);
+		float a = (steep * (0.42 * pow(max(f, 0.0), 1.5) + 0.20 * pow(max(-f, 0.0), 1.5)) + line * (0.10 + 0.35 * max(f, 0.0))) * cover * u_opacity;
+		gl_FragColor = vec4(vec3(a), a);
+	}
+}
+)";
+
 struct Program {
 	GLuint id = 0;
 	GLint flip, grow, quad, layout, center, color, half, radius, soft, dy, mode, tex, src, tint, tint2, across, opacity, bright;
 	GLint c[5], at0, at4, count, dir, len;
+	GLint origin, screen, glass, part;
 	GLint loc (const char *n) { return glGetUniformLocation(id, n); }
 };
 
-Program shape, img, grad;
+Program shape, img, grad, lens;
 GLuint quad_buffer;
 std::vector<Rect> clips;
 float group_alpha = 1;
 float outer_alpha = 1;      // a whole screen faded (set_outer_alpha), times each group's own
 bool into_target = false;
 float grow_x = 0, grow_y = 0, grow_k = 1;
+bool liquid_ok = false;
 
 GLuint compile (GLenum type, const std::string &src) {
 	GLuint s = glCreateShader(type);
@@ -171,10 +237,10 @@ GLuint compile (GLenum type, const std::string &src) {
 	return s;
 }
 
-bool build (Program &p, const char *fragment) {
+bool build (Program &p, const char *fragment, const char *head = SDF) {
 	p.id = glCreateProgram();
 	glAttachShader(p.id, compile(GL_VERTEX_SHADER, VERTEX));
-	glAttachShader(p.id, compile(GL_FRAGMENT_SHADER, std::string(SDF) + fragment));
+	glAttachShader(p.id, compile(GL_FRAGMENT_SHADER, std::string(head) + fragment));
 	glBindAttribLocation(p.id, 0, "a_pos");
 	glLinkProgram(p.id);
 	GLint ok = 0;
@@ -191,6 +257,7 @@ bool build (Program &p, const char *fragment) {
 	const char *cs[5] = {"u_c0", "u_c1", "u_c2", "u_c3", "u_c4"};
 	for (int i = 0; i < 5; i++) p.c[i] = p.loc(cs[i]);
 	p.at0 = p.loc("u_at0"); p.at4 = p.loc("u_at4"); p.count = p.loc("u_count"); p.dir = p.loc("u_dir"); p.len = p.loc("u_len");
+	p.origin = p.loc("u_origin"); p.screen = p.loc("u_screen"); p.glass = p.loc("u_glass"); p.part = p.loc("u_part");
 	return true;
 }
 
@@ -244,6 +311,9 @@ bool init (int width, int height) {
 	screen_w = width;
 	screen_h = height;
 	if (!build(shape, SHAPE) || !build(img, IMAGE) || !build(grad, GRADIENT)) return false;
+	// the liquid glass is an extra: without it the cards fall back to the frosted glass
+	liquid_ok = build(lens, LIQUID, LIQUID_HEAD);
+	if (!liquid_ok) logf("gl: no liquid glass (its shader did not build)");
 	const float corners[] = {0, 0, 1, 0, 0, 1, 1, 1};
 	glGenBuffers(1, &quad_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, quad_buffer);
@@ -380,6 +450,36 @@ void image (const Texture &t, Rect r, float opacity, float radius, Color tint, f
 	glUniform1f(img.bright, brightness);
 	glUniform1f(img.radius, radius > 0 ? std::min(radius, std::min(r.w, r.h) / 2) : 0.f);
 	draw();
+}
+
+bool liquid_available () { return liquid_ok; }
+
+static void liquid_part (const Texture *t, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g, int part) {
+	use(lens, r, r, radius);
+	if (t) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, t->id);
+	}
+	glUniform1i(lens.tex, 0);
+	glUniform1f(lens.opacity, opacity);
+	glUniform1f(lens.bright, brightness);
+	glUniform2f(lens.origin, r.x + r.w / 2, r.y + r.h / 2);
+	glUniform2f(lens.screen, LAYOUT_W, LAYOUT_H);
+	glUniform4f(lens.glass, g.bevel, g.thickness, g.dispersion, g.smooth ? 1.f : 0.f);
+	glUniform1i(lens.part, part);
+	draw();
+}
+
+void liquid (const Texture &frost, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g) {
+	opacity *= group_alpha * outer_alpha;
+	if (!liquid_ok || !frost.id || opacity <= 0 || r.w <= 0 || r.h <= 0) return;
+	liquid_part(&frost, r, radius, opacity, brightness, g, 0);
+}
+
+void liquid_light (Rect r, float radius, const LiquidGlass &g, float opacity) {
+	opacity *= group_alpha * outer_alpha;
+	if (!liquid_ok || opacity <= 0 || r.w <= 0 || r.h <= 0) return;
+	liquid_part(nullptr, r, radius, opacity, 1, g, 1);
 }
 
 void gradient (Rect r, float angle, const GradientStop *stops, int count, float opacity, float radius) {

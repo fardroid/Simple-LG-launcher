@@ -231,8 +231,6 @@ static const Entry LOCALE_DE[] = {
 	{"Cards", "Karten"},
 	{"Text size", "Textgröße"},
 	{"All the text on the weather and calendar cards.", "Der gesamte Text auf den Wetter- und Kalenderkarten."},
-	{"Frosted glass", "Milchglas"},
-	{"The cards blur the picture behind them.", "Die Karten verwischen das Bild hinter ihnen."},
 	{"Shadows", "Schatten"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Ein weicher Schatten unter Uhr und Karten. Ohne ihn hat der Fernseher etwas weniger zu zeichnen."},
 	{"Font", "Schrift"},
@@ -626,6 +624,10 @@ static const Entry LOCALE_DE[] = {
 	{"Clock weight", "Stärke der Uhrziffern"},
 	{"Card background", "Widget-Hintergrund"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt."},
+	{"Glass", "Glas"},
+	{"Frosted", "Matt"},
+	{"Liquid", "Flüssig"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ES[] = {
@@ -860,8 +862,6 @@ static const Entry LOCALE_ES[] = {
 	{"Cards", "Tarjetas"},
 	{"Text size", "Tamaño del texto"},
 	{"All the text on the weather and calendar cards.", "Todo el texto de las tarjetas del tiempo y del calendario."},
-	{"Frosted glass", "Cristal esmerilado"},
-	{"The cards blur the picture behind them.", "Las tarjetas desenfocan la imagen que tienen detrás."},
 	{"Shadows", "Sombras"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Una sombra suave bajo el reloj y las tarjetas. Sin ella, el televisor tiene algo menos que dibujar."},
 	{"Font", "Fuente"},
@@ -1255,6 +1255,10 @@ static const Entry LOCALE_ES[] = {
 	{"Clock weight", "Grosor de los dígitos"},
 	{"Card background", "Fondo de los widgets"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro u oscuro, en el tono del tema de color. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno."},
+	{"Glass", "Cristal"},
+	{"Frosted", "Esmerilado"},
+	{"Liquid", "Líquido"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Esmerilado: los widgets difuminan la imagen de detrás. Líquido: además la curvan en sus bordes, como un cristal grueso."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_FR[] = {
@@ -1489,8 +1493,6 @@ static const Entry LOCALE_FR[] = {
 	{"Cards", "Cartes"},
 	{"Text size", "Taille du texte"},
 	{"All the text on the weather and calendar cards.", "Tout le texte des cartes météo et calendrier."},
-	{"Frosted glass", "Verre dépoli"},
-	{"The cards blur the picture behind them.", "Les cartes floutent l’image derrière elles."},
 	{"Shadows", "Ombres"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Une ombre douce sous l’horloge et les cartes. Sans elle, le téléviseur a un peu moins à dessiner."},
 	{"Font", "Police"},
@@ -1884,6 +1886,10 @@ static const Entry LOCALE_FR[] = {
 	{"Clock weight", "Épaisseur des chiffres"},
 	{"Card background", "Fond des widgets"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Clair ou foncé, dans la teinte du thème de couleurs. Auto : tous les widgets deviennent clairs ou foncés ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun."},
+	{"Glass", "Verre"},
+	{"Frosted", "Dépoli"},
+	{"Liquid", "Liquide"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Dépoli : les widgets floutent l'image derrière eux. Liquide : ils la courbent aussi sur leurs bords, comme un verre épais."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_IT[] = {
@@ -2118,8 +2124,6 @@ static const Entry LOCALE_IT[] = {
 	{"Cards", "Schede"},
 	{"Text size", "Dimensione del testo"},
 	{"All the text on the weather and calendar cards.", "Tutto il testo sulle schede del meteo e del calendario."},
-	{"Frosted glass", "Vetro smerigliato"},
-	{"The cards blur the picture behind them.", "Le schede sfocano l'immagine dietro di esse."},
 	{"Shadows", "Ombre"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Un'ombra morbida sotto l'orologio e le schede. Senza, il TV ha un po' meno da disegnare."},
 	{"Font", "Carattere"},
@@ -2513,6 +2517,10 @@ static const Entry LOCALE_IT[] = {
 	{"Clock weight", "Spessore delle cifre"},
 	{"Card background", "Sfondo dei widget"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Chiaro o scuro, nella tinta del tema di colori. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno."},
+	{"Glass", "Vetro"},
+	{"Frosted", "Smerigliato"},
+	{"Liquid", "Liquido"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Smerigliato: i widget sfocano l'immagine dietro. Liquido: la piegano anche ai bordi, come un vetro spesso."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_JA[] = {
@@ -2747,8 +2755,6 @@ static const Entry LOCALE_JA[] = {
 	{"Cards", "カード"},
 	{"Text size", "文字サイズ"},
 	{"All the text on the weather and calendar cards.", "天気とカレンダーのカードのすべての文字。"},
-	{"Frosted glass", "すりガラス"},
-	{"The cards blur the picture behind them.", "カードが背後の画像をぼかします。"},
 	{"Shadows", "影"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "時計とカードの下にやわらかい影を付けます。オフにするとテレビの描画負荷が少し下がります。"},
 	{"Font", "フォント"},
@@ -3142,6 +3148,10 @@ static const Entry LOCALE_JA[] = {
 	{"Clock weight", "時計の数字の太さ"},
 	{"Card background", "ウィジェットの背景"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "明るいか暗いか、カラーテーマの色合いで。自動：背後の画像に応じてすべてのウィジェットが一緒に明るく・暗くなり、どれでも文字が読みやすくなります。"},
+	{"Glass", "ガラス"},
+	{"Frosted", "すりガラス"},
+	{"Liquid", "リキッド"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_KO[] = {
@@ -3376,8 +3386,6 @@ static const Entry LOCALE_KO[] = {
 	{"Cards", "카드"},
 	{"Text size", "글자 크기"},
 	{"All the text on the weather and calendar cards.", "날씨와 캘린더 카드의 모든 글자."},
-	{"Frosted glass", "젖빛 유리"},
-	{"The cards blur the picture behind them.", "카드가 뒤의 이미지를 흐리게 합니다."},
 	{"Shadows", "그림자"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "시계와 카드 아래의 부드러운 그림자. 끄면 TV가 그릴 것이 조금 줄어듭니다."},
 	{"Font", "글꼴"},
@@ -3771,6 +3779,10 @@ static const Entry LOCALE_KO[] = {
 	{"Clock weight", "시계 숫자 굵기"},
 	{"Card background", "위젯 배경"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "밝게 또는 어둡게, 색상 테마의 색조로. 자동: 뒤의 그림에 따라 모든 위젯이 함께 밝아지거나 어두워져 각 위젯의 글자가 잘 읽힙니다."},
+	{"Glass", "유리"},
+	{"Frosted", "반투명"},
+	{"Liquid", "리퀴드"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "반투명: 위젯이 뒤의 그림을 흐리게 합니다. 리퀴드: 두꺼운 유리처럼 가장자리에서 그림을 굴절시키기도 합니다."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PL[] = {
@@ -4004,8 +4016,6 @@ static const Entry LOCALE_PL[] = {
 	{"Cards", "Karty"},
 	{"Text size", "Rozmiar tekstu"},
 	{"All the text on the weather and calendar cards.", "Cały tekst na kartach pogody i kalendarza."},
-	{"Frosted glass", "Szronione szkło"},
-	{"The cards blur the picture behind them.", "Karty rozmywają obraz znajdujący się za nimi."},
 	{"Shadows", "Cienie"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Delikatny cień pod zegarem i kartami. Bez niego telewizor ma nieco mniej elementów do renderowania."},
 	{"Font", "Czcionka"},
@@ -4400,6 +4410,10 @@ static const Entry LOCALE_PL[] = {
 	{"Clock weight", "Grubość cyfr zegara"},
 	{"Card background", "Tło widżetów"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Jasne lub ciemne, w odcieniu motywu kolorów. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, żeby tekst był czytelny na każdym."},
+	{"Glass", "Szkło"},
+	{"Frosted", "Matowe"},
+	{"Liquid", "Płynne"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Matowe: widżety rozmywają obraz za sobą. Płynne: dodatkowo załamują go na krawędziach, jak grube szkło."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PT[] = {
@@ -4634,8 +4648,6 @@ static const Entry LOCALE_PT[] = {
 	{"Cards", "Cartões"},
 	{"Text size", "Tamanho do texto"},
 	{"All the text on the weather and calendar cards.", "Todo o texto nos cartões de clima e calendário."},
-	{"Frosted glass", "Vidro fosco"},
-	{"The cards blur the picture behind them.", "Os cartões desfocam a imagem atrás deles."},
 	{"Shadows", "Sombras"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Uma sombra suave sob o relógio e os cartões. Sem ela, a TV tem um pouco menos a desenhar."},
 	{"Font", "Fonte"},
@@ -5029,6 +5041,10 @@ static const Entry LOCALE_PT[] = {
 	{"Clock weight", "Espessura dos dígitos"},
 	{"Card background", "Fundo dos widgets"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro ou escuro, no tom do tema de cores. Auto: todos os widgets ficam claros ou escuros em conjunto conforme a imagem por trás, para que o texto se leia bem em cada um."},
+	{"Glass", "Vidro"},
+	{"Frosted", "Fosco"},
+	{"Liquid", "Líquido"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Fosco: os widgets desfocam a imagem atrás. Líquido: também a curvam nas bordas, como vidro grosso."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_TR[] = {
@@ -5263,8 +5279,6 @@ static const Entry LOCALE_TR[] = {
 	{"Cards", "Kartlar"},
 	{"Text size", "Metin boyutu"},
 	{"All the text on the weather and calendar cards.", "Hava durumu ve takvim kartlarındaki tüm metin."},
-	{"Frosted glass", "Buzlu cam"},
-	{"The cards blur the picture behind them.", "Kartlar arkalarındaki resmi bulanıklaştırır."},
 	{"Shadows", "Gölgeler"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Saatin ve kartların altında yumuşak bir gölge. Olmazsa TV'nin çizeceği şey biraz azalır."},
 	{"Font", "Yazı tipi"},
@@ -5658,6 +5672,10 @@ static const Entry LOCALE_TR[] = {
 	{"Clock weight", "Saat rakamlarının kalınlığı"},
 	{"Card background", "Widget arka planı"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Açık veya koyu, renk temasının tonunda. Otomatik: tüm widget'lar arkalarındaki resme göre birlikte açık ya da koyu olur, böylece her birinde metin rahat okunur."},
+	{"Glass", "Cam"},
+	{"Frosted", "Buzlu"},
+	{"Liquid", "Sıvı"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Buzlu: widget'lar arkalarındaki resmi bulanıklaştırır. Sıvı: kalın cam gibi kenarlarında resmi ayrıca kırar."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_UK[] = {
@@ -5892,8 +5910,6 @@ static const Entry LOCALE_UK[] = {
 	{"Cards", "Картки"},
 	{"Text size", "Розмір тексту"},
 	{"All the text on the weather and calendar cards.", "Увесь текст на картках погоди та календаря."},
-	{"Frosted glass", "Матове скло"},
-	{"The cards blur the picture behind them.", "Картки розмивають зображення під собою."},
 	{"Shadows", "Тіні"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "М’яка тінь під годинником і картками. Без неї ТВ малює трохи менше."},
 	{"Font", "Шрифт"},
@@ -6287,6 +6303,10 @@ static const Entry LOCALE_UK[] = {
 	{"Clock weight", "Товщина цифр годинника"},
 	{"Card background", "Підкладка віджетів"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Світла або темна, у відтінку кольорової теми. Авто: усі віджети разом стають світлими або темними залежно від картинки за ними, щоб текст добре читався на кожному."},
+	{"Glass", "Скло"},
+	{"Frosted", "Матове"},
+	{"Liquid", "Рідке"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Матове: віджети розмивають картинку під собою. Рідке: ще й заломлюють її біля країв, як товсте скло."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ZH[] = {
@@ -6521,8 +6541,6 @@ static const Entry LOCALE_ZH[] = {
 	{"Cards", "卡片"},
 	{"Text size", "文字大小"},
 	{"All the text on the weather and calendar cards.", "天气和日历卡片上的所有文字。"},
-	{"Frosted glass", "磨砂玻璃"},
-	{"The cards blur the picture behind them.", "卡片会模糊其身后的图片。"},
 	{"Shadows", "阴影"},
 	{"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "时钟和卡片下方的柔和阴影。关闭后电视的绘制负担会稍小。"},
 	{"Font", "字体"},
@@ -6916,6 +6934,10 @@ static const Entry LOCALE_ZH[] = {
 	{"Clock weight", "时钟数字粗细"},
 	{"Card background", "小部件背景"},
 	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "浅色或深色，采用配色主题的色调。自动：所有小部件会根据背后的图片一起变浅或变深，让每个小部件上的文字都清晰可读。"},
+	{"Glass", "玻璃"},
+	{"Frosted", "磨砂"},
+	{"Liquid", "液态"},
+	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "磨砂：小部件会模糊背后的图片。液态：还会像厚玻璃一样在边缘折射图片。"},
 	{nullptr, nullptr}
 };
 static const Locale LOCALES[] = {

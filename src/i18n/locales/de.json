@@ -230,8 +230,6 @@
 	"Cards": "Karten",
 	"Text size": "Textgröße",
 	"All the text on the weather and calendar cards.": "Der gesamte Text auf den Wetter- und Kalenderkarten.",
-	"Frosted glass": "Milchglas",
-	"The cards blur the picture behind them.": "Die Karten verwischen das Bild hinter ihnen.",
 	"Shadows": "Schatten",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Ein weicher Schatten unter Uhr und Karten. Ohne ihn hat der Fernseher etwas weniger zu zeichnen.",
 	"Font": "Schrift",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· im Homebrew Channel aktualisieren",
 	"Clock weight": "Stärke der Uhrziffern",
 	"Card background": "Widget-Hintergrund",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt.",
+	"Glass": "Glas",
+	"Frosted": "Matt",
+	"Liquid": "Flüssig",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas."
 }

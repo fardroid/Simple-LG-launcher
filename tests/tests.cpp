@@ -569,6 +569,12 @@ static void settings () {
 	bool glass = false;
 	for (auto &o : options_for("look", pic, info)) glass = glass || o.id == "glass";
 	eq(glass, true, "frosted glass appears with a picture");
+	auto glass_of = [] (const UserConfig &c) { return c.glass ? c.glassKind : std::string("off"); };
+	eq(S{glass_of(pic), glass_of(apply_pref(pic, "glass", Press::right)), glass_of(apply_pref(pic, "glass", Press::left))}, S{"frost", "liquid", "off"}, "Glass: off, frosted or liquid");
+	UserConfig liquid_cfg = apply_pref(pic, "glass", Press::right);
+	eq(glass_of(parse_config(config_json(liquid_cfg))), std::string("liquid"), "liquid glass is kept in the settings");
+	eq(glass_of(parse_config(R"({"glass":false})")) + " " + glass_of(parse_config(R"({"glass":true})")), std::string("off frost"), "the old on/off glass reads as off or frosted");
+	eq(glass_of(apply_pref(apply_pref(liquid_cfg, "glass", Press::left), "glass", Press::right)), std::string("liquid"), "frosted again from liquid keeps going to liquid next");
 	auto picture_text = [&] (const SystemInfo &si) { for (auto &o : options_for("wallpaper", pic, si)) if (o.id == "wallpaper") return o.valueText; return std::string(); };
 	SystemInfo titled = info;
 	titled.picture_title = "Matterhorn from Lake Grindji";

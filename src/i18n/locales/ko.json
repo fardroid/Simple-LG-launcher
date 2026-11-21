@@ -230,8 +230,6 @@
 	"Cards": "카드",
 	"Text size": "글자 크기",
 	"All the text on the weather and calendar cards.": "날씨와 캘린더 카드의 모든 글자.",
-	"Frosted glass": "젖빛 유리",
-	"The cards blur the picture behind them.": "카드가 뒤의 이미지를 흐리게 합니다.",
 	"Shadows": "그림자",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "시계와 카드 아래의 부드러운 그림자. 끄면 TV가 그릴 것이 조금 줄어듭니다.",
 	"Font": "글꼴",
@@ -624,5 +622,9 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel에서 업데이트",
 	"Clock weight": "시계 숫자 굵기",
 	"Card background": "위젯 배경",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "밝게 또는 어둡게, 색상 테마의 색조로. 자동: 뒤의 그림에 따라 모든 위젯이 함께 밝아지거나 어두워져 각 위젯의 글자가 잘 읽힙니다."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "밝게 또는 어둡게, 색상 테마의 색조로. 자동: 뒤의 그림에 따라 모든 위젯이 함께 밝아지거나 어두워져 각 위젯의 글자가 잘 읽힙니다.",
+	"Glass": "유리",
+	"Frosted": "반투명",
+	"Liquid": "리퀴드",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "반투명: 위젯이 뒤의 그림을 흐리게 합니다. 리퀴드: 두꺼운 유리처럼 가장자리에서 그림을 굴절시키기도 합니다."
 }

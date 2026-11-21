@@ -72,6 +72,7 @@ struct UserConfig {
 	int cardSize = ranges::cardSize.def;
 	std::string plates = "auto";     // auto light dark
 	bool glass = true;
+	std::string glassKind = "frost";     // frost: it blurs; liquid: it also bends the picture at the cards' edges
 	int frost = ranges::frost.def;
 	bool shadows = true;
 	std::string pixelShift = "auto"; // auto on off
