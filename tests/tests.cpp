@@ -731,6 +731,11 @@ static void homemode () {
 	st = parse_mode_status("mode=none\r\ncan_default=no\r\nrelease=\r\n");
 	eq(st ? st->mode + "," + show(st->can_default) + "," + st->release : "", std::string("none,false,"), "an unknown release stays empty (and a terminal's CR is no harm)");
 	eq(parse_mode_status("sh: homemode.sh: not found").has_value(), false, "no script: unknown, not \"off\"");
+	eq(show(st && !st->restart), std::string("true"), "no restart line (an older copy): no restart asked for");
+	st = parse_mode_status("mode=default\ncan_default=yes\nrelease=10.3.2\nrestart=yes\n");
+	eq(show(st && st->restart), std::string("true"), "the TV has not read the start-up rules yet: a restart is asked for");
+	st = parse_mode_status("mode=none\r\ncan_default=yes\r\nrelease=10.3.2\r\nrestart=no\r\n");
+	eq(show(st && !st->restart), std::string("true"), "restart=no is no restart");
 	auto r = parse_result("ok default\n");
 	eq(r ? show(r->ok) + "," + r->mode + "," + r->why : "", std::string("true,default,"), "a switch that worked");
 	r = parse_result("failed default: the TV did not keep the launcher as Home (back to none)");

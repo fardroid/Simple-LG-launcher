@@ -631,5 +631,6 @@
 	"Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. Then the TV restarts, to forget the launcher's start-up rules.": "設定、カレンダーのリンク、壁紙フォルダー、ダウンロードした写真が削除され、起動方法はオフになります。その後、ランチャーの起動ルールを忘れるためにテレビが再起動します。",
 	"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.": "起動方法がオフになり、ランチャーがアンインストールされ、テレビに置いたものが設定、カレンダーのリンク、壁紙フォルダーごとすべて削除されます。その後、ランチャーの起動ルールを忘れるためにテレビが再起動します。",
 	"Restart the TV now?": "今すぐテレビを再起動しますか？",
-	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "完全に再起動するまで、電源を入れるとテレビはまだランチャーを開きます：前回の起動時にランチャーの起動ルールを読み込んだためです。"
+	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "完全に再起動するまで、電源を入れるとテレビはまだランチャーを開きます：前回の起動時にランチャーの起動ルールを読み込んだためです。",
+	"Restart the TV to apply all start-up settings": "起動設定をすべて反映するにはテレビを再起動してください"
 }

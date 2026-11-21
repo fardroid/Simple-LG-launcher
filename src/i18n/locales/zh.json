@@ -631,5 +631,6 @@
 	"Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. Then the TV restarts, to forget the launcher's start-up rules.": "将删除它的设置、日历链接、壁纸文件夹和下载的照片，并关闭打开方式。之后电视会重新启动，以忘记启动器的启动规则。",
 	"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.": "将关闭打开方式、卸载启动器，并删除它放在电视上的所有内容，包括设置、日历链接和壁纸文件夹。之后电视会重新启动，以忘记启动器的启动规则。",
 	"Restart the TV now?": "现在重启电视吗？",
-	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "在完全重启之前，电视开机时仍会打开启动器：它在上次启动时读取了启动器的启动规则。"
+	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "在完全重启之前，电视开机时仍会打开启动器：它在上次启动时读取了启动器的启动规则。",
+	"Restart the TV to apply all start-up settings": "重启电视以应用所有启动设置"
 }

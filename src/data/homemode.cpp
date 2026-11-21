@@ -24,6 +24,8 @@ std::optional<HomeModeInfo> parse_mode_status (const std::string &out) {
 	info.mode = m[2];
 	static const std::regex can_re(R"((^|\n)can_default=yes(\r?\n|$))");
 	info.can_default = std::regex_search(out, can_re);
+	static const std::regex restart_re(R"((^|\n)restart=yes(\r?\n|$))");
+	info.restart = std::regex_search(out, restart_re);
 	static const std::regex rel_re(R"((^|\n)release=([^\n]*))");
 	if (std::regex_search(out, m, rel_re)) {
 		std::string r = m[2];

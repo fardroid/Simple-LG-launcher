@@ -852,18 +852,27 @@ void Home::draw_row (double now) {
 	}
 }
 
-// a pill of dark glass with a green dot, right-aligned with the row, just over it (not while a tile is being moved)
+// pills of dark glass with a coloured dot, right-aligned with the row, just over it (not while a tile is being moved): the alert
+// (red) at the right end, the notice (green) to its left
 void Home::draw_notice () {
-	if (notice_.empty() || lifting_) return;
+	if (lifting_) return;
+	float right = 1920.f - cfg_.sideMargin + shift_x_;
+	if (!alert_.empty()) right -= draw_pill(alert_, Color::hex("#FF453A"), right) + 12;
+	if (!notice_.empty()) draw_pill(notice_, Color::hex("#30D158"), right);
+}
+
+/** One pill ending at `right`; returns its width. */
+float Home::draw_pill (const std::string &raw, Color dot, float right) {
 	TextStyle st{Face::ui, 21, 500, 0};
-	std::string text = text::ellipsize(notice_, st, 700);
+	std::string text = text::ellipsize(raw, st, 900);       // the longest translation of the restart notice fits
 	const TextLine &l = text::line(text, st);
 	const float H = 40, PAD = 18, DOT = 10;
 	float w = PAD + DOT + 12 + l.w + PAD;
-	float x = 1920.f - cfg_.sideMargin - w + shift_x_, y = row_top(0) - 12 - H;
+	float x = right - w, y = row_top(0) - 12 - H;
 	gfx::rect({x, y, w, H}, H / 2, {0, 0, 0, 0.45f});
-	gfx::rect({x + PAD, y + (H - DOT) / 2, DOT, DOT}, DOT / 2, Color::hex("#30D158"));
+	gfx::rect({x + PAD, y + (H - DOT) / 2, DOT, DOT}, DOT / 2, dot);
 	text::draw(text, st, std::round(x + PAD + DOT + 12), std::round(y + (H - l.h) / 2), {1, 1, 1, 0.92f});
+	return w;
 }
 
 void Home::draw_overlay (double now) {

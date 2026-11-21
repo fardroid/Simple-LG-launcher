@@ -53,13 +53,13 @@ Needs SSH turned on in the Homebrew Channel's settings. In the commands below, r
 Copy the package to the TV:
 
 ```bash
-scp -O tld.my.simplelauncher_2.2.3_arm.ipk root@<tv-ip>:/tmp/
+scp -O tld.my.simplelauncher_2.2.4_arm.ipk root@<tv-ip>:/tmp/
 ```
 
 Install it (one line, copy it whole):
 
 ```bash
-ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.3_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
+ssh -tt root@<tv-ip> "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/tld.my.simplelauncher_2.2.4_arm.ipk\",\"subscribe\":true}' | grep -E 'installed|errorText' | head -1"
 ```
 
 When it is done it prints a long line that contains `"state":"installed"`. Then open Simple LG launcher from the TV's app list.
@@ -80,7 +80,7 @@ Install the `.ipk` with [webOS Dev Manager](https://github.com/webosbrew/dev-man
 
 ### Coming from version 1
 
-Install 2.2.3 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
+Install 2.2.4 over it, the same way you updated before. It keeps the same app ID, so your settings, calendars, hidden apps and the way it opens on Home all carry over by themselves on its first start. Nothing to run by hand.
 
 ### Updates: once you turn it on, nothing more to install by hand
 
@@ -100,7 +100,7 @@ It adds one permission to the launcher (the group `org.webosbrew.hbchannel.servi
 
 On the TV: Settings → Home screen → **How the launcher opens**. It lists four ways, each with how it works and its pros and cons; OK twice switches. The way that was on is switched off first, and if the new one does not take, the old one comes back. No SSH needed.
 
-**1. Home app** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. The Home app does not decide what opens when the TV is switched on: the TV's boot manager does, by why it was switched on (`firstAppByPowerOnReason` in `/etc/palm/bootd.json`), and otherwise it opens LG Home by its ID or the last input. It reads `/var/luna/preferences/bootd.json` instead when that file is there (LG's own override, which [Hearth](https://github.com/rudra-avatar/Hearth) uses for *When the TV turns on, open…*). This way puts a copy of LG's file there with the power button, the TV's own button, the plug and a cold start sent to the launcher, so the TV opens it straight away, behind its own start-up cover. It takes effect from the TV's next full start. LG's *start with Home* is left as you set it. A small watcher still opens the launcher if LG Home comes up some other way. Nothing of LG's is replaced (the copy is only read while it is there), and LG Home stays on its own tile. Things to know:
+**1. Home app** (the one I use on webOS 25). webOS lets you choose which app is Home, the way a computer lets you choose its browser: the launcher declares itself a Home app (`appCategory: ["home"]`) and is chosen with the TV's own `setDefaultApp`. The Home button and Back out of the last app then open the launcher. The Home app does not decide what opens when the TV is switched on: the TV's boot manager does, by why it was switched on (`firstAppByPowerOnReason` in `/etc/palm/bootd.json`), and otherwise it opens LG Home by its ID or the last input. It reads `/var/luna/preferences/bootd.json` instead when that file is there (LG's own override, which [Hearth](https://github.com/rudra-avatar/Hearth) uses for *When the TV turns on, open…*). This way puts a copy of LG's file there with the power button, the TV's own button, the plug and a cold start sent to the launcher, so the TV opens it straight away, behind its own start-up cover. It takes effect from the TV's next full start. LG's *start with Home* is left as you set it. When the last app closes (or a long press of Back closes one), the TV's app manager opens its *idle app*, which the TV's system profile names, not the Home app: LG Home. This way names the launcher there too, with a file in `/var/webos-profile/override/` (LG's own way to change the profile), so the launcher opens with no LG Home before it; switched off, the file goes and LG Home is the idle app again at once. Where the TV has no such profile, nothing is changed and the launcher still opens itself over LG Home. A small watcher still opens the launcher if LG Home comes up some other way. Nothing of LG's is replaced (the copy is only read while it is there), and LG Home stays on its own tile. Things to know:
 
 - Only on TVs that offer the choice (webOS 25 and newer).
 - After standby the launcher starts from scratch when you press Home, in 2–3 seconds.
@@ -108,6 +108,7 @@ On the TV: Settings → Home screen → **How the launcher opens**. It lists fou
 - The copy is made only from the LG file this version knows; after a firmware update that changes LG's file, the copy is left out and LG Home shows first again until a launcher update knows the new file.
 - Up to 2.2.0 this way named the launcher as the TV's last input, so that waking up opened it, and kept it loaded through standby by restarting the app manager at every full start. Both are gone: with the launcher as the last input, a full restart left the HDMI inputs and Live TV black ("no signal") until the next restart ([issue 16](https://github.com/fardroid/Simple-LG-launcher/issues/16)), and the restart of the app manager opened the launcher over Live TV half a minute into a start.
 - The TV reads its start-up rules only at a full start and keeps them until the next one (it has no way to read them again), so taking ours out works from the next full start. That is why switching this way *Off* asks whether to restart the TV now (until then it still opens the launcher when switched on), and why *Reset the launcher* and *Uninstall the launcher* end with a restart when the TV has our rules in memory (the question says so). A mark in `/tmp`, written at each full start while the rules are there, tells; `/tmp` is emptied at every full start.
+- After switching this way on, the home screen shows *Restart the TV to apply all start-up settings* (a red dot) until the TV has read the start-up rules at a full start, and the switch itself asks whether to restart now.
 - If you uninstall the launcher in another way while this is on, the watcher for an uninstall (below) sees it go within seconds, takes everything back and restarts the TV at once. If it was uninstalled while nothing watched, the next full start shows LG's store with "Content unavailable" (the TV does not fall back to its last input for an app that is gone) for a while, then the check takes everything back and restarts the TV once.
 - Before updating the TV's firmware, switch this way off and restart the TV once. An update can change LG's start-up rules (the launcher then makes its copy again from the new file, or leaves it out) and can take root away, and without root nothing of the launcher runs to take an old copy out. Without SSH, only a factory reset of the TV clears it then.
 - The method is from [Lumen](https://github.com/ammar027/lumen-webos).

@@ -48,6 +48,11 @@ LASTINPUT=/media/developer/launcher-lastinput.json
 TWEAKS=/media/developer/launcher-tweaks
 TWEAKS_SCRIPT=/media/developer/tv-tweaks.sh
 BOOTD=/var/luna/preferences/bootd.json
+# the Home app way's idle app (defaulthome.sh): the launcher opens when the last app closes; with the launcher gone, the screen
+# would stay black then
+IDLE=${GUARD_IDLE:-/var/webos-profile/override/$(echo "$APP_ID" | tr . _)_profile.json}
+SYSPROFILE=luna://com.webos.service.systemprofile
+profile_rescan () { luna-send -n 1 -w 10000 "$SYSPROFILE/debug/rescan" '{}' </dev/null >/dev/null 2>&1; }
 SETTINGS=luna://com.webos.settingsservice
 AM=luna://com.webos.applicationManager
 INSTALL=luna://com.webos.appInstallService
@@ -102,6 +107,13 @@ launcher_state () {
 	if listed "$list" "$APP_ID" || [ -f "$LAUNCHER/appinfo.json" ] || [ ! -d "$APPS" ]; then echo installed; else echo gone; fi
 }
 
+# This script's own boot link (it runs "boot" from the copy in $DIR, when that is still there).
+link_text () { printf '#!/bin/sh\n# Takes back what the launcher put on the TV once it is uninstalled. See %s\n[ -f %s ] && sh %s boot >/dev/null 2>&1 &' "$DIR/guard.sh" "$DIR/guard.sh" "$DIR/guard.sh"; }
+link_write () {
+	[ "$(cat "$LINK" 2>/dev/null)" = "$(link_text)" ] && return 0
+	printf '%s\n' "$(link_text)" > "$LINK.new" && chmod +x "$LINK.new" && mv -f "$LINK.new" "$LINK" && sync
+}
+
 # The other build of the launcher (web id or native id): installed? Then the person's files stay.
 other_installed () {
 	list=$(app_list) || return 0                       # cannot tell: keep them
@@ -151,6 +163,9 @@ wipe_data () {
 clean_up () {
 	log "the launcher is not installed: taking back what it put on the TV (data: $1)"
 	in_memory=no; [ -f "$RULES_MARK" ] && in_memory=yes
+	# A power cut in the middle: switching the way off below takes its boot link, which ran this check. This script's own link
+	# makes the next full start run the check again and finish (every step below does nothing when its part is gone already).
+	[ -f "$DIR/guard.sh" ] && act link_write
 	# the ways, each with its own copy (they live outside the app folder)
 	[ -f "$DH_DIR/enabled" ] && [ -f "$DH_DIR/defaulthome.sh" ] && { act sh "$DH_DIR/defaulthome.sh" disable >/dev/null 2>&1; log "Home app: LG Home is the TV's Home again"; }
 	[ -f "$TK_DIR/enabled" ] && [ -f "$TK_DIR/takeover.sh" ] && { act sh "$TK_DIR/takeover.sh" disable >/dev/null 2>&1; log "Swap: LG Home is back in its place"; }
@@ -158,6 +173,8 @@ clean_up () {
 	helper_stop
 	[ -f "$ACCESS_DIR/webos26-access.sh" ] && act sh "$ACCESS_DIR/webos26-access.sh" remove >/dev/null 2>&1
 	lastinput_back
+	# the idle app (defaulthome.sh disable above takes it back too, when its copy was there)
+	if [ -f "$IDLE" ]; then act rm -f "$IDLE"; act sync; act profile_rescan; log "the idle app is LG Home again"; fi
 	if ours_bootd; then act rm -f "$BOOTD"; act sync; log "the start-up rules are LG's again (from the next full start)"; fi
 	act rm -f "$DH_LINK" "$TK_LINK" "$HOOK_LINK" "$ACCESS_LINK" "$LASTINPUT"
 	act rm -rf "$DH_DIR" "$TK_DIR" "$HOOK" "$ACCESS_DIR"
@@ -169,8 +186,9 @@ clean_up () {
 		log "Delete the data was off: the launcher's data, the calendar links and the wallpapers stay"
 	fi
 	act rm -f /tmp/launcher-* 2>/dev/null
-	act rm -f "$LINK"
+	# the folder before the link: a link left by a power cut here finds no script and does nothing
 	act rm -rf "$DIR"
+	act rm -f "$LINK"
 	act sync
 	log "done: nothing of the launcher runs on the TV any more"
 	# the TV still has the launcher's start-up rules in memory: only a full start makes it read LG's again
@@ -237,10 +255,7 @@ sync_files () {
 		[ -f "$WIPE_FILE" ] || echo on > "$WIPE_FILE"
 	fi
 	if [ "$want_link" = yes ]; then
-		text=$(printf '#!/bin/sh\n# Takes back what the launcher put on the TV once it is uninstalled. See %s\nsh %s boot >/dev/null 2>&1 &' "$DIR/guard.sh" "$DIR/guard.sh")
-		if [ "$(cat "$LINK" 2>/dev/null)" != "$text" ]; then
-			printf '%s\n' "$text" > "$LINK.new" && chmod +x "$LINK.new" && mv -f "$LINK.new" "$LINK" && log "boot link written"
-		fi
+		[ "$(cat "$LINK" 2>/dev/null)" = "$(link_text)" ] || { link_write && log "boot link written"; }
 	elif [ -e "$LINK" ]; then
 		rm -f "$LINK"; log "boot link removed (a way's script does the check, or none is wanted)"
 	fi

@@ -3,7 +3,8 @@
 # One way at a time: the way that is on now is switched off and checked to be off before the new one is switched on,
 # and a way that does not take is undone, so the TV is never left with two of them or none half-done.
 #
-#   sh homemode.sh status            prints mode=<none|helper|default|mount>, can_default=<yes|no>, release=<webOS release>
+#   sh homemode.sh status            prints mode=<none|helper|default|mount>, can_default=<yes|no>, release=<webOS release>,
+#                                    restart=<yes|no> (the TV needs a full restart to read the start-up rules there are now)
 #   sh homemode.sh set <none|default|mount>
 #   sh homemode.sh run <none|default|mount>     what the launcher starts: set, in the background, with the result in $RESULT
 #
@@ -24,7 +25,9 @@ HOOK_LINK=/var/lib/webosbrew/init.d/48-launcher-homehook
 DEFAULT_LINK=/var/lib/webosbrew/init.d/45-launcher-defaulthome
 TAKEOVER_LINK=/var/lib/webosbrew/init.d/46-launcher-takeover
 RULES=/var/luna/preferences/bootd.json
+RULES_MARK=/tmp/launcher-rules-loaded
 APP_ID=tld.my.simplelauncher
+IDLE=/var/webos-profile/override/$(echo "$APP_ID" | tr . _)_profile.json
 RESULT=/tmp/launcher-homemode.result
 LOCK=/tmp/launcher-homemode.lock
 LOG=/tmp/launcher-homehook.log
@@ -49,6 +52,20 @@ helper_on () {
 	[ -L "$HOOK_LINK" ] && return 0
 	pid=$(cat /tmp/launcher-homehook-watch.pid 2>/dev/null)
 	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+# The Home app way's start-up rules (tools/defaulthome.sh) are read by the TV only at a full start: does it need one so that
+# what it has in memory is what is on disk? The boot link writes $RULES_MARK at a full start while the rules are ours (about 45 s
+# in); before it has run, rules on disk from before the start were read. Standby keeps both (/proc/uptime leaves out the time
+# asleep, so it is small only just after a full start).
+rules_ours () { [ -f "$RULES" ] && grep -q "\"$APP_ID\"" "$RULES"; }
+rules_loaded () {
+	[ -f "$RULES_MARK" ] && return 0
+	up=$(cut -d. -f1 /proc/uptime 2>/dev/null)
+	[ -n "$up" ] && [ "$up" -lt 300 ] && rules_ours && [ $(( $(date +%s) - $(date -r "$RULES" +%s) )) -gt "$up" ]
+}
+restart_needed () {
+	if rules_ours; then ! rules_loaded; else [ -f "$RULES_MARK" ]; fi
 }
 
 mode () {
@@ -85,6 +102,12 @@ all_off () {
 	[ -f "$DEFAULT_DIR/enabled" ] || rm -f "$DEFAULT_LINK"
 	[ -f "$TAKEOVER_DIR/enabled" ] || rm -f "$TAKEOVER_LINK"
 	if [ -f "$RULES" ] && grep -q "\"$APP_ID\"" "$RULES"; then rm -f "$RULES" "$DEFAULT_DIR/bootd.stock.md5"; sync; log "start-up rules: LG's again"; fi
+	# and the Home app way's idle app (defaulthome.sh): LG Home again when the last app closes, at once
+	if [ ! -f "$DEFAULT_DIR/enabled" ] && [ -f "$IDLE" ]; then
+		rm -f "$IDLE"; sync
+		luna-send -n 1 -w 10000 luna://com.webos.service.systemprofile/debug/rescan '{}' >/dev/null 2>&1
+		log "idle app: LG Home again"
+	fi
 	[ "$(mode)" = none ]
 }
 
@@ -133,6 +156,7 @@ case "$1" in
 		echo "mode=$(mode)"
 		echo "can_default=$(can_default && echo yes || echo no)"
 		echo "release=$(nyx-cmd OSInfo query webos_release 2>/dev/null)"
+		echo "restart=$(restart_needed && echo yes || echo no)"
 		;;
 	set)
 		case "$2" in none|default|mount) ;; *) echo "usage: sh $0 set none|default|mount"; exit 1 ;; esac
