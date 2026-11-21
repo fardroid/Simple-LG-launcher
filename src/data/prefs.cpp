@@ -10,7 +10,6 @@
 
 const std::vector<int> INTERVAL_VALUES = {10, 30, 60, 300, 900, 1800, 3600};
 const std::vector<std::string> CLOCK_FONT_IDS = {"inter", "tv", "poppins", "oswald", "mono", "serif"};
-const std::vector<std::string> CLOCK_COLOR_IDS = {"white", "warm", "blue", "amber", "grey", "charcoal", "black", "ember", "ocean", "dusk"};
 
 namespace {
 
@@ -79,7 +78,7 @@ std::string labels_of (const UserConfig &c) { return !c.showLabels ? "none" : c.
 std::string labels_text (std::string v) { return v == "none" ? tr("None", "Нет") : v == "selected" ? tr("Selected only", "Только у выбранной") : tr("All", "У всех"); }
 std::string shift_text (std::string v) { return v == "on" ? tr("On", "Вкл.") : v == "off" ? tr("Off", "Выкл.") : tr("Auto", "Авто"); }
 std::string dim_text (std::string v) { return v == "night" ? tr("At night", "Ночью") : v == "always" ? tr("Always", "Всегда") : tr("Off", "Выкл."); }
-std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлые") : v == "dark" ? tr("Dark", "Тёмные") : tr("Auto", "Авто"); }
+std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлая") : v == "dark" ? tr("Dark", "Тёмная") : tr("Auto", "Авто"); }
 std::string theme_text (std::string v) { const ThemeColors &t = theme_colors(v); return tr(t.en, t.ru); }
 std::vector<std::string> theme_list () {
 	std::vector<std::string> out;
@@ -156,9 +155,11 @@ std::vector<Pref> base_prefs () {
 	append(out, group(tr("Widgets", "Виджеты"), {
 		choice<std::string>("clockFont", "look", tr("Font", "Шрифт"), tr("For the clock, the date, the weather and the calendar. \"TV font\" is built into the TV; the others come with the launcher.", "Для часов, даты, погоды и календаря. «Шрифт ТВ» встроен в телевизор, остальные идут с лаунчером."),
 			CLOCK_FONT_IDS, [] (const UserConfig &c) { return c.clock.font; }, [] (UserConfig c, std::string v) { c.clock.font = v; return c; }, font_label),
+		choice<int>("clockWeight", "look", tr("Clock weight", "Толщина цифр часов"), tr("From thin to bold digits.", "От тонких до жирных цифр."),
+			{200, 300, 400, 500, 600}, [] (const UserConfig &c) { return c.clock.weight; }, [] (UserConfig c, int v) { c.clock.weight = v; return c; }, weight_text),
 		range("cardSize", "look", tr("Text size", "Размер текста"), tr("All the text on the weather and calendar cards.", "Весь текст на виджетах погоды и календаря."),
 			ranges::cardSize, [] (const UserConfig &c) { return c.cardSize; }, [] (UserConfig c, int v) { c.cardSize = v; return c; }, pct),
-		choice<std::string>("plates", "look", tr("Card colour", "Цвет виджетов"), tr("Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
+		choice<std::string>("plates", "look", tr("Card background", "Подложка виджетов"), tr("Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Светлая или тёмная, в оттенке цветовой темы. Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
 			SV{"auto", "light", "dark"}, [] (const UserConfig &c) { return c.plates; }, [] (UserConfig c, std::string v) { c.plates = v; return c; }, plate_text),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient"; },
 			toggle("glass", "look", tr("Frosted glass", "Матовое стекло"), tr("The cards blur the picture behind them.", "Виджеты размывают картинку под собой."),
@@ -178,12 +179,6 @@ std::vector<Pref> base_prefs () {
 			SV{"24h", "12h", "tv"}, [] (const UserConfig &c) { return c.clockFormat; }, [] (UserConfig c, std::string v) { c.clockFormat = v; return c; }, format_text),
 		range("clockSize", "widgets", tr("Size", "Размер"), tr("The height of the digits.", "Высота цифр."),
 			ranges::clockSize, [] (const UserConfig &c) { return c.clock.size; }, [] (UserConfig c, int v) { c.clock.size = v; return c; }, px),
-		choice<int>("clockWeight", "widgets", tr("Weight", "Толщина"), tr("From thin to bold digits.", "От тонких до жирных цифр."),
-			{200, 300, 400, 500, 600}, [] (const UserConfig &c) { return c.clock.weight; }, [] (UserConfig c, int v) { c.clock.weight = v; return c; }, weight_text),
-		choice<std::string>("clockColor", "widgets", tr("Colour", "Цвет"), tr("White is hard to read on a light picture: pick a dark colour or a gradient for light wallpapers.", "Белый плохо читается на светлой картинке: для светлых обоев выберите тёмный цвет или градиент."),
-			CLOCK_COLOR_IDS, [] (const UserConfig &c) { return c.clock.color; }, [] (UserConfig c, std::string v) { c.clock.color = v; return c; }, color_label)
-	}));
-	append(out, group(tr("Date", "Дата"), {
 		toggle("showDate", "widgets", tr("Show the date", "Показывать дату"), tr("The weekday and the date beside the time.", "День недели и дата рядом со временем."),
 			[] (const UserConfig &c) { return c.clock.showDate; }, [] (UserConfig c, bool v) { c.clock.showDate = v; return c; }),
 		only([] (const UserConfig &c) { return c.clock.showDate; },
@@ -296,19 +291,6 @@ std::string font_label (const std::string &id) {
 	if (id == "mono") return tr("Roboto Mono (digital)", "Roboto Mono (цифровой)");
 	if (id == "serif") return tr("Cormorant (elegant serif)", "Cormorant (изящный с засечками)");
 	return tr("Inter (default)", "Inter (по умолчанию)");
-}
-
-std::string color_label (const std::string &id) {
-	if (id == "warm") return tr("Warm white", "Тёплый белый");
-	if (id == "blue") return tr("Ice blue", "Ледяной синий");
-	if (id == "amber") return tr("Amber", "Янтарный");
-	if (id == "grey") return tr("Grey", "Серый");
-	if (id == "charcoal") return tr("Dark grey", "Тёмно-серый");
-	if (id == "black") return tr("Black", "Чёрный");
-	if (id == "ember") return tr("Gradient: Ember (red to gold)", "Градиент: Ember (красный в золото)");
-	if (id == "ocean") return tr("Gradient: Ocean (blue to teal)", "Градиент: Ocean (синий в бирюзовый)");
-	if (id == "dusk") return tr("Gradient: Dusk (violet to coral)", "Градиент: Dusk (фиолетовый в коралловый)");
-	return tr("White", "Белый");
 }
 
 UserConfig reset_look (const UserConfig &c) {

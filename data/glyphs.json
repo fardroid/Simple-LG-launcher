@@ -49,5 +49,7 @@
 	"q-screenoff": "<g stroke-width=\"1.9\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8.5 20h7M12 16v4M3 3l18 18\"/></g>",
 	"q-network": "<g stroke-width=\"1.9\"><path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.4a5 5 0 0 1 6.8 0\"/><circle cx=\"12\" cy=\"18.6\" r=\".9\"/></g>",
 	"download": "<path stroke-width=\"2.6\" d=\"M12 5v10.5M7.5 11l4.5 4.5 4.5-4.5M6 19.5h12\" />",
-	"collection": "<><path d=\"M3 18.5l5.5-8 4 5.5 2.5-3 6 5.5z\" /><circle cx=\"17\" cy=\"6.5\" r=\"1.8\" /></>"
+	"collection": "<><path d=\"M3 18.5l5.5-8 4 5.5 2.5-3 6 5.5z\" /><circle cx=\"17\" cy=\"6.5\" r=\"1.8\" /></>",
+	"note-info": "<path stroke-width=\"2.6\" d=\"M12 10.5v7.5M12 6.2v.1\" />",
+	"note-alert": "<path stroke-width=\"2.6\" d=\"M12 5.8v8.2M12 18.2v.1\" />"
 }

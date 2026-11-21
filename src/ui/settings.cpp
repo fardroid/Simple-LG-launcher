@@ -249,7 +249,7 @@ const double PEEK_MS = 2200;          // how long the home screen stays after th
 // The settings that show on the home screen as soon as they change
 bool shows_on_home (const std::string &id) {
 	static const char *ids[] = {"iconScale", "showLabels", "sideMargin", "bottomMargin", "cardSize", "plates", "glass", "frost", "shadows",
-		"clockFont", "clockFormat", "clockSize", "clockWeight", "clockColor", "showDate", "dateSize", "theme", "weatherUnit", "dim", "dimStrength"};
+		"clockFont", "clockFormat", "clockSize", "clockWeight", "showDate", "dateSize", "theme", "weatherUnit", "dim", "dimStrength"};
 	for (const char *i : ids) if (id == i) return true;
 	return false;
 }
@@ -507,9 +507,11 @@ void Settings::draw_options (double now, float top) {
 			// numbers from the model (build/fade-model.html): the dark runs on past the right edge of the screen, with no round end,
 			// and spreads up and down along that edge
 			const float PAD = 48, FADE = 160, ALPHA = 0.88f, SPREAD = 800, DEPTH = 1330, DENSITY = 1.4f;
+			// in the colour of the screen's own background (the theme's), so that the row keeps the look of Settings
 			float left = hr.x - PAD;
-			gfx::halo({left, hr.y - PAD, 1920 + 400 - left, hr.h + 2 * PAD}, 22 + PAD, FADE, {0, 0, 0, ALPHA * pk});
-			gfx::edge_glow({1920 - DEPTH, hr.y + hr.h / 2 - SPREAD, DEPTH, 2 * SPREAD}, DENSITY, {0, 0, 0, ALPHA * pk});
+			Color shade = t.screen.with_alpha(ALPHA * pk);
+			gfx::halo({left, hr.y - PAD, 1920 + 400 - left, hr.h + 2 * PAD}, 22 + PAD, FADE, shade);
+			gfx::edge_glow({1920 - DEPTH, hr.y + hr.h / 2 - SPREAD, DEPTH, 2 * SPREAD}, DENSITY, shade);
 			gfx::set_outer_alpha(keep);
 		}
 	gfx::push_clip({LIST_X, top, LIST_W, LIST_H});

@@ -11,7 +11,7 @@ constexpr int MAP_W = 16, MAP_H = 9;
 using BrightnessMap = std::vector<float>;          // MAP_W * MAP_H, 0-1
 
 struct Rgba { float r, g, b, a; };
-struct PlateLook { Rgba bg; Rgba focus; };
+struct PlateLook { Rgba bg; Rgba focus; bool light = false; };
 
 /** Brightness grid of an image drawn at 64 x 36 (RGBA bytes): the mean of 4 x 4 blocks. */
 BrightnessMap map_from_pixels (const unsigned char *rgba64x36);

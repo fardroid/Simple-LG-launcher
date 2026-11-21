@@ -62,8 +62,7 @@ T step_value (const std::vector<T> &values, const T &current, int delta, bool wr
 extern const std::vector<int> INTERVAL_VALUES;
 std::string interval_text (int seconds);
 std::string font_label (const std::string &id);
-std::string color_label (const std::string &id);
-extern const std::vector<std::string> CLOCK_FONT_IDS, CLOCK_COLOR_IDS;
+extern const std::vector<std::string> CLOCK_FONT_IDS;
 
 /** The look, margins and clock back to their defaults (apps, sources and wallpaper are left alone). */
 UserConfig reset_look (const UserConfig &c);

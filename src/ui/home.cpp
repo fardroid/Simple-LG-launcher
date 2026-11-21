@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include "ui/icons.h"
+#include "ui/notices.h"
 #include "ui/theme.h"
 #include "ui/tile.h"
 
@@ -25,6 +26,11 @@ const double LONG_PRESS_MS = 600;       // TIMING.longPressMs
 const float LIFT_PX = 24;               // how much higher a tile being moved stands
 const double FAST_STEP_MS = 280;          // steps closer than this glide (a held arrow key)
 const float VIEW_PAD_TOP = 230, VIEW_PAD_SIDE = 140, VIEW_PAD_BOTTOM = 130;    // .row__viewport: room for the glow
+// the line over the row (a new version, a restart): 38 px tall, 23 px over the selected tile; while it shows, the cards and the
+// selected tile keep 84 px apart (the row goes down for that, as far as the bottom margin lets it, then the cards go up)
+const int LANE_ROOM = 84;
+const float LANE_H = 38, LANE_BELOW = 23;
+const double LANE_MS = 450;
 }  // namespace
 
 int Home::tile_size () const { return (int)std::lround(layout::TILE_SIZE * cfg_.iconScale / 100.0); }
@@ -34,7 +40,9 @@ float Home::label_area () const { return cfg_.showLabels ? label_font() * 2.4f +
 
 std::vector<int> Home::sizes () const { return split_rows((int)items_.size(), cfg_.rows); }
 
-float Home::row_top (int r) const {
+float Home::row_top (int r) const { return row_base(r) + lane_px(); }
+
+float Home::row_base (int r) const {
 	auto s = sizes();
 	float shift = (float)shift_y_;
 	float row_h = tile_size() + label_area();
@@ -219,7 +227,7 @@ bool Home::card_on (CardId id) const {
 	return false;
 }
 
-BoardLayout Home::layout () const {
+BoardLayout Home::layout (int *drop) const {
 	Cards on;
 	on.weather = card_on(CardId::weather);
 	on.calendar = card_on(CardId::calendar);
@@ -227,7 +235,21 @@ BoardLayout Home::layout () const {
 	on.quote = card_on(CardId::quote);
 	on.clock = {cfg_.clock.size, cfg_.clock.showDate, cfg_.clock.dateSize, !h24_ && cfg_.clock.showPeriod};
 	int top = board_top({cfg_.iconScale, cfg_.bottomMargin, cfg_.showLabels, cfg_.rows}, (int)items_.size());
-	return board_layout(on, top);
+	BoardLayout l = board_layout(on, top);
+	// the line over the row needs room between the lowest card and the selected tile
+	int need = 0;
+	if (!alert_.empty() || !notice_.empty()) {
+		int bottom = 0;
+		for (auto &col : l.columns) for (auto &c : col.cards) bottom = std::max(bottom, c.y + c.h);
+		float focus_top = row_base(0) - shift_y_ - tile_size() * (float)(motion::FOCUS_SCALE - 1);
+		if (bottom > 0) need = std::max(0, LANE_ROOM - (int)std::floor(focus_top - bottom));
+		int down = std::min(need, cfg_.bottomMargin);
+		int up = std::min(need - down, std::max(0, top - 16));
+		if (up > 0) l = board_layout(on, top - up);
+		need = down;
+	}
+	if (drop) *drop = need;
+	return l;
 }
 
 void Home::set_zone (Zone z, double now) {
@@ -657,6 +679,7 @@ bool Home::animating (double now) const {
 	for (auto &f : card_focus_) if (f.moving(now)) return true;
 	if (card_on(CardId::calendar) && cal_.animating(now)) return true;
 	if (detail_ && now - detail_at_ < 200) return true;
+	if (lane_drop_.moving(now) || lane_show_.moving(now)) return true;
 	for (auto &f : card_focus_) if (f.moving(now)) return true;
 	return false;
 }
@@ -712,7 +735,7 @@ int Home::live_mask (double now) const {
 
 static int card_index (CardId id) { return id == CardId::weather ? 0 : id == CardId::calendar ? 1 : id == CardId::news ? 2 : -1; }
 
-void Home::prepare_board () {
+void Home::prepare_board (double now) {
 	// lib/pixelshift.ts: a small loop of whole-pixel offsets, one step a minute
 	static const int STEPS[8][2] = {{0, 0}, {4, 2}, {8, 0}, {4, -2}, {0, -4}, {-4, -2}, {-8, 0}, {-4, 2}};
 	bool shift_on = cfg_.pixelShift == "on" || (cfg_.pixelShift == "auto" && oled_);
@@ -720,7 +743,11 @@ void Home::prepare_board () {
 	const int *shift = STEPS[((minute % 8) + 8) % 8];
 	shift_x_ = shift_on ? shift[0] : 0;
 	shift_y_ = shift_on ? shift[1] : 0;
-	board_ = layout();
+	int drop = 0;
+	board_ = layout(&drop);
+	bool lane = !alert_.empty() || !notice_.empty();
+	lane_drop_.set(drop, now, LANE_MS, Ease::ease_in_out);
+	lane_show_.set(lane ? 1 : 0, now, lane ? LANE_MS : 250, Ease::ease_in_out);
 	for (auto &col : board_.columns) for (auto &c : col.cards) { c.x += shift_x_; c.y += shift_y_; }
 	// the plates: one look for all, from the brightest place behind any of them
 	std::vector<std::array<int, 4>> rects;
@@ -731,19 +758,20 @@ void Home::prepare_board () {
 	old_look_ = plate_look(cfg_.plates, cfg_.theme, wp_ ? seen(wp_->old_glass().map) : BrightnessMap(), rects);
 	// each change of the plates' colour goes to the log, with what it was chosen from
 	char why[160];
-	snprintf(why, sizeof why, "plates %s: %s %.2f (dim %.2f, brightest %.3f)", cfg_.plates.c_str(), look_.bg.r == 1 ? "light" : "dark", look_.bg.a,
+	snprintf(why, sizeof why, "plates %s: %s %.2f (dim %.2f, brightest %.3f)", cfg_.plates.c_str(), look_.light ? "light" : "dark", look_.bg.a,
 		wp_ ? wp_->dim() : 0.f, wp_ ? brightest_of(seen(wp_->glass().map), rects) : -1.f);
 	if (why != logged_plates_) { logged_plates_ = why; logf("%s", why); }
 }
 
-void Home::draw_card (const BoardCard &c, double now, const std::tm &clock) {
+void Home::draw_card (const BoardCard &c, double now, const std::tm &clock, bool live) {
 	Face face = clock_face(cfg_.clock.font);
 	int i = card_index(c.id);
 	float focus = i >= 0 ? (float)card_focus_[i].at(now) : 0;
 	// .weather--focus, .cal--focus, .news--focus: the card grows by 1.02 (its text a little soft meanwhile, as on the web version)
 	float grow = i >= 0 ? 1 + 0.02f * (float)card_grow_[i].at(now) : 1;
 	if (grow != 1) gfx::set_grow(c.x + c.w / 2.f, c.y + c.h / 2.f, grow);
-	if (wp_) draw_plate({(float)c.x, (float)c.y, (float)c.w, (float)c.h}, *wp_, cfg_, look_, old_look_, focus, now);
+	// a card drawn live is over the cross-fading pictures of the board: its plate changes with them, not at once
+	if (wp_) draw_plate({(float)c.x, (float)c.y, (float)c.w, (float)c.h}, *wp_, cfg_, look_, old_look_, focus, live ? wp_->change(now) : wp_->fade(now));
 	if (c.id == CardId::clock) draw_clock(c, clock, cfg_.clock, lang_, h24_, board_.narrow);
 	else if (c.id == CardId::weather && weather_) {
 		WeatherView v = weather_view(*weather_, cfg_.weather.unit, "", weather_day_);     // no city on the card
@@ -761,13 +789,13 @@ void Home::draw_card (const BoardCard &c, double now, const std::tm &clock) {
 
 void Home::draw_board (double now, const std::tm &clock) {
 	board_dirty_ = false;
-	prepare_board();
+	prepare_board(now);
 	drawn_live_ = live_mask(now);
 	for (auto &col : board_.columns)
 		for (auto &c : col.cards) {
 			int i = card_index(c.id);
 			if (i >= 0 && (drawn_live_ & (1 << i))) continue;      // drawn over the picture, every frame
-			draw_card(c, now, clock);
+			draw_card(c, now, clock, false);
 		}
 }
 
@@ -775,7 +803,7 @@ void Home::draw_live (double now, const std::tm &clock) {
 	for (auto &col : board_.columns)
 		for (auto &c : col.cards) {
 			int i = card_index(c.id);
-			if (i >= 0 && (drawn_live_ & (1 << i))) draw_card(c, now, clock);
+			if (i >= 0 && (drawn_live_ & (1 << i))) draw_card(c, now, clock, true);
 		}
 }
 
@@ -852,32 +880,49 @@ void Home::draw_row (double now) {
 	}
 }
 
-// pills of dark glass with a coloured dot, right-aligned with the row, just over it (not while a tile is being moved): the alert
-// (red) at the right end, the notice (green) to its left
-void Home::draw_notice () {
-	if (lifting_) return;
-	float right = 1920.f - cfg_.sideMargin + shift_x_;
-	if (!alert_.empty()) right -= draw_pill(alert_, Color::hex("#FF453A"), right) + 12;
-	if (!notice_.empty()) draw_pill(notice_, Color::hex("#30D158"), right);
-}
-
-/** One pill ending at `right`; returns its width. */
-float Home::draw_pill (const std::string &raw, Color dot, float right) {
-	TextStyle st{Face::ui, 21, 500, 0};
-	std::string text = text::ellipsize(raw, st, 900);       // the longest translation of the restart notice fits
-	const TextLine &l = text::line(text, st);
-	const float H = 40, PAD = 18, DOT = 10;
-	float w = PAD + DOT + 12 + l.w + PAD;
-	float x = right - w, y = row_top(0) - 12 - H;
-	gfx::rect({x, y, w, H}, H / 2, {0, 0, 0, 0.45f});
-	gfx::rect({x + PAD, y + (H - DOT) / 2, DOT, DOT}, DOT / 2, dot);
-	text::draw(text, st, std::round(x + PAD + DOT + 12), std::round(y + (H - l.h) / 2), {1, 1, 1, 0.92f});
-	return w;
+// The line over the row: the restart first (red), then the new version (green, its dimmer note after it); no plate of its own, the
+// words over the wallpaper with a soft shadow, from the left end of the row. Not while a tile is being moved.
+void Home::draw_lane (double now) {
+	if (!alert_.empty() || !notice_.empty()) { lane_alert_ = alert_; lane_notice_ = notice_; lane_note_ = notice_note_; }   // kept while it fades out
+	float show = (float)lane_show_.at(now);
+	if (show <= 0.01f || lifting_) return;
+	TextStyle st{Face::ui, 22, 500, 0}, note_st{Face::ui, 22, 400, 0};
+	const float ICON = 32, ICON_GAP = 12, ITEM_GAP = 34;
+	float focus_top = row_top(0) - tile_size() * (float)(motion::FOCUS_SCALE - 1);
+	float y = std::round(focus_top - LANE_BELOW - LANE_H);
+	float x = row_x0(), right = row_x0() + viewport_w();
+	gfx::set_alpha(show);
+	auto item = [&] (const std::string &raw, const std::string &note, bool alert) {
+		if (raw.empty() || right - x < ICON + ICON_GAP + 80) return;
+		NoticeKind kind = alert ? NoticeKind::restart : NoticeKind::update;
+		round_icon({x, y + (LANE_H - ICON) / 2, ICON, ICON}, notice_color(kind), notice_glyph(kind));
+		x += ICON + ICON_GAP;
+		std::string s = text::ellipsize(raw, st, (int)(right - x));
+		const TextLine &l = text::line(s, st);
+		float ty = std::round(y + (LANE_H - l.h) / 2);
+		text::draw_shadow(s, st, x, ty, 1, 10, {0, 0, 0, 0.55f});
+		text::draw(s, st, x, ty, {1, 1, 1, 0.88f});
+		x += l.w;
+		if (!note.empty()) {
+			std::string n = " " + note;
+			const TextLine &nl = text::line(n, note_st);
+			if (x + nl.w <= right) {
+				text::draw_shadow(n, note_st, x, ty, 1, 10, {0, 0, 0, 0.55f});
+				text::draw(n, note_st, x, ty, {1, 1, 1, 0.55f});
+				x += nl.w;
+			}
+		}
+		x += ITEM_GAP;
+	};
+	item(lane_alert_, "", true);
+	item(lane_notice_, lane_note_, false);
+	gfx::set_alpha(1);
 }
 
 void Home::draw_overlay (double now) {
-	draw_notice();
-	if (detail_) draw_news_detail(*detail_, clock_face(cfg_.clock.font), wall_now(), (float)ease(Ease::ease_out, std::min(1.0, (now - detail_at_) / 200)));}
+	draw_lane(now);
+	if (detail_) draw_news_detail(*detail_, clock_face(cfg_.clock.font), wall_now(), (float)ease(Ease::ease_out, std::min(1.0, (now - detail_at_) / 200)));
+}
 
 void Home::draw (double now, const std::tm &clock) {
 	draw_board(now, clock);
