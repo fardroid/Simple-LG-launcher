@@ -147,7 +147,7 @@ cat > "$T/bin/luna-send" <<'LUNA'
 case "$*" in *listApps*) cat "$LIST_FILE" ;; *) echo '{"returnValue":true}' ;; esac
 LUNA
 chmod +x "$T/bin/luna-send"
-runguard () { PATH="$T/bin:$PATH" LIST_FILE="$T/list" DRY_RUN=1 WAIT_ROUNDS=2 NAP=0 RECHECK=0 GUARD_APPS="$T/apps" GUARD_LOG="$T/glog" GUARD_LOCK="$T/lock" GUARD_WIPE="$T/wipe" GUARD_MARK="$T/rulesmark" sh "$G" check 2>&1; }
+runguard () { GUARD_IDLE="$T/idle_profile.json" PATH="$T/bin:$PATH" LIST_FILE="$T/list" DRY_RUN=1 WAIT_ROUNDS=2 NAP=0 RECHECK=0 GUARD_APPS="$T/apps" GUARD_LOG="$T/glog" GUARD_LOCK="$T/lock" GUARD_WIPE="$T/wipe" GUARD_MARK="$T/rulesmark" sh "$G" check 2>&1; }
 echo '{"returnValue":true,"apps":[{"id":"com.webos.app.home"},{"id":"tld.my.simplelauncher"}]}' > "$T/list"
 touch "$T/apps/tld.my.simplelauncher/appinfo.json"
 check "guard: the launcher in the list and in its folder is installed" "$(runguard | tail -n 1)" "installed"
@@ -159,9 +159,16 @@ check "guard: in neither is gone, and everything is taken back" "$(echo "$out" |
 check "guard: the launcher's data is deleted" "$(echo "$out" | grep -c 'would run: rm -rf .*/media/developer/simplelauncher')" "1"
 check "guard: the calendar links and the wallpapers too" "$(echo "$out" | grep -c 'would run: rm -rf /media/developer/calendar.txt /media/developer/cals /media/developer/wallpapers')" "1"
 check "guard: and last its own boot link and folder" "$(echo "$out" | grep -c 'would run: rm -rf /media/developer/launcher-guard')" "1"
+check "guard: its folder goes before its boot link (a power cut between leaves a link that does nothing)" "$(echo "$out" | grep -n -E 'would run: (rm -rf /media/developer/launcher-guard|rm -f /var/lib/webosbrew/init.d/40-launcher-guard)$' | cut -d: -f2- | tr '\n' '|')" "would run: rm -rf /media/developer/launcher-guard|would run: rm -f /var/lib/webosbrew/init.d/40-launcher-guard|"
+check "guard: no idle app override: nothing to take back" "$(echo "$out" | grep -c 'idle app')" "0"
 check "guard: no restart when the TV has not read the launcher's start-up rules" "$(echo "$out" | grep -c 'restart the TV')" "0"
 touch "$T/rulesmark"
 check "guard: a restart when it has them in memory" "$(runguard | grep -c 'would restart the TV')" "1"
+touch "$T/idle_profile.json"
+out=$(runguard)
+check "guard: the idle app override is removed" "$(echo "$out" | grep -c "would run: rm -f $T/idle_profile.json")" "1"
+check "guard: and the profile rescanned (LG Home at once)" "$(echo "$out" | grep -c 'would run: profile_rescan')" "1"
+rm -f "$T/idle_profile.json"
 rm -f "$T/rulesmark"
 echo off > "$T/wipe"
 out=$(runguard)

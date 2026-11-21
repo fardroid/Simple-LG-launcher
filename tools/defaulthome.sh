@@ -34,6 +34,15 @@
 #   sh defaulthome.sh point     what the launcher of 2.2.0 ran on coming to the front: the same settings check (nothing else)
 #   sh defaulthome.sh watch     the watcher above (the boot link, enable and refresh start it in the background)
 #
+# When the last app closes (also after a long press of Back), the TV's app manager opens its "idle app", which the TV's system
+# profile names: LG Home, whatever the Home app is (lastAppHandlerPolicy "idleApp"; idleApp.appId in
+# /var/webos-profile/platform/profile.json, seen on webOS 10.3.2). LG's own way to change a profile is a file in
+# /var/webos-profile/override/ (*_profile.json), which the profile service reads at a full start (and writes into the profile)
+# and at once when asked to rescan. This way puts one there that names the launcher as the idle app, so the launcher opens
+# with no LG Home before it; disable removes it (and asks for a rescan: LG Home at once). Tried on webOS 10.3.2 (2026-11-21):
+# closing the last app and a long press of Back opened the launcher, also after a full start. An idle app that is not installed
+# leaves the screen black, so the check for an uninstall (guard.sh) removes it too.
+#
 # Before uninstalling the launcher, run disable: the TV's Home must never name an app that is not there.
 # The boot link is a safety net for when that was forgotten.
 
@@ -63,6 +72,9 @@ RULES_MARK=/tmp/launcher-rules-loaded
 STOCK_RULES=/etc/palm/bootd.json
 RULES=/var/luna/preferences/bootd.json
 RULES_SUM=$DIR/bootd.stock.md5
+PROFILES=/var/webos-profile/override
+IDLE=$PROFILES/$(echo "$APP_ID" | tr . _)_profile.json
+SYSPROFILE=luna://com.webos.service.systemprofile
 
 log () { echo "$(date '+%H:%M:%S') defaulthome: $*" | tee -a "$LOG"; }
 # A script started through the Homebrew Channel's service inherits its open sockets (file descriptors 3 and up), and one that
@@ -310,12 +322,42 @@ rules_off () {
 	log "start-up rules: LG's again (from the TV's next full start)"
 }
 
+# The idle app (see the top): the app the TV's profile names now, and our override of it.
+idle_app () {
+	luna-send -n 1 -w 5000 "$SYSPROFILE/getProfiles" '{"names":["idleApp"]}' 2>/dev/null | sed -n 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+}
+idle_text () { printf '{"idleApp":{"_packageIncluded":true,"_configuration":"idleApp.json","support":true,"appId":"%s"}}\n' "$APP_ID"; }
+idle_rescan () { luna-send -n 1 -w 10000 "$SYSPROFILE/debug/rescan" '{}' >/dev/null 2>&1; sleep 2; }
+idle_on () {
+	[ -d "$PROFILES" ] || { log "idle app: this TV has no $PROFILES: LG Home comes when the last app closes"; return 1; }
+	now=$(idle_app)
+	case "$now" in
+		"$APP_ID") [ -f "$IDLE" ] && return 0 ;;
+		"$LG_HOME") ;;
+		*) log "idle app: the TV names ${now:-none} (not LG Home): left alone"; return 1 ;;
+	esac
+	if [ "$(cat "$IDLE" 2>/dev/null)" != "$(idle_text)" ]; then
+		idle_text > "$IDLE.new" && mv -f "$IDLE.new" "$IDLE" && sync || { rm -f "$IDLE.new"; log "idle app: could not write $IDLE"; return 1; }
+	fi
+	[ "$now" = "$APP_ID" ] && return 0
+	idle_rescan
+	if [ "$(idle_app)" = "$APP_ID" ]; then log "idle app: the launcher (it opens when the last app closes, with no LG Home)"; return 0; fi
+	log "idle app: the TV did not take the launcher: override removed"; idle_off; return 1
+}
+idle_off () {
+	[ -f "$IDLE" ] || return 0
+	rm -f "$IDLE"; sync
+	idle_rescan
+	[ "$(idle_app)" = "$APP_ID" ] && log "idle app: still the launcher after the rescan" || log "idle app: LG Home again"
+}
+
 give_back () {
 	watch_stop
 	set_home "$LG_HOME" || log "setDefaultApp for LG Home was not accepted"
 	put_settings_back
 	rm -f "$FLAG" "$LINK"
 	rules_off
+	idle_off
 	keepalive_off
 	old_guard_off
 	[ "$(current)" = "$LG_HOME" ] && log "LG Home is the TV's Home again" || log "the TV's Home is now: $(current) (expected $LG_HOME)"
@@ -345,6 +387,7 @@ case "$1" in
 		keep_settings || log "could not read the last input: disable will name LG Home there if needed"
 		settings_check || log "could not check the last input settings"
 		rules_on
+		idle_on
 		keepalive_off
 		if ! open_home "$APP_ID"; then
 			log "Home did not open the launcher: LG Home put back"; give_back; exit 1
@@ -379,6 +422,7 @@ case "$1" in
 			settings_check
 			# after a firmware update that changed LG's start-up rules: made again from the new file, or taken out
 			rules_on
+			idle_on
 			# the watcher for an uninstall (guard.sh)
 			[ -f "$GUARD" ] && sh "$GUARD" watch-start
 			rm -rf "$COPIES"
@@ -397,6 +441,7 @@ case "$1" in
 		keep_settings
 		settings_check
 		rules_on
+		idle_on
 		keepalive_off
 		sync
 		watch_start
@@ -418,6 +463,7 @@ case "$1" in
 		echo "LG Home has home category: $(has_home_category "$LG_HOME" && echo yes || echo no)"
 		echo "start with Home: $(setting homeAutoLaunch); last input: $(setting lastInputApp) / $(setting physicalLastInputApp)"
 		echo "settings kept for disable: $([ -s "$ORIG" ] && echo yes || echo no)"
+		echo "idle app: $(idle_app) (override: $([ -f "$IDLE" ] && echo ours || echo none))"
 		echo "start-up rules: $(rules_ours && echo ours || { [ -f "$RULES" ] && echo "someone else's" || echo "LG's"; })"
 		echo "boot link: $([ "$(cat "$LINK" 2>/dev/null)" = "$(link_text)" ] && echo yes || { [ -e "$LINK" ] && echo "not as it should be" || echo no; })"
 		echo "wake watcher: $(watching && echo running || echo no)"

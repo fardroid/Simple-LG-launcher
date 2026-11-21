@@ -633,6 +633,7 @@ static const Entry LOCALE_DE[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Die Startart wird ausgeschaltet, der Launcher deinstalliert und alles gelöscht, was er auf den Fernseher gebracht hat, mit seinen Einstellungen, den Kalenderlinks und dem Hintergrundordner. Danach startet der Fernseher neu, um die Startregeln des Launchers zu vergessen."},
 	{"Restart the TV now?", "Fernseher jetzt neu starten?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Bis zu einem vollständigen Neustart öffnet der Fernseher beim Einschalten noch den Launcher: Er hat dessen Startregeln beim letzten Start gelesen."},
+	{"Restart the TV to apply all start-up settings", "Starten Sie den Fernseher neu, um alle Starteinstellungen zu übernehmen"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ES[] = {
@@ -1269,6 +1270,7 @@ static const Entry LOCALE_ES[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Se desactiva la forma de abrirlo, se desinstala el lanzador y se borra todo lo que puso en la TV, con sus ajustes, los enlaces de calendario y la carpeta de fondos. Después la TV se reinicia para olvidar las reglas de arranque del lanzador."},
 	{"Restart the TV now?", "¿Reiniciar la TV ahora?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Hasta un reinicio completo la TV aún abre el lanzador al encenderse: leyó sus reglas de arranque la última vez que se inició."},
+	{"Restart the TV to apply all start-up settings", "Reinicia la TV para aplicar todos los ajustes de inicio"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_FR[] = {
@@ -1905,6 +1907,7 @@ static const Entry LOCALE_FR[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Le mode d'ouverture est désactivé, le lanceur est désinstallé et tout ce qu'il a mis sur la TV est effacé, avec ses réglages, les liens de calendrier et le dossier des fonds d'écran. Ensuite la TV redémarre pour oublier les règles de démarrage du lanceur."},
 	{"Restart the TV now?", "Redémarrer la TV maintenant ?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Jusqu'à un redémarrage complet, la TV ouvre encore le lanceur à l'allumage : elle a lu ses règles de démarrage à son dernier démarrage."},
+	{"Restart the TV to apply all start-up settings", "Redémarrez la TV pour appliquer tous les réglages de démarrage"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_IT[] = {
@@ -2541,6 +2544,7 @@ static const Entry LOCALE_IT[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Il modo di apertura viene disattivato, il launcher disinstallato e tutto ciò che ha messo sulla TV eliminato, con le sue impostazioni, i link dei calendari e la cartella degli sfondi. Poi la TV si riavvia per dimenticare le regole di avvio del launcher."},
 	{"Restart the TV now?", "Riavviare la TV ora?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Fino a un riavvio completo la TV apre ancora il launcher all'accensione: ha letto le sue regole di avvio all'ultimo avvio."},
+	{"Restart the TV to apply all start-up settings", "Riavvia la TV per applicare tutte le impostazioni di avvio"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_JA[] = {
@@ -3177,6 +3181,7 @@ static const Entry LOCALE_JA[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "起動方法がオフになり、ランチャーがアンインストールされ、テレビに置いたものが設定、カレンダーのリンク、壁紙フォルダーごとすべて削除されます。その後、ランチャーの起動ルールを忘れるためにテレビが再起動します。"},
 	{"Restart the TV now?", "今すぐテレビを再起動しますか？"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "完全に再起動するまで、電源を入れるとテレビはまだランチャーを開きます：前回の起動時にランチャーの起動ルールを読み込んだためです。"},
+	{"Restart the TV to apply all start-up settings", "起動設定をすべて反映するにはテレビを再起動してください"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_KO[] = {
@@ -3813,6 +3818,7 @@ static const Entry LOCALE_KO[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "여는 방식이 꺼지고, 런처가 제거되며, TV에 둔 모든 것이 설정, 캘린더 링크, 배경화면 폴더와 함께 삭제됩니다. 그 후 런처의 시작 규칙을 잊도록 TV가 다시 시작됩니다."},
 	{"Restart the TV now?", "지금 TV를 다시 시작할까요?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "완전히 다시 시작할 때까지 TV는 켤 때 여전히 런처를 엽니다: 마지막으로 시작할 때 런처의 시작 규칙을 읽었기 때문입니다."},
+	{"Restart the TV to apply all start-up settings", "모든 시작 설정을 적용하려면 TV를 다시 시작하세요"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PL[] = {
@@ -4449,6 +4455,7 @@ static const Entry LOCALE_PL[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Sposób otwierania zostanie wyłączony, launcher odinstalowany, a wszystko, co umieścił na telewizorze, usunięte razem z ustawieniami, linkami kalendarzy i folderem tapet. Potem telewizor uruchomi się ponownie, by zapomnieć reguły uruchamiania launchera."},
 	{"Restart the TV now?", "Uruchomić telewizor ponownie teraz?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Do pełnego restartu telewizor nadal otwiera launcher po włączeniu: przeczytał jego reguły uruchamiania przy ostatnim starcie."},
+	{"Restart the TV to apply all start-up settings", "Uruchom ponownie TV, aby zastosować wszystkie ustawienia uruchamiania"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PT[] = {
@@ -5085,6 +5092,7 @@ static const Entry LOCALE_PT[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "A forma de abrir é desligada, o lançador é desinstalado e tudo o que pôs na TV é apagado, com as suas definições, as ligações de calendário e a pasta de fundos. Depois a TV reinicia para esquecer as regras de arranque do lançador."},
 	{"Restart the TV now?", "Reiniciar a TV agora?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Até um reinício completo a TV ainda abre o lançador ao ligar: leu as regras de arranque dele no último arranque."},
+	{"Restart the TV to apply all start-up settings", "Reinicie a TV para aplicar todas as definições de arranque"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_TR[] = {
@@ -5721,6 +5729,7 @@ static const Entry LOCALE_TR[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Açılış yolu kapatılır, başlatıcı kaldırılır ve TV'ye koyduğu her şey ayarları, takvim bağlantıları ve duvar kâğıdı klasörüyle birlikte silinir. Ardından TV, başlatıcının açılış kurallarını unutmak için yeniden başlar."},
 	{"Restart the TV now?", "TV şimdi yeniden başlatılsın mı?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "Tam bir yeniden başlatmaya kadar TV açılınca hâlâ başlatıcıyı açar: son açılışta başlatıcının açılış kurallarını okudu."},
+	{"Restart the TV to apply all start-up settings", "Tüm başlangıç ayarlarını uygulamak için TV'yi yeniden başlatın"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_UK[] = {
@@ -6357,6 +6366,7 @@ static const Entry LOCALE_UK[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "Спосіб відкриття вимкнеться, лаунчер видалиться, а з ним усе, що він поставив на ТВ, разом із налаштуваннями, посиланнями календарів і текою шпалер. Потім ТВ перезавантажиться, щоб забути правила запуску лаунчера."},
 	{"Restart the TV now?", "Перезавантажити ТВ зараз?"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "До повного перезавантаження ТВ ще відкриватиме лаунчер після ввімкнення: правила запуску лаунчера він прочитав під час останнього старту."},
+	{"Restart the TV to apply all start-up settings", "Перезавантажте ТВ, щоб застосувати всі налаштування запуску"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ZH[] = {
@@ -6993,6 +7003,7 @@ static const Entry LOCALE_ZH[] = {
 	{"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.", "将关闭打开方式、卸载启动器，并删除它放在电视上的所有内容，包括设置、日历链接和壁纸文件夹。之后电视会重新启动，以忘记启动器的启动规则。"},
 	{"Restart the TV now?", "现在重启电视吗？"},
 	{"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.", "在完全重启之前，电视开机时仍会打开启动器：它在上次启动时读取了启动器的启动规则。"},
+	{"Restart the TV to apply all start-up settings", "重启电视以应用所有启动设置"},
 	{nullptr, nullptr}
 };
 static const Locale LOCALES[] = {

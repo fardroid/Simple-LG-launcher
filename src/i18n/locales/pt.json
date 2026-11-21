@@ -631,5 +631,6 @@
 	"Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. Then the TV restarts, to forget the launcher's start-up rules.": "São apagadas as suas definições, as ligações de calendário, a pasta de fundos e as fotos transferidas, e a forma de abrir é desligada. Depois a TV reinicia para esquecer as regras de arranque do lançador.",
 	"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.": "A forma de abrir é desligada, o lançador é desinstalado e tudo o que pôs na TV é apagado, com as suas definições, as ligações de calendário e a pasta de fundos. Depois a TV reinicia para esquecer as regras de arranque do lançador.",
 	"Restart the TV now?": "Reiniciar a TV agora?",
-	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "Até um reinício completo a TV ainda abre o lançador ao ligar: leu as regras de arranque dele no último arranque."
+	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "Até um reinício completo a TV ainda abre o lançador ao ligar: leu as regras de arranque dele no último arranque.",
+	"Restart the TV to apply all start-up settings": "Reinicie a TV para aplicar todas as definições de arranque"
 }

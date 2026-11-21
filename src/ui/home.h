@@ -43,8 +43,10 @@ public:
 	void set_calendar (const std::optional<CalendarData> &c, bool loading) { calendar_ = c; cal_loading_ = loading; board_dirty_ = true; }
 	void set_news (const std::optional<NewsData> &n, bool loading) { news_ = n; news_loading_ = loading; board_dirty_ = true; }
 	void set_quote (const std::optional<Quote> &q, bool loading) { quote_ = q; quote_loading_ = loading; board_dirty_ = true; }
-	/** A quiet notice over the right end of the row (a new version of the launcher); empty: none. */
+	/** A quiet notice over the right end of the row (a new version of the launcher), with a green dot; empty: none. */
 	void set_notice (const std::string &text) { notice_ = text; }
+	/** The same with a red dot, at the very right (the TV needs a restart); empty: none. */
+	void set_alert (const std::string &text) { alert_ = text; }
 	/** The launcher is in front (the news pages turn by themselves only then). */
 	void set_front (bool front) { front_ = front; }
 	/** OLED care: the clock, the cards and the apps move a few pixels once a minute (pixelShift "auto" follows this). */
@@ -140,8 +142,9 @@ private:
 	bool quote_loading_ = false, front_ = true, oled_ = false;
 	int shift_x_ = 0, shift_y_ = 0;
 	bool board_dirty_ = true;
-	std::string notice_;
+	std::string notice_, alert_;
 	void draw_notice ();
+	float draw_pill (const std::string &text, Color dot, float right);
 	bool lifting_ = false, lift_trash_ = false;
 	int lift_btn_ = -1;          // -1: on the tile; 0, 1: the buttons over it
 	std::vector<TileModel> lift_original_;

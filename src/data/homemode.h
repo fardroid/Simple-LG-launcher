@@ -12,6 +12,7 @@ struct HomeModeInfo {
 	std::string mode;            // none helper default mount
 	bool can_default = false;    // the TV lets an app other than LG Home be chosen as Home
 	std::string release;         // webOS release, such as 10.3.2 (webOS 25); empty when unknown
+	bool restart = false;        // the TV needs a full restart to read the start-up rules there are now (the Home app way)
 };
 
 struct SwitchResult { bool ok; std::string mode, why; };

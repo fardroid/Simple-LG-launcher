@@ -932,6 +932,16 @@ void open_picker (Picker::Kind kind) {
 	app.dirty = true;
 }
 
+/** The notice with a red dot on the home screen while the TV needs a full restart to read the start-up rules there are now: the
+ *  Home app way switched on (or off) since the TV's last full start, which is when its boot manager reads them. */
+void show_restart () {
+	const auto &m = app.home_mode;
+	std::string alert;
+	if (m && m->restart) alert = tr("Restart the TV to apply all start-up settings", "Перезагрузите ТВ для применения всех настроек запуска");
+	app.home.set_alert(alert);
+	app.dirty = true;
+}
+
 /** How the launcher opens on Home, read from the TV (the Settings row and the screen of the ways show it). */
 void read_mode () {
 	run_background([] {
@@ -946,6 +956,7 @@ void read_mode () {
 			if (info) { app.default_home = info->mode == "default"; app.helper_on = info->mode == "helper"; }
 			app.home_method.set_info(info, false);
 			refresh_settings();
+			show_restart();
 		});
 	});
 }
@@ -1271,10 +1282,15 @@ void setup_home_method () {
 				if (info) { app.default_home = info->mode == "default"; app.helper_on = info->mode == "helper"; }
 				app.home_method.set_info(info, false);
 				refresh_settings();
+				show_restart();
 				std::string name = mode_text(mode).name;
 				app.toast.show(r.ok ? fmt(tr("Done: {0}", "Готово: {0}"), name) : fmt(tr("Could not switch: {0}", "Не удалось переключить: {0}"), r.why), !r.ok, now_ms());
+				// the Home app way on: the TV reads its start-up rules only at a full start (until then the red notice says so)
+				if (r.ok && mode == "default" && info && info->restart)
+					app.menu.open_question(tr("Restart the TV now?", "Перезагрузить ТВ сейчас?"), tr("Restart the TV to apply all start-up settings", "Перезагрузите ТВ для применения всех настроек запуска"),
+						tr("Restart", "Перезагрузить"), [] { restart_tv(); }, now_ms());
 				// Off while the TV keeps the Home app way's start-up rules: it would still open the launcher when switched on
-				if (r.ok && mode == "none" && rules_in_memory())
+				else if (r.ok && mode == "none" && rules_in_memory())
 					app.menu.open_question(tr("Restart the TV now?", "Перезагрузить ТВ сейчас?"), tr("Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.",
 						"До полной перезагрузки ТВ ещё будет открывать лаунчер при включении: правила запуска лаунчера он прочитал при последнем старте."),
 						tr("Restart", "Перезагрузить"), [] { restart_tv(); }, now_ms());
@@ -1741,6 +1757,9 @@ int main (int argc, char **argv) {
 		while (!g.empty() && isspace((unsigned char)g.back())) g.pop_back();
 		logf("guard sync: %s", ok ? g.c_str() : "the Homebrew Channel did not answer");
 		post_main([helper] { app.helper_on = helper; if (helper) mark_alive(); if ((helper || AS_HOME) && app.front) app.name_at = now_ms(); });
+		// does the TV need a restart for its start-up rules (the red notice on the home screen)
+		auto info = read_home_mode(APP_ID);
+		post_main([info] { if (info) { app.home_mode = info; show_restart(); } });
 	});
 	// When the last app closes, the TV opens its "last input" through LG Home's own handler (last_input_handler), which opens
 	// LG Home whatever the Home app is (seen on webOS 10.3.2 after closing YouTube). While the official way is on, LG Home

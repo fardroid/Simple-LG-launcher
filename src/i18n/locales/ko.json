@@ -631,5 +631,6 @@
 	"Its settings, the calendar links, the wallpapers folder and the downloaded photos are deleted, and the way of opening is switched off. Then the TV restarts, to forget the launcher's start-up rules.": "설정, 캘린더 링크, 배경화면 폴더, 다운로드한 사진이 삭제되고 여는 방식이 꺼집니다. 그 후 런처의 시작 규칙을 잊도록 TV가 다시 시작됩니다.",
 	"The way of opening is switched off, the launcher is uninstalled, and everything it put on the TV is deleted, with its settings, the calendar links and the wallpapers folder. Then the TV restarts, to forget the launcher's start-up rules.": "여는 방식이 꺼지고, 런처가 제거되며, TV에 둔 모든 것이 설정, 캘린더 링크, 배경화면 폴더와 함께 삭제됩니다. 그 후 런처의 시작 규칙을 잊도록 TV가 다시 시작됩니다.",
 	"Restart the TV now?": "지금 TV를 다시 시작할까요?",
-	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "완전히 다시 시작할 때까지 TV는 켤 때 여전히 런처를 엽니다: 마지막으로 시작할 때 런처의 시작 규칙을 읽었기 때문입니다."
+	"Until a full restart the TV still opens the launcher when switched on: it read the launcher's start-up rules when it last started.": "완전히 다시 시작할 때까지 TV는 켤 때 여전히 런처를 엽니다: 마지막으로 시작할 때 런처의 시작 규칙을 읽었기 때문입니다.",
+	"Restart the TV to apply all start-up settings": "모든 시작 설정을 적용하려면 TV를 다시 시작하세요"
 }
