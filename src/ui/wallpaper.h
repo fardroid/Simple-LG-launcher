@@ -40,6 +40,9 @@ public:
 	const Glass &old_glass () const { return prev_.glass; }
 	/** How far the change to the current picture has come (0-1, eased as the wallpaper's own fade). */
 	float fade (double now) const;
+	/** The same, also while settled: for what is drawn every frame over the cross-fading pictures of the board (the card the
+	 *  remote is on), whose plate has to change with them. */
+	float change (double now) const;
 	/** When the current picture came (it changes when another one is shown). */
 	double shown_at () const { return cur_.shown_at; }
 	/** Drawn as if the change were over (the screen then cross-fades whole pictures of the board instead). */

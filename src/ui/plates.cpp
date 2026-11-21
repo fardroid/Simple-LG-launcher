@@ -27,7 +27,13 @@ Rgba tint_of (const std::string &theme, float a) {
 	return {((n >> 16) & 255) / 255.f, ((n >> 8) & 255) / 255.f, (n & 255) / 255.f, a};
 }
 
-const PlateLook LIGHT{{1, 1, 1, 0.11f}, {1, 1, 1, 0.06f}};
+// The light plate: the theme's own hue too (the middle of its background), half way to white, so that the colour theme shows on
+// the cards in both looks.
+PlateLook light_look (const std::string &theme) {
+	unsigned n = (unsigned)strtoul(theme_colors(theme).mid + 1, nullptr, 16);
+	auto half = [] (unsigned v) { return (v / 255.f + 1) / 2; };
+	return {{half((n >> 16) & 255), half((n >> 8) & 255), half(n & 255), 0.16f}, {1, 1, 1, 0.06f}, true};
+}
 
 // The dark plate: the theme's colour (dusk keeps the web version's own). The card in focus lights up, as a light plate does: a
 // darker tint over it made the chosen card the darkest of all.
@@ -86,14 +92,14 @@ float region_brightness (const BrightnessMap &map, const std::array<int, 4> &r) 
 
 PlateLook look_for (float b, const std::string &theme) {
 	// one of the two looks, the same as Light and Dark: in between ones read as a third colour
-	return b <= 0.34f ? LIGHT : dark_look(theme);
+	return b <= 0.34f ? light_look(theme) : dark_look(theme);
 }
 
 PlateLook plate_look (const std::string &mode, const std::string &theme, const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects) {
-	if (mode == "light") return LIGHT;
+	if (mode == "light") return light_look(theme);
 	if (mode == "dark") return dark_look(theme);
 	float brightest = brightest_of(map.empty() ? theme_map(theme) : map, rects);
-	return brightest < 0 ? LIGHT : look_for(brightest, theme);
+	return brightest < 0 ? light_look(theme) : look_for(brightest, theme);
 }
 
 float brightest_of (const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects) {

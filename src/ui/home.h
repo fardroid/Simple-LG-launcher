@@ -43,10 +43,14 @@ public:
 	void set_calendar (const std::optional<CalendarData> &c, bool loading) { calendar_ = c; cal_loading_ = loading; board_dirty_ = true; }
 	void set_news (const std::optional<NewsData> &n, bool loading) { news_ = n; news_loading_ = loading; board_dirty_ = true; }
 	void set_quote (const std::optional<Quote> &q, bool loading) { quote_ = q; quote_loading_ = loading; board_dirty_ = true; }
-	/** A quiet notice over the right end of the row (a new version of the launcher), with a green dot; empty: none. */
-	void set_notice (const std::string &text) { notice_ = text; }
-	/** The same with a red dot, at the very right (the TV needs a restart); empty: none. */
-	void set_alert (const std::string &text) { alert_ = text; }
+	/** A line of its own over the row, with a green round icon: a new version of the launcher (`note`: dimmer words after it);
+	 *  empty: none. While the line is there, the row makes room for it. */
+	void set_notice (const std::string &text, const std::string &note = "") { notice_ = text; notice_note_ = note; board_dirty_ = true; }
+	/** The same with a red one, first on the line (the TV needs a restart); empty: none. */
+	void set_alert (const std::string &text) { alert_ = text; board_dirty_ = true; }
+	/** The plates' colour for the picture on screen and the one before it (the banners are drawn in it too). */
+	const PlateLook &plates () const { return look_; }
+	const PlateLook &old_plates () const { return old_look_; }
 	/** The launcher is in front (the news pages turn by themselves only then). */
 	void set_front (bool front) { front_ = front; }
 	/** OLED care: the clock, the cards and the apps move a few pixels once a minute (pixelShift "auto" follows this). */
@@ -98,7 +102,8 @@ private:
 	void moved (double now);
 	int tile_at (float x, float y, int &row) const;
 	void draw_tile (const TileModel &m, float x, float y, float f, double now, bool label_on);
-	BoardLayout layout () const;
+	/** `drop`: how far the row goes down to make room for the line over it (null: not asked). */
+	BoardLayout layout (int *drop = nullptr) const;
 	bool card_on (CardId id) const;
 	/** Steps onto a card (false when it cannot be stepped onto). */
 	bool enter (std::optional<CardId> id, double now);
@@ -142,9 +147,13 @@ private:
 	bool quote_loading_ = false, front_ = true, oled_ = false;
 	int shift_x_ = 0, shift_y_ = 0;
 	bool board_dirty_ = true;
-	std::string notice_, alert_;
-	void draw_notice ();
-	float draw_pill (const std::string &text, Color dot, float right);
+	std::string notice_, notice_note_, alert_;
+	// the line over the row: how far the row has gone down to make room for it (px), and how much it shows (0-1)
+	Tween lane_drop_, lane_show_;
+	float row_base (int r) const;     // row_top without the room for the line
+	float lane_px () const { return (float)std::round(lane_drop_.at(now_ms())); }
+	void draw_lane (double now);
+	std::string lane_alert_, lane_notice_, lane_note_;     // what the line says (kept while it fades out)
 	bool lifting_ = false, lift_trash_ = false;
 	int lift_btn_ = -1;          // -1: on the tile; 0, 1: the buttons over it
 	std::vector<TileModel> lift_original_;
@@ -170,6 +179,7 @@ private:
 	PlateLook look_{}, old_look_{};
 	int drawn_live_ = 0;
 	int live_mask (double now) const;
-	void prepare_board ();
-	void draw_card (const BoardCard &c, double now, const std::tm &clock);
+	void prepare_board (double now);
+	/** `live`: over the picture of the board, every frame (draw_live). */
+	void draw_card (const BoardCard &c, double now, const std::tm &clock, bool live);
 };

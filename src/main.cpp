@@ -40,7 +40,7 @@
 #include "ui/icons.h"
 #include "ui/pickers.h"
 #include "ui/settings.h"
-#include "ui/toast.h"
+#include "ui/notices.h"
 #include "ui/wallpaper.h"
 
 #include <SDL.h>
@@ -95,6 +95,9 @@ struct App {
 	bool default_home = false;                 // the official way is on (defaulthome.sh refresh said so, or a switch to it)
 	bool helper_on = false;                    // the helper is on (helper.sh refresh said so, or a switch to it)
 	UpdateState update;                        // a new version of the launcher (data/update.h)
+	// the banner at the top is shown once: for each new version, and once each time the TV comes to need a restart (file "banners")
+	std::string banner_version;                // the version it was shown for
+	bool banner_restart = false;               // shown for the restart needed now
 	Root root = Root::unknown;                 // can the TV run commands as root (told when Settings opens: read_mode)
 	std::string root_detail;                   // what it said when it could not
 	double update_next = -1;                   // when to look for one next (-1: not while the setting is off)
@@ -108,7 +111,7 @@ struct App {
 	AppMenu menu;                    // over the home screen: OK held on a tile
 	QuickPanel quick;                // over the home screen: Down from the row
 	std::string menu_key;            // the tile it is for
-	Toast toast;
+	Notices notices;                 // the banners at the top, over every screen
 	std::string version;
 	bool manual_refresh = false;     // the "Refresh list" button: say what was found
 	bool dirty = true, running = true, front = true;
@@ -144,6 +147,12 @@ double wall_ms () {
 }
 
 App app;
+
+/** A banner at the top of the screen (ui/notices.h), over whatever screen is open. */
+void notify (NoticeKind kind, const std::string &title, const std::string &text = "") {
+	app.notices.show(kind, title, text, now_ms());
+	app.dirty = true;
+}
 
 void apply_lang () {
 	std::string was = app.lang;
@@ -341,7 +350,7 @@ void refresh_apps () {
 		bool manual = app.manual_refresh;
 		app.manual_refresh = false;
 		if (apps.empty()) {
-			if (manual) app.toast.show(tr("Could not read the app list", "Не удалось прочитать список приложений"), true, now_ms());
+			if (manual) notify(NoticeKind::error, tr("Could not read the app list", "Не удалось прочитать список приложений"));
 			return;
 		}
 		if (manual) {
@@ -351,7 +360,7 @@ void refresh_apps () {
 				for (auto &b : app.apps) known = known || a.id == b.id;
 				if (!known) added++;
 			}
-			app.toast.show(added > 0 ? fmt(tr("Found: {0}", "Найдено: {0}"), count(added, "new app", "new apps", "новое приложение", "новых приложения", "новых приложений")) : tr("The app list is up to date", "Список приложений актуален"), false, now_ms());
+			notify(NoticeKind::done, added > 0 ? fmt(tr("Found: {0}", "Найдено: {0}"), count(added, "new app", "new apps", "новое приложение", "новых приложения", "новых приложений")) : tr("The app list is up to date", "Список приложений актуален"));
 		}
 		// read again each time the launcher comes back to the front: the row is built again only when the list changed
 		auto same = [] (const AppEntry &a, const AppEntry &b) { return a.id == b.id && a.title == b.title && a.iconPath == b.iconPath && a.removable == b.removable; };
@@ -668,17 +677,60 @@ using Step = UpdateState::Step;
 std::mutex update_lock;
 std::string update_wanted;
 
+void save_banners () {
+	write_file(join_path(DATA_DIR, "banners"), "version=" + app.banner_version + "\nrestart=" + (app.banner_restart ? "1" : "0") + "\n");
+}
+
+void load_banners () {
+	std::string raw;
+	if (!read_file(join_path(DATA_DIR, "banners"), raw, 256)) return;
+	size_t at = 0;
+	while (at < raw.size()) {
+		size_t end = raw.find('\n', at);
+		std::string line = raw.substr(at, end == std::string::npos ? std::string::npos : end - at);
+		at = end == std::string::npos ? raw.size() : end + 1;
+		if (line.rfind("version=", 0) == 0) app.banner_version = line.substr(8);
+		else if (line == "restart=1") app.banner_restart = true;
+	}
+}
+
+/** The banners for a restart and a new version, once for what they say: shown when the launcher is in front (on any of its
+ *  screens: a restart is needed just after the way of opening is switched in Settings) and no question is open over it. Both at
+ *  once: the restart stands on top. */
+void offer_banner () {
+	if (!app.front || app.menu.open()) return;
+	const UpdateState &u = app.update;
+	if (app.cfg.checkUpdates && (u.step == Step::available || u.step == Step::ready) && !u.info.version.empty() && u.info.version != app.banner_version) {
+		app.banner_version = u.info.version;
+		save_banners();
+		logf("banner: version %s", u.info.version.c_str());
+		notify(NoticeKind::update, fmt(tr("Version {0} of the launcher is out", "Вышла версия лаунчера {0}"), u.info.version),
+			app.root == Root::no ? tr("Update it in the Homebrew Channel", "Обновите в Homebrew Channel")
+				: tr("Update it in the launcher settings", "Обновите через настройки лаунчера"));
+	}
+	if (app.home_mode && app.home_mode->restart && !app.banner_restart) {
+		app.banner_restart = true;
+		save_banners();
+		logf("banner: restart");
+		notify(NoticeKind::restart, tr("Restart the TV", "Перезагрузите ТВ"), tr("To apply the start-up settings", "Чтобы применить настройки запуска"));
+	}
+}
+
 /** The update shown everywhere: its row in Settings, the notice on the home screen and its tile in the row. */
 void show_update () {
 	const UpdateState &u = app.update;
 	if (u.step != Step::downloading) { std::lock_guard<std::mutex> l(update_lock); update_wanted.clear(); }
-	std::string notice;
+	std::string notice, note;
 	if (app.cfg.checkUpdates) {
-		if (u.step == Step::available || u.step == Step::failed) notice = fmt(tr("Version {0} of the launcher is out", "Вышла версия лаунчера {0}"), u.info.version);
+		if (u.step == Step::available || u.step == Step::failed) {
+			notice = fmt(tr("Version {0} of the launcher is out", "Вышла версия лаунчера {0}"), u.info.version);
+			note = app.root == Root::no ? tr("· update it in the Homebrew Channel", "· обновите в Homebrew Channel")
+				: tr("· update it in the launcher settings", "· обновите через настройки лаунчера");
+		}
 		else if (u.step == Step::downloading) notice = fmt(tr("Downloading version {0}… {1}%", "Скачиваю версию {0}… {1}%"), {u.info.version, std::to_string((int)(u.progress * 100))});
 		else if (u.step == Step::ready) notice = fmt(tr("Version {0} is ready to install", "Версия {0} готова к установке"), u.info.version);
 	}
-	app.home.set_notice(notice);
+	app.home.set_notice(notice, note);
 	rebuild_items();
 	refresh_settings();
 	app.dirty = true;
@@ -800,7 +852,7 @@ void start_download () {
 				app.update.step = Step::failed;
 				app.update.why = why;
 				show_update();
-				app.toast.show(fmt(tr("Could not download the update: {0}", "Не удалось скачать обновление: {0}"), why), true, now_ms());
+				notify(NoticeKind::error, fmt(tr("Could not download the update: {0}", "Не удалось скачать обновление: {0}"), why));
 				return;
 			}
 			logf("update: %s downloaded", info.version.c_str());
@@ -843,7 +895,7 @@ void install_update () {
 		post_main([why] {
 			logf("update: install failed: %s", why.c_str());
 			app.menu.close();
-			app.toast.show(fmt(tr("Could not install the update: {0}", "Не удалось установить обновление: {0}"), why), true, now_ms());
+			notify(NoticeKind::error, fmt(tr("Could not install the update: {0}", "Не удалось установить обновление: {0}"), why));
 			show_update();
 		});
 	});
@@ -869,13 +921,13 @@ void save_config (const UserConfig &cfg) {
 	long long freed = clear_rebuildable(DATA_DIR, keep_update);
 	logf("config: could not save (%lld bytes free); %lld bytes of saved copies removed", before, freed);
 	if (write_file(file, text)) {
-		app.toast.show(tr("The TV's storage is full. The launcher removed its saved copies to keep your settings.", "Память ТВ заполнена. Лаунчер удалил свои сохранённые копии, чтобы записать настройки."), true, now_ms());
+		notify(NoticeKind::error, tr("The TV's storage is full. The launcher removed its saved copies to keep your settings.", "Память ТВ заполнена. Лаунчер удалил свои сохранённые копии, чтобы записать настройки."));
 		return;
 	}
 	logf("config: still could not save (%lld bytes free)", free_bytes(DATA_DIR));
-	app.toast.show(before >= 0 && before < 65536
+	notify(NoticeKind::error, before >= 0 && before < 65536
 		? tr("The TV's storage is full: the setting was not saved. Free some space on the TV.", "Память ТВ заполнена: настройка не сохранена. Освободите место на ТВ.")
-		: tr("The setting could not be saved", "Не удалось сохранить настройку"), true, now_ms());
+		: tr("The setting could not be saved", "Не удалось сохранить настройку"));
 }
 
 /** New settings: kept on disk and put to use (the screens, the wallpaper, the language, and the widgets read again when what they
@@ -937,8 +989,10 @@ void open_picker (Picker::Kind kind) {
 void show_restart () {
 	const auto &m = app.home_mode;
 	std::string alert;
-	if (m && m->restart) alert = tr("Restart the TV to apply all start-up settings", "Перезагрузите ТВ для применения всех настроек запуска");
+	if (m && m->restart) alert = tr("Restart the TV to apply all start-up settings", "Перезагрузите ТВ, чтобы применить настройки запуска");
 	app.home.set_alert(alert);
+	// restarted (or switched back): the next time a restart is needed, the banner comes again
+	if (m && !m->restart && app.banner_restart) { app.banner_restart = false; save_banners(); }
 	app.dirty = true;
 }
 
@@ -971,9 +1025,9 @@ void change_option (const std::string &id, Press press) {
 	const Pref *pref = find_pref(id);
 	if (!pref) return;
 	double now = now_ms();
-	if (id == "weatherOn" && !app.cfg.weather.city) { app.toast.show(tr("Choose a city first", "Сначала выберите город"), false, now); open_picker(Picker::Kind::city); return; }
-	if (id == "calendarOn" && app.cfg.calendar.sources.empty()) { app.toast.show(tr("Add a calendar first", "Сначала подключите календарь"), false, now); open_picker(Picker::Kind::calendars); return; }
-	if (id == "newsOn" && !app.cfg.news.google && app.cfg.news.feeds.empty()) { app.toast.show(tr("Turn on Google News or add a feed first", "Сначала включите Google Новости или добавьте ленту"), false, now); open_picker(Picker::Kind::feeds); return; }
+	if (id == "weatherOn" && !app.cfg.weather.city) { notify(NoticeKind::info, tr("Choose a city first", "Сначала выберите город")); open_picker(Picker::Kind::city); return; }
+	if (id == "calendarOn" && app.cfg.calendar.sources.empty()) { notify(NoticeKind::info, tr("Add a calendar first", "Сначала подключите календарь")); open_picker(Picker::Kind::calendars); return; }
+	if (id == "newsOn" && !app.cfg.news.google && app.cfg.news.feeds.empty()) { notify(NoticeKind::info, tr("Turn on Google News or add a feed first", "Сначала включите Google Новости или добавьте ленту")); open_picker(Picker::Kind::feeds); return; }
 	if (pref->kind == "info") return;
 	if (pref->kind == "action") {
 		if (id == "weatherCity") open_picker(Picker::Kind::city);
@@ -987,7 +1041,7 @@ void change_option (const std::string &id, Press press) {
 		}
 
 		else if (id == "update") update_pressed();
-		else if (id == "resetLook") { update_config(reset_look(app.cfg)); app.toast.show(tr("Look and clock reset", "Вид и часы сброшены"), false, now); }
+		else if (id == "resetLook") { update_config(reset_look(app.cfg)); notify(NoticeKind::done, tr("Look and clock reset", "Вид и часы сброшены")); }
 		else if (id == "wallpaper") {
 			std::vector<std::string> chosen = app.cfg.wallpaper.mode == "pictures" ? app.cfg.wallpaper.paths : app.cfg.wallpaper.mode == "image" ? std::vector<std::string>{app.cfg.wallpaper.path} : std::vector<std::string>();
 			app.gallery.open(chosen, now);
@@ -1034,7 +1088,7 @@ void setup_settings () {
 	app.settings.on_option = change_option;
 	app.settings.on_refresh = [] {
 		app.manual_refresh = true;
-		app.toast.show(tr("Looking for new apps…", "Ищем новые приложения…"), false, now_ms());
+		notify(NoticeKind::info, tr("Looking for new apps…", "Ищем новые приложения…"));
 		refresh_apps();
 	};
 	app.settings.on_toggle = [] (const std::string &tab, const std::string &key) {
@@ -1073,7 +1127,7 @@ void setup_settings () {
 		next.weather.on = true;
 		update_config(next);
 		back();
-		app.toast.show(fmt(tr("Weather for {0}", "Погода для города: {0}"), city.name), false, now_ms());
+		notify(NoticeKind::done, fmt(tr("Weather for {0}", "Погода для города: {0}"), city.name));
 	};
 	app.picker.on_country = [back] (const std::string &country) {
 		UserConfig next = app.cfg;
@@ -1087,7 +1141,7 @@ void setup_settings () {
 		next.calendar.on = !sources.empty();
 		update_config(next);
 		app.picker.set_list(sources);
-		app.toast.show(!sources.empty() ? tr("Connecting the calendars…", "Календари подключаются…") : tr("Calendars removed", "Календари убраны"), false, now_ms());
+		notify(!sources.empty() ? NoticeKind::info : NoticeKind::done, !sources.empty() ? tr("Connecting the calendars…", "Календари подключаются…") : tr("Calendars removed", "Календари убраны"));
 	};
 	app.picker.on_feeds = [] (const std::vector<std::string> &feeds) {
 		UserConfig next = app.cfg;
@@ -1118,9 +1172,9 @@ void setup_gallery_and_menu () {
 		sync_collection(true);
 		int coming = app.collection.missing();
 		if (coming > 0)
-			app.toast.show(fmt(tr("The wallpaper downloads in the background: {0}", "Обои скачиваются в фоне: {0}"),
-				count(coming, "picture", "pictures", "картинка", "картинки", "картинок")), false, now_ms());
-		else app.toast.show(choice.mode == "gradient" ? tr("Default background restored", "Фон по умолчанию восстановлен") : w.mode == "image" ? tr("Loading the wallpaper…", "Загружаем обои…") : tr("Starting the slideshow…", "Запускаем слайд-шоу…"), false, now_ms());
+			notify(NoticeKind::download, fmt(tr("The wallpaper downloads in the background: {0}", "Обои скачиваются в фоне: {0}"),
+				count(coming, "picture", "pictures", "картинка", "картинки", "картинок")));
+		else notify(choice.mode == "gradient" ? NoticeKind::done : NoticeKind::info, choice.mode == "gradient" ? tr("Default background restored", "Фон по умолчанию восстановлен") : w.mode == "image" ? tr("Loading the wallpaper…", "Загружаем обои…") : tr("Starting the slideshow…", "Запускаем слайд-шоу…"));
 	};
 	// OK held on a tile: it is lifted to be moved, with buttons over it to hide it and (an app that can be removed) uninstall it
 	app.home.on_long_press = [] (const TileModel &t) {
@@ -1154,7 +1208,7 @@ void setup_gallery_and_menu () {
 		if (is_app) next.hiddenIds = toggle_hidden(hidden_ids(), key);
 		else next.sourceIds.erase(std::remove(next.sourceIds.begin(), next.sourceIds.end(), key), next.sourceIds.end());
 		update_config(next);
-		app.toast.show(fmt(tr("{0} hidden. Bring it back in Settings → {1}", "{0} скрыто. Вернуть можно в Настройки → {1}"), {title, is_app ? tr("Apps", "Приложения") : tr("Inputs", "Входы")}), false, now_ms());
+		notify(NoticeKind::done, fmt(tr("{0} hidden. Bring it back in Settings → {1}", "{0} скрыто. Вернуть можно в Настройки → {1}"), {title, is_app ? tr("Apps", "Приложения") : tr("Inputs", "Входы")}));
 	};
 	app.home.on_uninstall = [] (const std::string &key) {
 		std::string title;
@@ -1178,10 +1232,10 @@ void setup_gallery_and_menu () {
 					if (next.hiddenIds) next.hiddenIds->erase(std::remove(next.hiddenIds->begin(), next.hiddenIds->end(), id), next.hiddenIds->end());
 					app.apps.erase(std::remove_if(app.apps.begin(), app.apps.end(), [&id] (const AppEntry &a) { return a.id == id; }), app.apps.end());
 					update_config(next);
-					app.toast.show(fmt(tr("{0} uninstalled", "{0} удалено"), title), false, now_ms());
+					notify(NoticeKind::done, fmt(tr("{0} uninstalled", "{0} удалено"), title));
 				} else if (result == "still-installed")
-					app.toast.show(fmt(tr("The TV did not remove {0} (details: {1})", "ТВ не удалил {0} (подробности: {1})"), {title, UNINSTALL_LOG}), true, now_ms());
-				else app.toast.show(tr("Could not uninstall the app", "Не удалось удалить приложение") + tr(". The TV did not accept the command", ". ТВ не принял команду"), true, now_ms());
+					notify(NoticeKind::error, fmt(tr("The TV did not remove {0} (details: {1})", "ТВ не удалил {0} (подробности: {1})"), {title, UNINSTALL_LOG}));
+				else notify(NoticeKind::error, tr("Could not uninstall the app", "Не удалось удалить приложение") + tr(". The TV did not accept the command", ". ТВ не принял команду"));
 				refresh_apps();         // the list again, to see whether it is really gone
 				app.dirty = true;
 			});
@@ -1202,7 +1256,7 @@ void restart_tv () {
 		std::string out = hbc_exec("luna-send -n 1 luna://com.webos.service.tvpower/power/reboot '{\"reason\":\"reset\"}'", 10000, &ok);
 		logf("restart: %s", out.substr(0, 160).c_str());
 		if (!ok || !reply_ok(out)) { ok = false; hbc_exec("reboot", 10000, &ok); }
-		if (!ok) post_main([] { app.menu.close(); app.toast.show(tr("Could not restart the TV. This needs the Homebrew Channel (root)", "Не удалось перезагрузить ТВ. Нужен Homebrew Channel (рут)"), true, now_ms()); app.dirty = true; });
+		if (!ok) post_main([] { app.menu.close(); notify(NoticeKind::error, tr("Could not restart the TV. This needs the Homebrew Channel (root)", "Не удалось перезагрузить ТВ. Нужен Homebrew Channel (рут)")); app.dirty = true; });
 	});
 }
 
@@ -1227,7 +1281,7 @@ void reset_launcher () {
 		post_main([started] {
 			if (started) { app.running = false; return; }
 			app.menu.close();
-			app.toast.show(tr("Could not reset: the Homebrew Channel did not answer", "Не удалось сбросить: Homebrew Channel не ответил"), true, now_ms());
+			notify(NoticeKind::error, tr("Could not reset: the Homebrew Channel did not answer", "Не удалось сбросить: Homebrew Channel не ответил"));
 			app.dirty = true;
 		});
 	});
@@ -1247,7 +1301,7 @@ void uninstall_launcher () {
 		post_main([started] {
 			if (started) { app.running = false; return; }
 			app.menu.close();
-			app.toast.show(tr("Could not uninstall: the Homebrew Channel did not answer", "Не удалось удалить: Homebrew Channel не ответил"), true, now_ms());
+			notify(NoticeKind::error, tr("Could not uninstall: the Homebrew Channel did not answer", "Не удалось удалить: Homebrew Channel не ответил"));
 			app.dirty = true;
 		});
 	});
@@ -1284,7 +1338,7 @@ void setup_home_method () {
 				refresh_settings();
 				show_restart();
 				std::string name = mode_text(mode).name;
-				app.toast.show(r.ok ? fmt(tr("Done: {0}", "Готово: {0}"), name) : fmt(tr("Could not switch: {0}", "Не удалось переключить: {0}"), r.why), !r.ok, now_ms());
+				notify(!r.ok ? NoticeKind::error : NoticeKind::done, r.ok ? fmt(tr("Done: {0}", "Готово: {0}"), name) : fmt(tr("Could not switch: {0}", "Не удалось переключить: {0}"), r.why));
 				// the Home app way on: the TV reads its start-up rules only at a full start (until then the red notice says so)
 				if (r.ok && mode == "default" && info && info->restart)
 					app.menu.open_question(tr("Restart the TV now?", "Перезагрузить ТВ сейчас?"), tr("Restart the TV to apply all start-up settings", "Перезагрузите ТВ для применения всех настроек запуска"),
@@ -1350,7 +1404,7 @@ void setup_quick () {
 				std::string out = hbc_exec("luna-send -n 1 luna://com.webos.service.tvpower/power/turnOffScreen '{}'", 8000, &ok);
 				logf("screen off: %s", out.substr(0, 160).c_str());
 				bool off = ok && reply_ok(out.substr(out.find('{') == std::string::npos ? 0 : out.find('{')));
-				if (!off) post_main([] { app.toast.show(tr("The TV did not switch the screen off", "ТВ не выключил экран"), true, now_ms()); app.dirty = true; });
+				if (!off) post_main([] { notify(NoticeKind::error, tr("The TV did not switch the screen off", "ТВ не выключил экран")); app.dirty = true; });
 			});
 		}
 	};
@@ -1370,7 +1424,7 @@ void setup_quick () {
 			post_main([setting, value, now_is] {
 				if (!now_is.empty()) app.quick.set_value(setting.id, now_is);
 				if (now_is != value)
-					app.toast.show(tr("The TV did not switch to it. It can be chosen in the TV's settings", "ТВ не переключился на этот режим. Его можно выбрать в настройках ТВ"), true, now_ms());
+					notify(NoticeKind::error, tr("The TV did not switch to it. It can be chosen in the TV's settings", "ТВ не переключился на этот режим. Его можно выбрать в настройках ТВ"));
 				app.dirty = true;
 			});
 		});
@@ -1451,8 +1505,15 @@ void on_activate (const TileModel &t) {
  *  Settings in its fourth section, in the list; "settings:3:nav" leaves the focus on the sections; "city" (country, calendars,
  *  feeds) a sheet; "gallery" the wallpaper gallery; "update" what the Update tile does (Settings on the update row, and on to
  *  the download), "update:install" that and Install answered by itself; "keys:R,R,OK,BACK" presses keys of the remote on the screen
- *  that is open (L R U D OK BACK), as the remote would. */
+ *  that is open (L R U D OK BACK), as the remote would; "restart-notice" shows the home screen as when the TV needs a restart
+ *  (in the launcher only, until the way of opening is read again: the TV is not changed). */
 void test_open (const std::string &what) {
+	if (what == "restart-notice") {
+		if (!app.home_mode) app.home_mode = HomeModeInfo();
+		app.home_mode->restart = true;
+		show_restart();
+		return;
+	}
 	if (what.rfind("keys:", 0) == 0) {
 		std::string list = what.substr(5) + ",";
 		for (size_t at = 0, comma; (comma = list.find(',', at)) != std::string::npos; at = comma + 1) {
@@ -1522,6 +1583,7 @@ void lifecycle (const std::string &msg) {
 namespace {
 /** Something on the screen in front moves (the home screen under Settings stays still). */
 bool screen_moving (double now) {
+	if (app.notices.animating(now)) return true;         // a banner's ring runs down, over any screen
 	if (app.menu.open() && app.menu.animating(now)) return true;      // over any screen (Restart the TV is asked over Settings)
 	if (app.screen == App::Screen::settings) return app.settings.animating(now);
 	if (app.screen == App::Screen::picker) return app.picker.animating(now);
@@ -1703,12 +1765,13 @@ int main (int argc, char **argv) {
 	// a picture of the collection came: the wallpaper takes it in (a slideshow grows as they come)
 	app.collection.on_arrived = [] (const std::string &path) { app.wallpaper.files_changed(path); app.dirty = true; };
 	app.collection.on_no_room = [] {
-		app.toast.show(tr("Not enough room on the TV for the wallpaper collection", "На ТВ не хватает места для обоев из коллекции"), true, now_ms());
+		notify(NoticeKind::error, tr("Not enough room on the TV for the wallpaper collection", "На ТВ не хватает места для обоев из коллекции"));
 		app.dirty = true;
 	};
 	load_config();
 	forget_splash();
 	load_weather();
+	load_banners();
 	load_calendar();
 	load_news_and_quote();
 	app.home.on_activate = on_activate;
@@ -1813,7 +1876,6 @@ int main (int argc, char **argv) {
 		quote_tick(now);
 		if (app.home.tick(now)) app.dirty = true;
 		if (app.screen == App::Screen::settings && app.settings.tick(now)) app.dirty = true;
-		if (app.toast.tick(now)) app.dirty = true;
 		if (app.update_next >= 0 && now >= app.update_next && !app.update_busy) check_update();
 		if (app.name_at >= 0 && now >= app.name_at) {
 			// the Swap or the Helper on, and the launcher in front: Home is the TV's last input now, so a full start opens Home, as it
@@ -1839,7 +1901,7 @@ int main (int argc, char **argv) {
 			if (app.update_next >= 0 && !app.update_busy) until = std::min(until, std::max(1.0, app.update_next - now));
 			double page = app.home.next_event(now);
 			if (page >= 0) until = std::min(until, page + 1);
-			for (double t : {app.toast.next_event(now), app.screen == App::Screen::settings ? app.settings.next_event(now) : -1.0, app.name_at >= 0 ? std::max(0.0, app.name_at - now) : -1.0})
+			for (double t : {app.screen == App::Screen::settings ? app.settings.next_event(now) : -1.0, app.name_at >= 0 ? std::max(0.0, app.name_at - now) : -1.0})
 				if (t >= 0) until = std::min(until, t + 1);
 			if (demo && demo_step < demo_keys.size()) until = std::min(until, std::max(1.0, demo_next - now));
 			timeout = (int)std::max(1.0, std::min(until, 60000.0));
@@ -1940,6 +2002,7 @@ int main (int argc, char **argv) {
 		// arrows) would show only at its next change
 		if (icons::upload_ready()) { app.dirty = true; app.home.mark_board(); }
 		now = now_ms();
+		offer_banner();
 		moving = screen_moving(now) | (app.wallpaper.update(now) && app.screen == App::Screen::home);
 		bool ended = was_moving && !moving;
 		was_moving = moving;
@@ -1995,7 +2058,7 @@ int main (int argc, char **argv) {
 		else if (app.screen == App::Screen::home_method) app.home_method.draw(now);
 		if (app.screen == App::Screen::home) app.quick.draw(app.cfg.theme, now);
 		app.menu.draw(app.cfg.theme, now);
-		app.toast.draw(app.cfg.theme);
+		app.notices.draw(now, &app.wallpaper, app.cfg, app.home.plates(), app.home.old_plates());
 		double t2 = now_ms();
 		SDL_GL_SwapWindow(app.win);
 		double t3 = now_ms();

@@ -232,23 +232,24 @@ static void plates () {
 	std::array<int, 4> clock{200, 40, 880, 184}, weather{200, 264, 880, 462}, calendar{1120, 40, 600, 686};
 	eq(region_brightness(map, weather) > 0.8f, true, "the weather is over the bright half");
 	eq(region_brightness(map, calendar) == 0.f, true, "the calendar is over the dark half");
-	eq(A(look_for(0)), std::string("255,255,255,0.11"), "a dark background gets a light plate");
+	eq(A(look_for(0)), std::string("147,154,189,0.16"), "a dark background gets a light plate");
 	eq(A(look_for(1)), std::string("12,18,46,0.55"), "a bright background gets a dark plate");
-	eq(A(look_for(0.5f)) + " " + A(look_for(0.34f)) + " " + A(look_for(0.35f)), std::string("12,18,46,0.55 255,255,255,0.11 12,18,46,0.55"), "in between: light or dark, nothing else");
+	eq(A(look_for(0.5f)) + " " + A(look_for(0.34f)) + " " + A(look_for(0.35f)), std::string("12,18,46,0.55 147,154,189,0.16 12,18,46,0.55"), "in between: light or dark, nothing else");
 	eq(A(look_for(0.9f, "black")) == A(plate_look("dark", "black", {}, {clock})), true, "auto's dark is Dark's, on any theme");
 	eq(look_for(1).focus.r == 1 && look_for(1).focus.a > 0, true, "a dark card in focus lights up");
+	eq(A(plate_look("light", "forest", {}, {clock})), std::string("143,166,155,0.16"), "the light plate takes the theme's hue too");
 	eq(A(plate_look("auto", "dusk", map, {clock, weather, calendar})), std::string("12,18,46,0.55"), "auto: one bright part makes all dark");
 	auto dark_left = map;
 	for (int i = 0; i < 144; i++) if (i % 16 < 8) dark_left[i] = 0;
-	eq(A(plate_look("auto", "dusk", dark_left, {clock, weather, calendar})), std::string("255,255,255,0.11"), "auto: all over dark, all light");
-	eq(A(plate_look("light", "dusk", map, {clock})), std::string("255,255,255,0.11"), "light: always light");
+	eq(A(plate_look("auto", "dusk", dark_left, {clock, weather, calendar})), std::string("147,154,189,0.16"), "auto: all over dark, all light");
+	eq(A(plate_look("light", "dusk", map, {clock})), std::string("147,154,189,0.16"), "light: always light");
 	eq(A(plate_look("dark", "dusk", map, {clock})), std::string("12,18,46,0.55"), "dark: always dark");
 	auto black = theme_map("black");
 	eq((int)black.size(), 144, "the black theme's grid");
 	eq(*std::max_element(black.begin(), black.end()) == 0.f, true, "the black theme is dark everywhere");
 	auto dusk = theme_map("dusk");
 	eq(dusk[0] < dusk[143], true, "the dusk theme gets brighter towards the bottom right");
-	eq(A(plate_look("auto", "dusk", {}, {clock, weather, calendar})), std::string("255,255,255,0.11"), "on the dusk theme the plates are light");
+	eq(A(plate_look("auto", "dusk", {}, {clock, weather, calendar})), std::string("147,154,189,0.16"), "on the dusk theme the plates are light");
 }
 
 static void weather () {
@@ -545,11 +546,11 @@ static void settings () {
 	apply_pref(c0, "nonsense", Press::ok, &changed);
 	eq(changed, false, "unknown option does nothing");
 	UserConfig messy = c0;
-	messy.theme = "grey"; messy.iconScale = 50; messy.sideMargin = 0; messy.bottomMargin = 0; messy.clockFormat = "12h"; messy.clock.size = 80; messy.clock.color = "ember"; messy.clock.font = "serif";
+	messy.theme = "grey"; messy.iconScale = 50; messy.sideMargin = 0; messy.bottomMargin = 0; messy.clockFormat = "12h"; messy.clock.size = 80; messy.clock.font = "serif";
 	messy.appIds = S{"a"}; messy.wallpaper.mode = "image"; messy.wallpaper.path = "/a.jpg";
 	UserConfig r = reset_look(messy);
-	eq(S{r.theme, std::to_string(r.iconScale), std::to_string(r.sideMargin), std::to_string(r.bottomMargin), r.clockFormat, std::to_string(r.clock.size), r.clock.color, r.clock.font},
-		S{"dusk", "100", "80", "50", "24h", "160", "white", "inter"}, "reset restores the look, the clock and its font");
+	eq(S{r.theme, std::to_string(r.iconScale), std::to_string(r.sideMargin), std::to_string(r.bottomMargin), r.clockFormat, std::to_string(r.clock.size), r.clock.font},
+		S{"dusk", "100", "80", "50", "24h", "160", "inter"}, "reset restores the look, the clock and its font");
 	eq(S{r.appIds ? (*r.appIds)[0] : "", r.wallpaper.mode}, S{"a", "image"}, "reset keeps apps and wallpaper");
 	for (const char *tab : {"look", "widgets", "wallpaper", "home"}) {
 		auto list = options_for(tab, c0, info);
@@ -558,8 +559,11 @@ static void settings () {
 	auto look = options_for("look", c0, info);
 	S texts, groups;
 	for (auto &o : look) { texts.push_back(o.value >= 0 ? "-" : o.valueText); groups.push_back(o.group); }
-	eq(texts, S{"Вечернее небо", "100%", "У всех", "80 px", "50 px", "Inter (по умолчанию)", "100%", "Авто", "-", "Авто"}, "Appearance shows current values, the colour theme first (switches have no text; no frosted glass without a picture)");
-	eq(groups, S{"", "Ряд приложений", "Ряд приложений", "Ряд приложений", "Ряд приложений", "Виджеты", "Виджеты", "Виджеты", "Виджеты", "Виджеты"}, "Appearance: the colour theme, then two groups");
+	eq(texts, S{"Вечернее небо", "100%", "У всех", "80 px", "50 px", "Inter (по умолчанию)", "Тонкий", "100%", "Авто", "-", "Авто"}, "Appearance shows current values, the colour theme first (switches have no text; no frosted glass without a picture)");
+	eq(groups, S{"", "Ряд приложений", "Ряд приложений", "Ряд приложений", "Ряд приложений", "Виджеты", "Виджеты", "Виджеты", "Виджеты", "Виджеты", "Виджеты"}, "Appearance: the colour theme, then two groups (the clock's weight with the widgets' look)");
+	S clock_rows, clock_groups;
+	for (auto &o : options_for("widgets", c0, info)) if (o.group == "Часы") clock_rows.push_back(o.id);
+	eq(clock_rows, S{"clockFormat", "clockSize", "showDate", "dateSize"}, "Widgets: the clock and its date in one group");
 	eq(S{c0.pixelShift, apply_pref(c0, "pixelShift", Press::ok).pixelShift, apply_pref(c0, "pixelShift", Press::left).pixelShift}, S{"auto", "on", "auto"}, "the pixel shift: OK turns it on for good");
 	UserConfig pic = c0; pic.wallpaper.mode = "image"; pic.wallpaper.path = "/a.jpg";
 	bool glass = false;

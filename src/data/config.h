@@ -29,7 +29,6 @@ struct ClockConfig {
 	int size = ranges::clockSize.def;
 	int weight = 200;                // 200 300 400 500 600
 	std::string font = "inter";      // inter tv poppins oswald mono serif
-	std::string color = "white";     // lib/clockcolor.ts
 	int opacity = ranges::clockOpacity.def;
 	bool showDate = true;
 	int dateSize = ranges::dateSize.def;

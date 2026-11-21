@@ -16,7 +16,6 @@ const std::vector<std::string> NEWS_COUNTRIES = {"AE", "AR", "AU", "BG", "BR", "
 	"HK", "HU", "ID", "IE", "IL", "IN", "IT", "JP", "KR", "LT", "LV", "MX", "MY", "NG", "NL", "NO", "NZ", "PE", "PH", "PL", "PT", "RO", "RS",
 	"RU", "SA", "SE", "SG", "SI", "SK", "TH", "TR", "TW", "UA", "US", "VN", "ZA"};
 static const char *CLOCK_FONTS[] = {"inter", "tv", "poppins", "oswald", "mono", "serif"};
-static const char *CLOCK_COLORS[] = {"white", "warm", "blue", "amber", "grey", "charcoal", "black", "ember", "ocean", "dusk"};
 static const size_t WALLPAPER_MAX_FILES = 400;
 
 std::vector<int> range_values (const Range &r) {
@@ -191,8 +190,6 @@ UserConfig parse_config (const std::string &raw) {
 	c.clock.weight = weight == 300 || weight == 400 || weight == 500 || weight == 600 ? weight : 200;
 	std::string font = str(field(ck, "font"));
 	c.clock.font = in(font, CLOCK_FONTS) ? font : "inter";
-	std::string color = str(field(ck, "color"));
-	c.clock.color = in(color, CLOCK_COLORS) ? color : "white";
 	c.clock.opacity = ranged(field(ck, "opacity"), ranges::clockOpacity);
 	c.clock.showDate = not_false(field(ck, "showDate"));
 	c.clock.dateSize = ranged(field(ck, "dateSize"), ranges::dateSize);
@@ -240,7 +237,7 @@ std::string config_json (const UserConfig &c) {
 		{"labelsSelectedOnly", c.labelsSelectedOnly}, {"rows", c.rows}, {"sideMargin", c.sideMargin},
 		{"bottomMargin", c.bottomMargin}, {"cardSize", c.cardSize}, {"plates", c.plates}, {"glass", c.glass}, {"frost", c.frost},
 		{"shadows", c.shadows}, {"pixelShift", c.pixelShift}, {"clockFormat", c.clockFormat},
-		{"clock", {{"size", c.clock.size}, {"weight", c.clock.weight}, {"font", c.clock.font}, {"color", c.clock.color},
+		{"clock", {{"size", c.clock.size}, {"weight", c.clock.weight}, {"font", c.clock.font},
 			{"opacity", c.clock.opacity}, {"showDate", c.clock.showDate}, {"dateSize", c.clock.dateSize}, {"showPeriod", c.clock.showPeriod}}},
 		{"weather", {{"on", c.weather.on}, {"city", city}, {"unit", c.weather.unit}, {"showCity", c.weather.showCity}}},
 		{"calendar", {{"on", c.calendar.on}, {"sources", c.calendar.sources}}},

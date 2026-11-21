@@ -10,6 +10,7 @@
 constexpr float CARD_RADIUS = 36;
 
 /** `look` / `old_look`: the plates' colour for the current and the previous picture (they change in the wallpaper's fade).
- *  `focus`: 0-1, the stronger layer of a card the remote is on. */
+ *  `focus`: 0-1, the stronger layer of a card the remote is on. `fade`: 0-1, how far the change from the previous picture's
+ *  plate has come (Wallpaper::fade on the picture of the board, Wallpaper::change on a card drawn over it every frame). */
 void draw_plate (Rect card, const Wallpaper &wallpaper, const UserConfig &cfg, const PlateLook &look, const PlateLook &old_look,
-	float focus, double now);
+	float focus, float fade);

@@ -261,7 +261,10 @@ void Wallpaper::set_paused (bool paused, double now) {
 }
 
 float Wallpaper::fade (double now) const {
-	if (settled_) return 1;
+	return settled_ ? 1 : change(now);
+}
+
+float Wallpaper::change (double now) const {
 	double f = std::min(1.0, (now - cur_.shown_at) / FADE_MS);
 	return (float)ease(Ease::ease_in_out, f);
 }
@@ -278,7 +281,8 @@ void Wallpaper::draw (double now) {
 	if (cur_.tex) gfx::image(*cur_.tex, screen, fade);
 	// Settings → Wallpaper → Dim the picture
 	if (dim() > 0) gfx::rect(screen, 0, {0, 0, 0, dim()});
-	if (f >= 1) { prev_.tex.reset(); prev_.glass = Glass(); prev_.small.reset(); }
+	// the previous picture is let go when its change is really over (settled, a card drawn live still fades from its glass)
+	if (now - cur_.shown_at >= FADE_MS) { prev_.tex.reset(); prev_.glass = Glass(); prev_.small.reset(); }
 	// .wallpaper__scrim
 	GradientStop scrim[] = {{{0, 0, 0, 0.22f}, 0}, {{0, 0, 0, 0.08f}, 0.35f}, {{0, 0, 0, 0}, 0.55f}, {{0, 0, 0, 0.5f}, 1}};
 	gfx::gradient(screen, 180, scrim, 4);

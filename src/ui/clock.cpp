@@ -1,4 +1,5 @@
 #include "ui/clock.h"
+#include "ui/theme.h"
 
 #include "gfx/text.h"
 #include "i18n/dates.h"
@@ -16,23 +17,9 @@ const FontInfo FONTS[] = {
 	{"oswald", Face::oswald, 0.14}, {"mono", Face::mono, 0.178}, {"serif", Face::serif, 0.19}
 };
 
-struct ColorInfo { const char *id; const char *color; const char *to; const char *accent; bool dark; };
-// lib/clockcolor.ts: a plain colour, or a gradient from `color` (left) to `to` (right) filling each line
-const ColorInfo COLORS[] = {
-	{"white", "#F2F2F2", nullptr, "#F2F2F2", false}, {"warm", "#FFE9C7", nullptr, "#FFE9C7", false}, {"blue", "#C4E2FF", nullptr, "#C4E2FF", false},
-	{"amber", "#FFB74D", nullptr, "#FFB74D", false}, {"grey", "#9AA0A6", nullptr, "#9AA0A6", false}, {"charcoal", "#3C4043", nullptr, "#3C4043", true},
-	{"black", "#0A0A0A", nullptr, "#0A0A0A", true}, {"ember", "#D62839", "#F08C1A", "#F0803F", false}, {"ocean", "#1E4FD8", "#19C6D8", "#1F8BDA", true},
-	{"dusk", "#6A2FC9", "#F2634F", "#A04A9A", true}
-};
-
 const FontInfo &font_info (const std::string &id) {
 	for (const auto &f : FONTS) if (id == f.id) return f;
 	return FONTS[0];
-}
-
-const ColorInfo &color_info (const std::string &id) {
-	for (const auto &c : COLORS) if (id == c.id) return c;
-	return COLORS[0];
 }
 
 // The y of a line's texture inside a CSS line box `line` px tall (the font's own content area centred in it).
@@ -53,10 +40,9 @@ Face clock_face (const std::string &font) { return font_info(font).face; }
 
 void draw_clock (const BoardCard &card, const std::tm &now, const ClockConfig &cfg, const std::string &lang, bool h24, bool narrow) {
 	const FontInfo &fi = font_info(cfg.font);
-	const ColorInfo &ci = color_info(cfg.color);
-	Color color = Color::hex(ci.color);
-	Color to_color = ci.to ? Color::hex(ci.to) : Color();
-	const Color *to = ci.to ? &to_color : nullptr;
+	// the same colour as the rest of the text on the cards: the colour theme's
+	Color color = current_theme().textPrimary;
+	const Color *to = nullptr;
 	float opacity = cfg.opacity / 100.f;
 	TimeParts tp = time_parts(now, h24);
 	bool period = !h24 && cfg.showPeriod;
@@ -65,13 +51,9 @@ void draw_clock (const BoardCard &card, const std::tm &now, const ClockConfig &c
 	int date_size = (int)std::lround(32.0 * cfg.dateSize / 100);
 	int date_line = (int)std::lround(date_size * 1.2);
 
-	// .clock__time and the others' soft shadows (light ones behind a dark colour)
+	// .clock__time and the others' soft shadows
 	Shadow time_sh[2] = {{2, 6, {0, 0, 0, 0.28f}}, {4, 44, {0, 0, 0, 0.5f}}};
 	Shadow date_sh[2] = {{2, 6, {0, 0, 0, 0.35f}}, {2, 24, {0, 0, 0, 0.5f}}};
-	if (ci.dark) {
-		time_sh[0] = date_sh[0] = {1, 3, {1, 1, 1, 0.35f}};
-		time_sh[1] = date_sh[1] = {2, 20, {1, 1, 1, 0.25f}};
-	}
 
 	TextStyle ts{fi.face, size, cfg.weight, (float)std::lround(size * 0.03)};
 	TextStyle ps{fi.face, (int)std::lround(size * 0.27), 300, 0};

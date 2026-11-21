@@ -21,10 +21,9 @@ void layer (Rect card, const TexturePtr &frost, const PlateLook &look, float opa
 
 }  // namespace
 
-void draw_plate (Rect card, const Wallpaper &wp, const UserConfig &cfg, const PlateLook &look, const PlateLook &old_look, float focus, double now) {
+void draw_plate (Rect card, const Wallpaper &wp, const UserConfig &cfg, const PlateLook &look, const PlateLook &old_look, float focus, float f) {
 	if (card.w <= 0 || card.h <= 0) return;
 	if (cfg.shadows) gfx::shadow(card, CARD_RADIUS, 34, 70, {0, 0, 0, 0.45f});
-	float f = wp.fade(now);
 	const TexturePtr &frost = cfg.glass ? wp.glass().frost : nullptr;
 	const TexturePtr &old_frost = cfg.glass ? wp.old_glass().frost : nullptr;
 	// The new layer fades in over the old one. With glass the old one stays whole until it is covered (the sharp wallpaper never
