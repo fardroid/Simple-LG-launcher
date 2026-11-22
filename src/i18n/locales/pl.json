@@ -416,7 +416,6 @@
 	"Start-up picture": "Obraz przy starcie",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Co telewizor pokazuje przez chwilę podczas uruchamiania launchera (gdy wcześniej usunął go z pamięci): tapetę, logo launchera lub czerń.",
 	"Frost": "Matowość",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej, przy 30% obraz jest najwyraźniejszy.",
 	"The launcher becomes the TV's Home app, and the TV opens it when switched on: the TV's start-up rules name it.": "Launcher staje się aplikacją startową telewizora, a telewizor otwiera go po włączeniu: wskazują go reguły uruchamiania telewizora.",
 	"Home and Back out of the last app open the launcher": "Home i Wstecz z ostatniej aplikacji otwierają launcher",
 	"LG Home is not replaced and keeps its tile": "LG Home nie jest podmieniany i zostaje na swoim kafelku",
@@ -629,5 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matowe: widżety rozmywają obraz za sobą. Płynne: dodatkowo załamują go na krawędziach, jak grube szkło.",
 	"Screen saver": "Wygaszacz ekranu",
 	"After {0}": "Po {0}",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Gdy przez tyle czasu na ekranie głównym nie zostanie naciśnięty żaden klawisz, aplikacje i widżety ustępują miejsca samej tapecie, która powoli się przybliża i przesuwa; pokaz slajdów zmienia obraz co 30 sekund. Dowolny klawisz przywraca ekran główny."
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Gdy przez tyle czasu na ekranie głównym nie zostanie naciśnięty żaden klawisz, aplikacje i widżety ustępują miejsca samej tapecie, która powoli się przybliża i przesuwa; pokaz slajdów zmienia obraz co 30 sekund. Dowolny klawisz przywraca ekran główny.",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje."
 }

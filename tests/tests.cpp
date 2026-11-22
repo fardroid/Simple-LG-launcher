@@ -572,6 +572,12 @@ static void settings () {
 	eq(glass, true, "frosted glass appears with a picture");
 	auto glass_of = [] (const UserConfig &c) { return c.glass ? c.glassKind : std::string("off"); };
 	eq(S{glass_of(pic), glass_of(apply_pref(pic, "glass", Press::right)), glass_of(apply_pref(pic, "glass", Press::left))}, S{"frost", "liquid", "off"}, "Glass: off, frosted or liquid");
+	{
+		UserConfig clear = pic; clear.frost = 10;
+		std::string t;
+		for (auto &o : options_for("look", apply_pref(clear, "frost", Press::left), info)) if (o.id == "frost") t = o.valueText;
+		eq(t + " " + std::to_string(apply_pref(clear, "frost", Press::left).frost), std::string("Выкл. 0"), "Frost goes down to off (clear glass)");
+	}
 	UserConfig liquid_cfg = apply_pref(pic, "glass", Press::right);
 	eq(glass_of(parse_config(config_json(liquid_cfg))), std::string("liquid"), "liquid glass is kept in the settings");
 	eq(glass_of(parse_config(R"({"glass":false})")) + " " + glass_of(parse_config(R"({"glass":true})")), std::string("off frost"), "the old on/off glass reads as off or frosted");

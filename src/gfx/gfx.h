@@ -65,9 +65,9 @@ void image (const Texture &t, Rect r, float opacity = 1, float radius = 0, Color
 	const Color *across = nullptr);
 /** A target's picture drawn over `r`, faded by `opacity`: its see-through parts stay see-through (it is premultiplied). */
 void layer (const Texture &t, Rect r, float opacity);
-/** The shape of the liquid glass: its convex bevel's width and the glass's thickness (px), how much the colours part (0-1), and
- *  the bevel's profile (smooth: a squircle, steep only at the very edge; otherwise a quarter circle). */
-struct LiquidGlass { float bevel = 54, thickness = 84, dispersion = 1; bool smooth = true; };
+/** The shape of the liquid glass: its convex bevel's width (never more than the corner's radius) and the glass's thickness (px),
+ *  how much the colours part (0-1) and its index of refraction. */
+struct LiquidGlass { float bevel = 35, thickness = 50, dispersion = 1, ior = 3; };
 /** The frosted wallpaper `frost` (over the whole screen) seen through liquid glass shaped as the rounded box `r`. */
 void liquid (const Texture &frost, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g);
 /** The GPU built the liquid glass's shader (false: the cards keep the frosted glass). */
@@ -85,6 +85,8 @@ void set_outer_alpha (float a);
 float outer_alpha_now ();
 /** Everything drawn from now on grows by `k` round the point cx, cy (CSS transform: scale); k 1 puts it back. */
 void set_grow (float cx, float cy, float k);
+/** Where `r` lands on the screen with the growth and the move set now. */
+Rect grown (Rect r);
 /** Everything drawn from now on moves by dx, dy (after the growth); 0, 0 puts it back. */
 void set_shift (float dx, float dy);
 

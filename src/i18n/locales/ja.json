@@ -417,7 +417,6 @@
 	"Start-up picture": "起動画面",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "ランチャーの起動中にテレビが一瞬表示するもの（メモリを空けるためにアンロードされた後）：壁紙、ランチャーのロゴ、または黒。",
 	"Frost": "すりガラスの強さ",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "ガラスが背後の画像をどれだけぼかすか：100% が最大、30% では画像がよりはっきり見えます。",
 	"Could not load the news. Check the feeds and the internet. It will try again": "ニュースを読み込めませんでした。フィードとインターネット接続を確認してください。再試行します",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "ニュースを読み込めませんでした。ほとんどのニュースサイトは Homebrew Channel（root）経由でしか読めません",
 	"Turn on Google News or add a feed first": "先に Google ニュースをオンにするか、フィードを追加してください",
@@ -629,5 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。",
 	"Screen saver": "スクリーンセーバー",
 	"After {0}": "{0}後",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "ホーム画面でこの時間キーを押さないと、アプリとウィジェットが消えて壁紙だけになり、ゆっくりズームしながら動きます。スライドショーでは30秒ごとに画像が変わります。いずれかのキーでホーム画面に戻ります。"
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "ホーム画面でこの時間キーを押さないと、アプリとウィジェットが消えて壁紙だけになり、ゆっくりズームしながら動きます。スライドショーでは30秒ごとに画像が変わります。いずれかのキーでホーム画面に戻ります。",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。"
 }

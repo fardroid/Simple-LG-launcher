@@ -45,11 +45,13 @@ uniform vec3 u_grow;      // everything grows by u_grow.z round the point u_grow
 uniform vec2 u_shift;     // then moves by this much (the app row sinking under the screen saver)
 varying vec2 v_p;
 varying vec2 v_uv;
+varying vec2 v_at;        // where it lands on the screen (layout px), after the growth and the move
 void main () {
 	vec2 at = u_quad.xy + a_pos * u_quad.zw;
 	v_p = at - u_center;
 	v_uv = a_pos;
 	at = u_grow.xy + (at - u_grow.xy) * u_grow.z + u_shift;
+	v_at = at;
 	// into a target the picture is drawn upside down, so that its first row is the top, as in an uploaded picture
 	gl_Position = vec4(at.x / u_layout.x * 2.0 - 1.0, u_flip * (1.0 - at.y / u_layout.y * 2.0), 0.0, 1.0);
 }
@@ -144,10 +146,12 @@ void main () {
 }
 )";
 
-// Liquid glass (gfx::liquid): the frosted wallpaper seen through a slab of glass whose edge is a convex bevel. The flat middle shows
-// what is under it as it is; a ray coming straight down into the bevel is bent inwards (Snell's law, n about 1.5) and lands that
-// far inside, so the picture from inside is stretched out to the edge, each colour a little differently (blue bends more). No light
-// is drawn on the glass: highlights on the bevel made its volume show, and only the lens was wanted (seen on the TV).
+// Liquid glass (gfx::liquid): the frosted wallpaper seen through a slab of glass whose edge is a convex bevel, as the web's liquid
+// glass demos do it (archisvaze/liquid-glass, gentpan/liquidglass, ybouane/liquidglass): the flat middle shows what is under it
+// as it is; over the bevel, a ray coming straight down through the tilted surface is bent (Snell's law) and goes down through the
+// glass's height there, so the picture is taken from further inside and stretched out towards the edge, each colour a little
+// differently (blue bends more). The bevel is never wider than the corner's radius. No light is drawn on the glass: highlights
+// on the bevel made its volume show, and only the lens was wanted (seen on the TV).
 const char *LIQUID_HEAD = R"(
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -165,41 +169,36 @@ uniform vec2 u_half;
 uniform float u_radius;
 uniform float u_opacity;
 uniform float u_bright;
-uniform vec2 u_origin;      // the shape's centre on the screen (layout px): the frost covers the whole screen
-uniform vec2 u_screen;      // the layout's size
-uniform vec4 u_glass;       // bevel width, thickness (px), dispersion (0-1), profile (0 round, 1 smooth)
+uniform vec2 u_screen;      // the layout's size (the frost covers the whole screen)
+uniform vec4 u_glass;       // bevel width, thickness (px), dispersion (0-1), index of refraction
 varying vec2 v_p;
-float slope (float x) {
-	x = clamp(x, 0.004, 1.0);
-	if (u_glass.w < 0.5) return (1.0 - x) / sqrt(1.0 - (1.0 - x) * (1.0 - x));
-	float a = 1.0 - pow(1.0 - x, 4.0);
-	return pow(a, -0.75) * pow(1.0 - x, 3.0);
+varying vec2 v_at;
+// the surface over the bevel: a squircle, 0 at the rim, 1 where the flat top starts
+float height (float t) { float s = 1.0 - t; return pow(1.0 - s * s * s * s, 0.25); }
+// how far the picture is taken from, inwards, at depth t into the bevel: the ray through the surface, tilted by its slope, is
+// bent by the glass (Snell) and goes down through the glass's height there; 0 at the very rim (no height) and on the flat top
+float shift (float t, float h, float dh, float bevel, float ior) {
+	float tilt = atan(dh * u_glass.y / bevel);
+	float bent = asin(clamp(sin(tilt) / ior, -1.0, 1.0));
+	return h * u_glass.y * (tan(tilt) - tan(bent));
 }
-float inward (float x, float n) {
-	if (x >= 1.0) return 0.0;
-	float i = atan(slope(x) * u_glass.y / u_glass.x);
-	float t = asin(sin(i) / n);
-	return u_glass.y * tan(i - t);
-}
-float depth (vec2 p, float rr) {
-	float own = box(p, u_half, u_radius), round = box(p, u_half, rr);
-	return mix(own, round, smoothstep(0.0, u_glass.x, -own));
-}
-vec3 frost (vec2 p) { return texture2D(u_tex, clamp(u_origin + p, vec2(0.0), u_screen) / u_screen).rgb; }
+vec3 frost (vec2 at) { return texture2D(u_tex, clamp(at, vec2(0.0), u_screen) / u_screen).rgb; }
 void main () {
 	float d = box(v_p, u_half, u_radius);
 	float cover = clamp(0.5 - d, 0.0, 1.0);
 	if (cover <= 0.0) discard;
-	// The bevel's depth: at the rim it is the card's own outline (the bending starts exactly on the card's corner), and deeper in
-	// it follows a shape rounded as much as the bevel is wide, so that it does not turn sharply along the corners' diagonals (a
-	// bevel wider than the corner's radius would): the one goes over into the other across the bevel.
-	float rr = min(max(u_radius, u_glass.x), min(u_half.x, u_half.y));
-	vec2 e = vec2(1.0, 0.0);
-	float x = clamp(-depth(v_p, rr) / u_glass.x, 0.0, 1.0);
-	vec2 n = normalize(vec2(depth(v_p + e.xy, rr) - depth(v_p - e.xy, rr), depth(v_p + e.yx, rr) - depth(v_p - e.yx, rr)) + 1e-5);
-	// only the lens: the picture bent at the edge, its colours parted; no light on the glass, which would show its volume
-	float k = u_glass.z;
-	vec3 c = vec3(frost(v_p - n * inward(x, 1.5 - 0.10 * k)).r, frost(v_p - n * inward(x, 1.5)).g, frost(v_p - n * inward(x, 1.5 + 0.12 * k)).b);
+	// the bevel is never wider than the corner's radius, so that it follows the corner exactly (no crease on its diagonal)
+	float bevel = max(1.0, min(u_glass.x, min(u_radius, min(u_half.x, u_half.y)) - 1.0));
+	float t = clamp(-d / bevel, 0.0, 1.0);
+	float h = height(t);
+	float dh = t < 1.0 ? (height(min(t + 0.001, 1.0)) - h) / 0.001 : 0.0;
+	vec2 e = vec2(0.5, 0.0);
+	vec2 n = normalize(vec2(box(v_p + e.xy, u_half, u_radius) - box(v_p - e.xy, u_half, u_radius), box(v_p + e.yx, u_half, u_radius) - box(v_p - e.yx, u_half, u_radius)) + 1e-5);
+	// only the lens: the picture bent at the edge, its colours parted (blue bends more); no light on the glass. It is taken from
+	// where the card is on the screen now (v_at), so that a card growing in focus does not grow the picture behind it.
+	float ior = u_glass.w, k = u_glass.z * 0.06;
+	vec3 c = vec3(frost(v_at - n * shift(t, h, dh, bevel, ior * (1.0 - k))).r, frost(v_at - n * shift(t, h, dh, bevel, ior)).g,
+		frost(v_at - n * shift(t, h, dh, bevel, ior * (1.0 + k))).b);
 	float a = cover * u_opacity;
 	gl_FragColor = vec4(min(c * u_bright, vec3(1.0)) * a, a);
 }
@@ -209,7 +208,7 @@ struct Program {
 	GLuint id = 0;
 	GLint flip, grow, quad, layout, center, color, half, radius, soft, dy, mode, tex, src, tint, tint2, across, opacity, bright;
 	GLint c[5], at0, at4, count, dir, len;
-	GLint origin, screen, glass, shift, premul;
+	GLint screen, glass, shift, premul;
 	GLint loc (const char *n) { return glGetUniformLocation(id, n); }
 };
 
@@ -257,7 +256,7 @@ bool build (Program &p, const char *fragment, const char *head = SDF) {
 	const char *cs[5] = {"u_c0", "u_c1", "u_c2", "u_c3", "u_c4"};
 	for (int i = 0; i < 5; i++) p.c[i] = p.loc(cs[i]);
 	p.at0 = p.loc("u_at0"); p.at4 = p.loc("u_at4"); p.count = p.loc("u_count"); p.dir = p.loc("u_dir"); p.len = p.loc("u_len");
-	p.origin = p.loc("u_origin"); p.screen = p.loc("u_screen"); p.glass = p.loc("u_glass");
+	p.screen = p.loc("u_screen"); p.glass = p.loc("u_glass");
 	return true;
 }
 
@@ -372,6 +371,10 @@ void set_grow (float cx, float cy, float k) {
 	grow_y = cy;
 	grow_k = k;
 	apply_clip();
+}
+
+Rect grown (Rect r) {
+	return {grow_x + (r.x - grow_x) * grow_k + shift_x, grow_y + (r.y - grow_y) * grow_k + shift_y, r.w * grow_k, r.h * grow_k};
 }
 
 void set_shift (float dx, float dy) {
@@ -489,9 +492,8 @@ void liquid (const Texture &frost, Rect r, float radius, float opacity, float br
 	glUniform1i(lens.tex, 0);
 	glUniform1f(lens.opacity, opacity);
 	glUniform1f(lens.bright, brightness);
-	glUniform2f(lens.origin, r.x + r.w / 2, r.y + r.h / 2);
 	glUniform2f(lens.screen, LAYOUT_W, LAYOUT_H);
-	glUniform4f(lens.glass, g.bevel, g.thickness, g.dispersion, g.smooth ? 1.f : 0.f);
+	glUniform4f(lens.glass, g.bevel, g.thickness, g.dispersion, g.ior);
 	draw();
 }
 

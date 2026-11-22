@@ -6,19 +6,21 @@ namespace {
 
 Color color (const Rgba &c) { return {c.r, c.g, c.b, c.a}; }
 
-// The liquid glass's shape (Settings → Appearance → Glass: Liquid): a smooth bevel 70 px wide, 120 px thick, the colours parted
-// fully (first 54 and 84; on the TV the bending was asked to go deeper and stronger).
-const gfx::LiquidGlass LIQUID{70, 120, 1, true};
+// The liquid glass's shape (Settings → Appearance → Glass: Liquid): a squircle bevel as wide as the cards' corners round (35 px),
+// 60 px thick, the colours parted fully, refracting as strongly as archisvaze/liquid-glass's default (index 3).
+const gfx::LiquidGlass LIQUID{35, 60, 1, 3};
 
 // One layer of the plate: the glass (when there is one), then the colour over it, at `opacity`.
 void layer (Rect card, const TexturePtr &frost, const PlateLook &look, float opacity, float dim, bool liquid) {
 	if (opacity <= 0) return;
 	if (frost && liquid) gfx::liquid(*frost, card, CARD_RADIUS, opacity, 1 - dim, LIQUID);
 	else if (frost) {
-		// the 960 x 540 glass is stretched over the whole screen; the card shows the part behind it
+		// the 960 x 540 glass is stretched over the whole screen; the card shows the part behind where it is on the screen now (a
+		// card growing in focus does not grow the picture behind it)
 		float kx = frost->w / 1920.f, ky = frost->h / 1080.f;
+		Rect at = gfx::grown(card);
 		// a dimmed wallpaper: its glass is as much darker
-		gfx::image(*frost, card, opacity, CARD_RADIUS, {1, 1, 1, 1}, 1 - dim, {card.x * kx, card.y * ky, card.w * kx, card.h * ky});
+		gfx::image(*frost, card, opacity, CARD_RADIUS, {1, 1, 1, 1}, 1 - dim, {at.x * kx, at.y * ky, at.w * kx, at.h * ky});
 	}
 	Color c = color(look.bg);
 	gfx::rect(card, CARD_RADIUS, c.with_alpha(c.a * opacity));

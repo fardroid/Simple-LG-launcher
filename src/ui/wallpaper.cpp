@@ -25,14 +25,14 @@ std::mt19937 &rng () { static std::mt19937 r{std::random_device{}()}; return r; 
 // screen blurred it about as much as the low steps of Frost did, so 30 % and 40 % looked the same (seen on the TV); at 960 x 540
 // the stretching blurs half as much and each step shows.
 std::shared_ptr<Pixels> frost_of (const Pixels &small, int strength) {
-	float k = std::max(0.3f, std::min(1.f, strength / 100.f));
+	float k = std::max(0.f, std::min(1.f, strength / 100.f));
 	const int W = 960, H = 540, PAD = 80;
 	auto padded = resize(small, W + 2 * PAD, H + 2 * PAD);
 	auto inner = resize(small, W, H);
 	for (int y = 0; y < H; y++) memcpy(&padded->rgba[((size_t)(y + PAD) * padded->w + PAD) * 4], &inner->rgba[(size_t)y * W * 4], (size_t)W * 4);
 	// the blur grows as the square of the setting: the eye tells small blurs apart and not large ones, so on a straight line the
 	// low steps all looked alike
-	blur(*padded, 14 * k * k);
+	if (k > 0) blur(*padded, 14 * k * k);     // off: clear glass, the picture as it is
 	auto out = std::make_shared<Pixels>();
 	out->w = W;
 	out->h = H;

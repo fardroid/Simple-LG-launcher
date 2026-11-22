@@ -418,7 +418,6 @@ static const Entry LOCALE_DE[] = {
 	{"Start-up picture", "Startbild"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Was der Fernseher kurz zeigt, während der Launcher startet (nachdem er ihn aus dem Speicher entladen hat): das Hintergrundbild, das Logo des Launchers oder Schwarz."},
 	{"Frost", "Mattheit"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Wie stark das Glas das Bild dahinter verwischt: 100 % am stärksten, bei 30 % ist das Bild deutlicher zu sehen."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Die Nachrichten konnten nicht geladen werden. Prüfen Sie die Feeds und das Internet. Es wird erneut versucht"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Die Nachrichten konnten nicht geladen werden. Die meisten Nachrichtenseiten lassen sich nur über den Homebrew Channel (Root) lesen"},
 	{"Turn on Google News or add a feed first", "Schalten Sie zuerst Google News ein oder fügen Sie einen Feed hinzu"},
@@ -631,6 +630,7 @@ static const Entry LOCALE_DE[] = {
 	{"Screen saver", "Bildschirmschoner"},
 	{"After {0}", "Nach {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Wird so lange auf dem Startbildschirm keine Taste gedrückt, machen Apps und Widgets dem Hintergrundbild Platz, das langsam heranzoomt und wandert; eine Diashow wechselt das Bild alle 30 Sekunden. Jede Taste holt den Startbildschirm zurück."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Wie stark das Glas das Bild dahinter weichzeichnet: 100 % am stärksten; aus lässt es klar, sodass Flüssigglas es nur bricht."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ES[] = {
@@ -1052,7 +1052,6 @@ static const Entry LOCALE_ES[] = {
 	{"Start-up picture", "Imagen de inicio"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Lo que el televisor muestra un momento mientras arranca el launcher (después de que lo haya descargado para liberar memoria): el fondo, el logotipo del launcher o negro."},
 	{"Frost", "Esmerilado"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Cuánto difumina el cristal la imagen de detrás: 100 % es lo máximo; con 30 % la imagen se ve más nítida."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "No se pudieron cargar las noticias. Compruebe los feeds e internet. Se volverá a intentar"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "No se pudieron cargar las noticias. La mayoría de los sitios de noticias solo se pueden leer a través del Homebrew Channel (root)"},
 	{"Turn on Google News or add a feed first", "Primero active Google Noticias o añada un feed"},
@@ -1265,6 +1264,7 @@ static const Entry LOCALE_ES[] = {
 	{"Screen saver", "Salvapantallas"},
 	{"After {0}", "A los {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Si pasa este tiempo sin pulsar ninguna tecla en la pantalla de inicio, las apps y los widgets dejan solo el fondo, que se acerca y se desplaza despacio; una presentación cambia la imagen cada 30 segundos. Cualquier tecla devuelve la pantalla de inicio."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Cuánto difumina el cristal la imagen de detrás: 100 % es el máximo; desactivado lo deja transparente, y el cristal líquido solo la refracta."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_FR[] = {
@@ -1686,7 +1686,6 @@ static const Entry LOCALE_FR[] = {
 	{"Start-up picture", "Image de démarrage"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Ce que le téléviseur affiche un instant pendant le démarrage du lanceur (après l'avoir déchargé pour libérer de la mémoire) : le fond d'écran, le logo du lanceur ou du noir."},
 	{"Frost", "Dépoli"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "À quel point le verre floute l'image derrière lui : 100 % au maximum, à 30 % l'image est plus nette."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Impossible de charger les actualités. Vérifiez les flux et Internet. Nouvel essai plus tard"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Impossible de charger les actualités. La plupart des sites d'actualités ne se lisent que par le Homebrew Channel (root)"},
 	{"Turn on Google News or add a feed first", "Activez d'abord Google Actualités ou ajoutez un flux"},
@@ -1899,6 +1898,7 @@ static const Entry LOCALE_FR[] = {
 	{"Screen saver", "Économiseur d'écran"},
 	{"After {0}", "Après {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Après ce délai sans appui sur une touche à l'écran d'accueil, les applis et les widgets laissent place au seul fond d'écran, qui zoome et glisse lentement ; un diaporama change d'image toutes les 30 secondes. N'importe quelle touche fait revenir l'écran d'accueil."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "À quel point le verre floute l'image derrière lui : 100 % au maximum ; désactivé, il reste clair et le verre liquide ne fait que la réfracter."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_IT[] = {
@@ -2320,7 +2320,6 @@ static const Entry LOCALE_IT[] = {
 	{"Start-up picture", "Immagine di avvio"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Ciò che il televisore mostra per un attimo mentre il launcher si avvia (dopo averlo scaricato per liberare memoria): lo sfondo, il logo del launcher o nero."},
 	{"Frost", "Satinatura"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Quanto il vetro sfoca l'immagine dietro: 100% al massimo, al 30% l'immagine si vede più nitida."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Impossibile caricare le notizie. Controlla i feed e la connessione. Riproverà"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Impossibile caricare le notizie. La maggior parte dei siti di notizie si può leggere solo tramite l'Homebrew Channel (root)"},
 	{"Turn on Google News or add a feed first", "Prima attiva Google News o aggiungi un feed"},
@@ -2533,6 +2532,7 @@ static const Entry LOCALE_IT[] = {
 	{"Screen saver", "Salvaschermo"},
 	{"After {0}", "Dopo {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Dopo questo tempo senza premere tasti nella schermata iniziale, app e widget lasciano spazio al solo sfondo, che si avvicina e scorre lentamente; una presentazione cambia immagine ogni 30 secondi. Qualsiasi tasto riporta la schermata iniziale."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto il vetro sfoca l'immagine dietro: 100% al massimo; disattivato resta trasparente e il vetro liquido la rifrange soltanto."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_JA[] = {
@@ -2954,7 +2954,6 @@ static const Entry LOCALE_JA[] = {
 	{"Start-up picture", "起動画面"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "ランチャーの起動中にテレビが一瞬表示するもの（メモリを空けるためにアンロードされた後）：壁紙、ランチャーのロゴ、または黒。"},
 	{"Frost", "すりガラスの強さ"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "ガラスが背後の画像をどれだけぼかすか：100% が最大、30% では画像がよりはっきり見えます。"},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "ニュースを読み込めませんでした。フィードとインターネット接続を確認してください。再試行します"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "ニュースを読み込めませんでした。ほとんどのニュースサイトは Homebrew Channel（root）経由でしか読めません"},
 	{"Turn on Google News or add a feed first", "先に Google ニュースをオンにするか、フィードを追加してください"},
@@ -3167,6 +3166,7 @@ static const Entry LOCALE_JA[] = {
 	{"Screen saver", "スクリーンセーバー"},
 	{"After {0}", "{0}後"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "ホーム画面でこの時間キーを押さないと、アプリとウィジェットが消えて壁紙だけになり、ゆっくりズームしながら動きます。スライドショーでは30秒ごとに画像が変わります。いずれかのキーでホーム画面に戻ります。"},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_KO[] = {
@@ -3588,7 +3588,6 @@ static const Entry LOCALE_KO[] = {
 	{"Start-up picture", "시작 화면"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "런처가 시작되는 동안 TV가 잠깐 보여 주는 것(메모리를 비우려고 언로드한 뒤): 배경 화면, 런처 로고 또는 검은 화면."},
 	{"Frost", "반투명 정도"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "유리가 뒤의 그림을 얼마나 흐리게 하는지: 100%가 가장 강하고, 30%에서는 그림이 더 선명하게 보입니다."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "뉴스를 불러오지 못했습니다. 피드와 인터넷 연결을 확인하세요. 다시 시도합니다"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "뉴스를 불러오지 못했습니다. 대부분의 뉴스 사이트는 Homebrew Channel(루트)을 통해서만 읽을 수 있습니다"},
 	{"Turn on Google News or add a feed first", "먼저 Google 뉴스를 켜거나 피드를 추가하세요"},
@@ -3801,6 +3800,7 @@ static const Entry LOCALE_KO[] = {
 	{"Screen saver", "화면 보호기"},
 	{"After {0}", "{0} 후"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "홈 화면에서 이 시간 동안 키를 누르지 않으면 앱과 위젯이 사라지고 배경 화면만 천천히 확대되며 움직입니다. 슬라이드쇼는 30초마다 사진을 바꿉니다. 아무 키나 누르면 홈 화면으로 돌아갑니다."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PL[] = {
@@ -4221,7 +4221,6 @@ static const Entry LOCALE_PL[] = {
 	{"Start-up picture", "Obraz przy starcie"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Co telewizor pokazuje przez chwilę podczas uruchamiania launchera (gdy wcześniej usunął go z pamięci): tapetę, logo launchera lub czerń."},
 	{"Frost", "Matowość"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej, przy 30% obraz jest najwyraźniejszy."},
 	{"The launcher becomes the TV's Home app, and the TV opens it when switched on: the TV's start-up rules name it.", "Launcher staje się aplikacją startową telewizora, a telewizor otwiera go po włączeniu: wskazują go reguły uruchamiania telewizora."},
 	{"Home and Back out of the last app open the launcher", "Home i Wstecz z ostatniej aplikacji otwierają launcher"},
 	{"LG Home is not replaced and keeps its tile", "LG Home nie jest podmieniany i zostaje na swoim kafelku"},
@@ -4435,6 +4434,7 @@ static const Entry LOCALE_PL[] = {
 	{"Screen saver", "Wygaszacz ekranu"},
 	{"After {0}", "Po {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Gdy przez tyle czasu na ekranie głównym nie zostanie naciśnięty żaden klawisz, aplikacje i widżety ustępują miejsca samej tapecie, która powoli się przybliża i przesuwa; pokaz slajdów zmienia obraz co 30 sekund. Dowolny klawisz przywraca ekran główny."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PT[] = {
@@ -4856,7 +4856,6 @@ static const Entry LOCALE_PT[] = {
 	{"Start-up picture", "Imagem de início"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "O que a TV mostra por um instante enquanto o launcher inicia (depois de tê-lo tirado da memória): o papel de parede, o logotipo do launcher ou preto."},
 	{"Frost", "Fosco"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Quanto o vidro desfoca a imagem atrás dele: 100% é o máximo; com 30% a imagem aparece mais nítida."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Não foi possível carregar as notícias. Verifique os feeds e a internet. Uma nova tentativa será feita"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Não foi possível carregar as notícias. A maioria dos sites de notícias só pode ser lida pelo Homebrew Channel (root)"},
 	{"Turn on Google News or add a feed first", "Primeiro ative o Google Notícias ou adicione um feed"},
@@ -5069,6 +5068,7 @@ static const Entry LOCALE_PT[] = {
 	{"Screen saver", "Proteção de tela"},
 	{"After {0}", "Após {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Após esse tempo sem nenhuma tecla na tela inicial, os apps e os widgets dão lugar só ao papel de parede, que se aproxima e desliza devagar; uma apresentação troca a imagem a cada 30 segundos. Qualquer tecla traz a tela inicial de volta."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto o vidro desfoca a imagem atrás: 100% é o máximo; desligado deixa-o transparente, e o vidro líquido só a refrata."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_TR[] = {
@@ -5490,7 +5490,6 @@ static const Entry LOCALE_TR[] = {
 	{"Start-up picture", "Açılış resmi"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Başlatıcı açılırken TV'nin bir an gösterdiği şey (belleği boşaltmak için onu kapattıktan sonra): duvar kâğıdı, başlatıcının logosu ya da siyah."},
 	{"Frost", "Buzlu cam"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Camın arkasındaki resmi ne kadar bulanıklaştırdığı: %100 en fazla, %30'de resim daha net görünür."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Haberler yüklenemedi. Kaynakları ve interneti kontrol edin. Yeniden denenecek"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Haberler yüklenemedi. Çoğu haber sitesi yalnızca Homebrew Channel (root) üzerinden okunabilir"},
 	{"Turn on Google News or add a feed first", "Önce Google Haberler'i açın veya bir kaynak ekleyin"},
@@ -5703,6 +5702,7 @@ static const Entry LOCALE_TR[] = {
 	{"Screen saver", "Ekran koruyucu"},
 	{"After {0}", "{0} sonra"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Ana ekranda bu süre boyunca hiçbir tuşa basılmazsa uygulamalar ve widget'lar yerini yalnızca duvar kağıdına bırakır; duvar kağıdı yavaşça yakınlaşır ve kayar. Slayt gösterisi resmi 30 saniyede bir değiştirir. Herhangi bir tuş ana ekranı geri getirir."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_UK[] = {
@@ -6124,7 +6124,6 @@ static const Entry LOCALE_UK[] = {
 	{"Start-up picture", "Заставка під час запуску"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "Що ТВ показує на мить, поки лаунчер запускається (після того як ТВ вивантажив його з пам'яті): шпалери, логотип лаунчера або чорний екран."},
 	{"Frost", "Матовість"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Наскільки скло розмиває картинку під собою: 100% — найсильніше, на 30% картинку видно чіткіше."},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "Не вдалося завантажити новини. Перевірте стрічки та інтернет. Спробую ще раз"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "Не вдалося завантажити новини. Більшість новинних сайтів можна читати лише через Homebrew Channel (потрібен рут)"},
 	{"Turn on Google News or add a feed first", "Спочатку увімкніть Google Новини або додайте стрічку"},
@@ -6337,6 +6336,7 @@ static const Entry LOCALE_UK[] = {
 	{"Screen saver", "Заставка"},
 	{"After {0}", "Через {0}"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Якщо стільки часу не натискати кнопки на головному екрані, застосунки й віджети поступаються місцем шпалерам: вони повільно наближаються й пливуть, а в слайд-шоу картинка змінюється кожні 30 секунд. Будь-яка кнопка повертає головний екран."},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Наскільки скло розмиває картинку під собою: 100% — найсильніше; якщо вимкнути, скло прозоре, і рідке скло лише заломлює картинку."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ZH[] = {
@@ -6758,7 +6758,6 @@ static const Entry LOCALE_ZH[] = {
 	{"Start-up picture", "启动画面"},
 	{"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.", "启动器启动时电视短暂显示的内容（在电视为释放内存而卸载它之后）：壁纸、启动器标志或黑屏。"},
 	{"Frost", "磨砂程度"},
-	{"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "玻璃对其后图片的模糊程度：100% 最强，30% 时图片更清晰。"},
 	{"Could not load the news. Check the feeds and the internet. It will try again", "无法加载新闻。请检查订阅源和网络连接，稍后会重试"},
 	{"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)", "无法加载新闻。大多数新闻网站只能通过 Homebrew Channel（root）读取"},
 	{"Turn on Google News or add a feed first", "请先打开 Google 新闻或添加一个订阅源"},
@@ -6971,6 +6970,7 @@ static const Entry LOCALE_ZH[] = {
 	{"Screen saver", "屏幕保护"},
 	{"After {0}", "{0}后"},
 	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "在主屏幕上这么长时间不按任何键，应用和小组件会让位于壁纸，壁纸会缓慢放大和移动；幻灯片每 30 秒换一张图片。按任意键即可回到主屏幕。"},
+	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "玻璃对其后图片的模糊程度：100% 最强；关闭后玻璃透明，液态玻璃只折射图片。"},
 	{nullptr, nullptr}
 };
 static const Locale LOCALES[] = {

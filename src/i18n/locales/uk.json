@@ -417,7 +417,6 @@
 	"Start-up picture": "Заставка під час запуску",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Що ТВ показує на мить, поки лаунчер запускається (після того як ТВ вивантажив його з пам'яті): шпалери, логотип лаунчера або чорний екран.",
 	"Frost": "Матовість",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Наскільки скло розмиває картинку під собою: 100% — найсильніше, на 30% картинку видно чіткіше.",
 	"Could not load the news. Check the feeds and the internet. It will try again": "Не вдалося завантажити новини. Перевірте стрічки та інтернет. Спробую ще раз",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "Не вдалося завантажити новини. Більшість новинних сайтів можна читати лише через Homebrew Channel (потрібен рут)",
 	"Turn on Google News or add a feed first": "Спочатку увімкніть Google Новини або додайте стрічку",
@@ -629,5 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Матове: віджети розмивають картинку під собою. Рідке: ще й заломлюють її біля країв, як товсте скло.",
 	"Screen saver": "Заставка",
 	"After {0}": "Через {0}",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Якщо стільки часу не натискати кнопки на головному екрані, застосунки й віджети поступаються місцем шпалерам: вони повільно наближаються й пливуть, а в слайд-шоу картинка змінюється кожні 30 секунд. Будь-яка кнопка повертає головний екран."
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Якщо стільки часу не натискати кнопки на головному екрані, застосунки й віджети поступаються місцем шпалерам: вони повільно наближаються й пливуть, а в слайд-шоу картинка змінюється кожні 30 секунд. Будь-яка кнопка повертає головний екран.",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Наскільки скло розмиває картинку під собою: 100% — найсильніше; якщо вимкнути, скло прозоре, і рідке скло лише заломлює картинку."
 }

@@ -15,7 +15,7 @@ constexpr Range clockSize{80, 220, 10, 160};
 constexpr Range clockOpacity{10, 100, 10, 100};
 constexpr Range dateSize{60, 160, 5, 100};
 constexpr Range cardSize{60, 160, 5, 100};
-constexpr Range frost{30, 100, 10, 100};
+constexpr Range frost{0, 100, 10, 100};      // 0: clear glass
 constexpr Range dimStrength{10, 70, 10, 40};
 }  // namespace ranges
 

@@ -417,7 +417,6 @@
 	"Start-up picture": "Imagem de início",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "O que a TV mostra por um instante enquanto o launcher inicia (depois de tê-lo tirado da memória): o papel de parede, o logotipo do launcher ou preto.",
 	"Frost": "Fosco",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Quanto o vidro desfoca a imagem atrás dele: 100% é o máximo; com 30% a imagem aparece mais nítida.",
 	"Could not load the news. Check the feeds and the internet. It will try again": "Não foi possível carregar as notícias. Verifique os feeds e a internet. Uma nova tentativa será feita",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "Não foi possível carregar as notícias. A maioria dos sites de notícias só pode ser lida pelo Homebrew Channel (root)",
 	"Turn on Google News or add a feed first": "Primeiro ative o Google Notícias ou adicione um feed",
@@ -629,5 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Fosco: os widgets desfocam a imagem atrás. Líquido: também a curvam nas bordas, como vidro grosso.",
 	"Screen saver": "Proteção de tela",
 	"After {0}": "Após {0}",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Após esse tempo sem nenhuma tecla na tela inicial, os apps e os widgets dão lugar só ao papel de parede, que se aproxima e desliza devagar; uma apresentação troca a imagem a cada 30 segundos. Qualquer tecla traz a tela inicial de volta."
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Após esse tempo sem nenhuma tecla na tela inicial, os apps e os widgets dão lugar só ao papel de parede, que se aproxima e desliza devagar; uma apresentação troca a imagem a cada 30 segundos. Qualquer tecla traz a tela inicial de volta.",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Quanto o vidro desfoca a imagem atrás: 100% é o máximo; desligado deixa-o transparente, e o vidro líquido só a refrata."
 }

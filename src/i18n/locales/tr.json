@@ -417,7 +417,6 @@
 	"Start-up picture": "Açılış resmi",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Başlatıcı açılırken TV'nin bir an gösterdiği şey (belleği boşaltmak için onu kapattıktan sonra): duvar kâğıdı, başlatıcının logosu ya da siyah.",
 	"Frost": "Buzlu cam",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Camın arkasındaki resmi ne kadar bulanıklaştırdığı: %100 en fazla, %30'de resim daha net görünür.",
 	"Could not load the news. Check the feeds and the internet. It will try again": "Haberler yüklenemedi. Kaynakları ve interneti kontrol edin. Yeniden denenecek",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "Haberler yüklenemedi. Çoğu haber sitesi yalnızca Homebrew Channel (root) üzerinden okunabilir",
 	"Turn on Google News or add a feed first": "Önce Google Haberler'i açın veya bir kaynak ekleyin",
@@ -629,5 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Buzlu: widget'lar arkalarındaki resmi bulanıklaştırır. Sıvı: kalın cam gibi kenarlarında resmi ayrıca kırar.",
 	"Screen saver": "Ekran koruyucu",
 	"After {0}": "{0} sonra",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Ana ekranda bu süre boyunca hiçbir tuşa basılmazsa uygulamalar ve widget'lar yerini yalnızca duvar kağıdına bırakır; duvar kağıdı yavaşça yakınlaşır ve kayar. Slayt gösterisi resmi 30 saniyede bir değiştirir. Herhangi bir tuş ana ekranı geri getirir."
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Ana ekranda bu süre boyunca hiçbir tuşa basılmazsa uygulamalar ve widget'lar yerini yalnızca duvar kağıdına bırakır; duvar kağıdı yavaşça yakınlaşır ve kayar. Slayt gösterisi resmi 30 saniyede bir değiştirir. Herhangi bir tuş ana ekranı geri getirir.",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar."
 }
