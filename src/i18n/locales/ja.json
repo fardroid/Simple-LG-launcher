@@ -230,8 +230,6 @@
 	"Cards": "カード",
 	"Text size": "文字サイズ",
 	"All the text on the weather and calendar cards.": "天気とカレンダーのカードのすべての文字。",
-	"Frosted glass": "すりガラス",
-	"The cards blur the picture behind them.": "カードが背後の画像をぼかします。",
 	"Shadows": "影",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "時計とカードの下にやわらかい影を付けます。オフにするとテレビの描画負荷が少し下がります。",
 	"Font": "フォント",
@@ -419,7 +417,6 @@
 	"Start-up picture": "起動画面",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "ランチャーの起動中にテレビが一瞬表示するもの（メモリを空けるためにアンロードされた後）：壁紙、ランチャーのロゴ、または黒。",
 	"Frost": "すりガラスの強さ",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "ガラスが背後の画像をどれだけぼかすか：100% が最大、30% では画像がよりはっきり見えます。",
 	"Could not load the news. Check the feeds and the internet. It will try again": "ニュースを読み込めませんでした。フィードとインターネット接続を確認してください。再試行します",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "ニュースを読み込めませんでした。ほとんどのニュースサイトは Homebrew Channel（root）経由でしか読めません",
 	"Turn on Google News or add a feed first": "先に Google ニュースをオンにするか、フィードを追加してください",
@@ -624,5 +621,13 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel で更新",
 	"Clock weight": "時計の数字の太さ",
 	"Card background": "ウィジェットの背景",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "明るいか暗いか、カラーテーマの色合いで。自動：背後の画像に応じてすべてのウィジェットが一緒に明るく・暗くなり、どれでも文字が読みやすくなります。"
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "明るいか暗いか、カラーテーマの色合いで。自動：背後の画像に応じてすべてのウィジェットが一緒に明るく・暗くなり、どれでも文字が読みやすくなります。",
+	"Glass": "ガラス",
+	"Frosted": "すりガラス",
+	"Liquid": "リキッド",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。",
+	"Screen saver": "スクリーンセーバー",
+	"After {0}": "{0}後",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。",
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "この時間キーを押さないと、画面には壁紙だけが残ります。いずれかのキーで元に戻ります。"
 }

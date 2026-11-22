@@ -25,14 +25,14 @@ std::mt19937 &rng () { static std::mt19937 r{std::random_device{}()}; return r; 
 // screen blurred it about as much as the low steps of Frost did, so 30 % and 40 % looked the same (seen on the TV); at 960 x 540
 // the stretching blurs half as much and each step shows.
 std::shared_ptr<Pixels> frost_of (const Pixels &small, int strength) {
-	float k = std::max(0.3f, std::min(1.f, strength / 100.f));
+	float k = std::max(0.f, std::min(1.f, strength / 100.f));
 	const int W = 960, H = 540, PAD = 80;
 	auto padded = resize(small, W + 2 * PAD, H + 2 * PAD);
 	auto inner = resize(small, W, H);
 	for (int y = 0; y < H; y++) memcpy(&padded->rgba[((size_t)(y + PAD) * padded->w + PAD) * 4], &inner->rgba[(size_t)y * W * 4], (size_t)W * 4);
 	// the blur grows as the square of the setting: the eye tells small blurs apart and not large ones, so on a straight line the
 	// low steps all looked alike
-	blur(*padded, 14 * k * k);
+	if (k > 0) blur(*padded, 14 * k * k);     // off: clear glass, the picture as it is
 	auto out = std::make_shared<Pixels>();
 	out->w = W;
 	out->h = H;
@@ -70,7 +70,7 @@ void Wallpaper::make_ahead (int frost) {
 	if (!cur_.small || frost < ranges::frost.min || frost > ranges::frost.max || glass_cache_.count(frost) || glass_making_.count(frost)) return;
 	glass_making_.insert(frost);
 	auto small = cur_.small;
-	run_background([this, small, frost] {
+	run_soon([this, small, frost] {
 		auto f = frost_of(*small, frost);
 		post_main([this, small, frost, f] {
 			if (cache_of_ != small.get()) return;
@@ -94,7 +94,7 @@ void Wallpaper::remake_glass () {
 		if (on_glass) on_glass();
 	} else {
 		auto small = cur_.small;
-		run_background([this, gen, seq, small, frost] {
+		run_soon([this, gen, seq, small, frost] {
 			auto f = frost_of(*small, frost);
 			post_main([this, gen, seq, small, frost, f] {
 				if (gen != generation_ || seq != frost_seq_ || cur_.small != small) return;
@@ -136,7 +136,7 @@ void Wallpaper::configure (const WallpaperConfig &c, const std::string &theme, i
 	int gen = generation_;
 	WallpaperConfig cfg = cfg_;
 	// the folder's pictures (or the ticked ones), listed off the main thread
-	run_background([this, gen, cfg] {
+	run_soon([this, gen, cfg] {
 		std::vector<std::string> files;
 		if (cfg.mode == "folder") {
 			for (auto &e : list_dir(cfg.path)) {
@@ -165,7 +165,7 @@ void Wallpaper::files_changed (const std::string &arrived) {
 	if (cfg_.mode != "pictures") return;
 	int gen = generation_;
 	std::vector<std::string> paths = cfg_.paths;
-	run_background([this, gen, paths] {
+	run_soon([this, gen, paths] {
 		std::vector<std::string> files;
 		for (auto &f : paths) if (file_exists(f)) files.push_back(f);
 		post_main([this, gen, files] {
@@ -177,7 +177,7 @@ void Wallpaper::files_changed (const std::string &arrived) {
 			if (files.size() != files_.size()) logf("wallpaper: %zu pictures now", files.size());
 			files_ = files;
 			if (first) advance(now_ms());
-			else if (files_.size() > 1 && next_at_ < 0) next_at_ = now_ms() + cfg_.intervalSec * 1000.0;
+			else if (files_.size() > 1 && next_at_ < 0) next_at_ = now_ms() + step_ms();
 		});
 	});
 }
@@ -200,13 +200,13 @@ void Wallpaper::advance (double now) {
 	}
 	last_ = next;
 	load(next);
-	next_at_ = files_.size() > 1 ? now + cfg_.intervalSec * 1000.0 : -1;
+	next_at_ = files_.size() > 1 ? now + step_ms() : -1;
 }
 
 void Wallpaper::load (const std::string &path) {
 	int gen = generation_, strength = frost_;
 	loading_ = true;
-	run_background([this, gen, path, strength] {
+	run_soon([this, gen, path, strength] {
 		std::string data, why;
 		std::shared_ptr<Pixels> fitted, small, frost;
 		BrightnessMap map;
@@ -247,6 +247,17 @@ bool Wallpaper::update (double now) {
 	return now - cur_.shown_at < FADE_MS;
 }
 
+// the screen saver changes the picture of a slideshow every 30 s
+const double SAVER_STEP_MS = 30000;
+
+double Wallpaper::step_ms () const { return saver_ ? SAVER_STEP_MS : cfg_.intervalSec * 1000.0; }
+
+void Wallpaper::set_saver (bool on, double now) {
+	if (on == saver_) return;
+	saver_ = on;
+	if (files_.size() > 1) next_at_ = now + step_ms();
+}
+
 double Wallpaper::next_event (double now) const {
 	if (next_at_ < 0 || paused_at_ >= 0) return -1;
 	return std::max(0.0, next_at_ - now);
@@ -269,7 +280,7 @@ float Wallpaper::change (double now) const {
 	return (float)ease(Ease::ease_in_out, f);
 }
 
-void Wallpaper::draw (double now) {
+void Wallpaper::draw (double now, float shade) {
 	const Theme &t = theme_named(theme_);
 	Rect screen{0, 0, 1920, 1080};
 	// the theme's gradient (155deg, start 0%, mid 55%, end 100%) is always underneath
@@ -277,7 +288,9 @@ void Wallpaper::draw (double now) {
 	gfx::gradient(screen, 155, stops, 3);
 	double f = settled_ ? 1.0 : std::min(1.0, (now - cur_.shown_at) / FADE_MS);
 	float fade = (float)ease(Ease::ease_in_out, f);
-	if (prev_.tex && f < 1) gfx::image(*prev_.tex, screen, 1 - fade);
+	// the old picture stays whole under the new one as it comes (both fading let the theme's background show through half-way,
+	// a dip in the light, seen behind Settings); it fades only into the gradient
+	if (prev_.tex && f < 1) gfx::image(*prev_.tex, screen, cur_.tex ? 1 : 1 - fade);
 	if (cur_.tex) gfx::image(*cur_.tex, screen, fade);
 	// Settings → Wallpaper → Dim the picture
 	if (dim() > 0) gfx::rect(screen, 0, {0, 0, 0, dim()});
@@ -285,5 +298,5 @@ void Wallpaper::draw (double now) {
 	if (now - cur_.shown_at >= FADE_MS) { prev_.tex.reset(); prev_.glass = Glass(); prev_.small.reset(); }
 	// .wallpaper__scrim
 	GradientStop scrim[] = {{{0, 0, 0, 0.22f}, 0}, {{0, 0, 0, 0.08f}, 0.35f}, {{0, 0, 0, 0}, 0.55f}, {{0, 0, 0, 0.5f}, 1}};
-	gfx::gradient(screen, 180, scrim, 4);
+	if (shade > 0) gfx::gradient(screen, 180, scrim, 4, shade);
 }

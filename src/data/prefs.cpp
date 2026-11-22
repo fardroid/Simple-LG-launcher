@@ -78,6 +78,7 @@ std::string labels_of (const UserConfig &c) { return !c.showLabels ? "none" : c.
 std::string labels_text (std::string v) { return v == "none" ? tr("None", "Нет") : v == "selected" ? tr("Selected only", "Только у выбранной") : tr("All", "У всех"); }
 std::string shift_text (std::string v) { return v == "on" ? tr("On", "Вкл.") : v == "off" ? tr("Off", "Выкл.") : tr("Auto", "Авто"); }
 std::string dim_text (std::string v) { return v == "night" ? tr("At night", "Ночью") : v == "always" ? tr("Always", "Всегда") : tr("Off", "Выкл."); }
+std::string glass_text (std::string v) { return v == "liquid" ? tr("Liquid", "Жидкое") : v == "frost" ? tr("Frosted", "Матовое") : tr("Off", "Выкл."); }
 std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлая") : v == "dark" ? tr("Dark", "Тёмная") : tr("Auto", "Авто"); }
 std::string theme_text (std::string v) { const ThemeColors &t = theme_colors(v); return tr(t.en, t.ru); }
 std::vector<std::string> theme_list () {
@@ -162,11 +163,12 @@ std::vector<Pref> base_prefs () {
 		choice<std::string>("plates", "look", tr("Card background", "Подложка виджетов"), tr("Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Светлая или тёмная, в оттенке цветовой темы. Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
 			SV{"auto", "light", "dark"}, [] (const UserConfig &c) { return c.plates; }, [] (UserConfig c, std::string v) { c.plates = v; return c; }, plate_text),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient"; },
-			toggle("glass", "look", tr("Frosted glass", "Матовое стекло"), tr("The cards blur the picture behind them.", "Виджеты размывают картинку под собой."),
-				[] (const UserConfig &c) { return c.glass; }, [] (UserConfig c, bool v) { c.glass = v; return c; })),
+			choice<std::string>("glass", "look", tr("Glass", "Стекло"), tr("Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Матовое: виджеты размывают картинку под собой. Жидкое: ещё и преломляют её у краёв, как толстое стекло."),
+				SV{"off", "frost", "liquid"}, [] (const UserConfig &c) { return c.glass ? c.glassKind : std::string("off"); },
+				[] (UserConfig c, std::string v) { c.glass = v != "off"; if (v != "off") c.glassKind = v; return c; }, glass_text)),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient" && c.glass; },
-			range("frost", "look", tr("Frost", "Матовость"), tr("How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.", "Насколько стекло размывает картинку под собой: 100% — сильнее всего, на 30% картинка видна чётче всего."),
-				ranges::frost, [] (const UserConfig &c) { return c.frost; }, [] (UserConfig c, int v) { c.frost = v; return c; }, pct)),
+			range("frost", "look", tr("Frost", "Матовость"), tr("How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Насколько стекло размывает картинку под собой: 100% — сильнее всего; если выключить, стекло прозрачное, и жидкое стекло только преломляет картинку."),
+				ranges::frost, [] (const UserConfig &c) { return c.frost; }, [] (UserConfig c, int v) { c.frost = v; return c; }, [] (int v) { return v == 0 ? tr("Off", "Выкл.") : pct(v); })),
 		toggle("shadows", "look", tr("Shadows", "Тени"), tr("A soft shadow under the clock and the cards. Without it the TV has a little less to draw.", "Мягкая тень под часами и виджетами. Без неё ТВ рисует экран чуть легче."),
 			[] (const UserConfig &c) { return c.shadows; }, [] (UserConfig c, bool v) { c.shadows = v; return c; }),
 		choice<std::string>("pixelShift", "look", tr("Pixel shift (OLED)", "Сдвиг пикселей (OLED)"), tr("The clock, the cards and the apps move a few pixels once a minute, so an OLED screen does not keep the same picture on the same pixels for hours. Auto: on when the TV is an OLED (by its model name).", "Часы, виджеты и приложения раз в минуту сдвигаются на несколько пикселей, чтобы OLED-экран часами не держал одно и то же изображение на одних пикселях. Авто: включается, если ТВ — OLED (по названию модели)."),
@@ -205,6 +207,12 @@ std::vector<Pref> base_prefs () {
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient" && c.wallpaper.dim != "off"; },
 			range("dimStrength", "wallpaper", tr("Dimming", "Затемнение"), tr("How much darker the picture gets.", "Насколько картинка становится темнее."),
 				ranges::dimStrength, [] (const UserConfig &c) { return c.wallpaper.dimStrength; }, [] (UserConfig c, int v) { c.wallpaper.dimStrength = v; return c; }, pct))
+	}));
+
+	append(out, group(tr("Screen saver", "Заставка"), {
+		choice<int>("saver", "wallpaper", tr("Screen saver", "Заставка"), tr("After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Через это время без нажатий на экране остаются одни обои. Любая кнопка возвращает всё."),
+			SAVER_MINUTES, [] (const UserConfig &c) { return c.saverMinutes; }, [] (UserConfig c, int v) { c.saverMinutes = v; return c; },
+			[] (int m) { return m == 0 ? tr("Off", "Выкл.") : fmt(tr("After {0}", "Через {0}"), interval_text(m * 60)); })
 	}));
 
 	// ----- Home screen -----
@@ -304,6 +312,7 @@ UserConfig reset_look (const UserConfig &c) {
 	out.cardSize = d.cardSize;
 	out.plates = "auto";
 	out.glass = true;
+	out.glassKind = "frost";
 	out.frost = d.frost;
 	out.shadows = true;
 	out.clockFormat = "24h";

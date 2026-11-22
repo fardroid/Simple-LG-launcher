@@ -229,8 +229,6 @@
 	"Cards": "Karty",
 	"Text size": "Rozmiar tekstu",
 	"All the text on the weather and calendar cards.": "Cały tekst na kartach pogody i kalendarza.",
-	"Frosted glass": "Szronione szkło",
-	"The cards blur the picture behind them.": "Karty rozmywają obraz znajdujący się za nimi.",
 	"Shadows": "Cienie",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Delikatny cień pod zegarem i kartami. Bez niego telewizor ma nieco mniej elementów do renderowania.",
 	"Font": "Czcionka",
@@ -418,7 +416,6 @@
 	"Start-up picture": "Obraz przy starcie",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Co telewizor pokazuje przez chwilę podczas uruchamiania launchera (gdy wcześniej usunął go z pamięci): tapetę, logo launchera lub czerń.",
 	"Frost": "Matowość",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej, przy 30% obraz jest najwyraźniejszy.",
 	"The launcher becomes the TV's Home app, and the TV opens it when switched on: the TV's start-up rules name it.": "Launcher staje się aplikacją startową telewizora, a telewizor otwiera go po włączeniu: wskazują go reguły uruchamiania telewizora.",
 	"Home and Back out of the last app open the launcher": "Home i Wstecz z ostatniej aplikacji otwierają launcher",
 	"LG Home is not replaced and keeps its tile": "LG Home nie jest podmieniany i zostaje na swoim kafelku",
@@ -624,5 +621,13 @@
 	"· update it in the Homebrew Channel": "· zaktualizuj w Homebrew Channel",
 	"Clock weight": "Grubość cyfr zegara",
 	"Card background": "Tło widżetów",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Jasne lub ciemne, w odcieniu motywu kolorów. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, żeby tekst był czytelny na każdym."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Jasne lub ciemne, w odcieniu motywu kolorów. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, żeby tekst był czytelny na każdym.",
+	"Glass": "Szkło",
+	"Frosted": "Matowe",
+	"Liquid": "Płynne",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matowe: widżety rozmywają obraz za sobą. Płynne: dodatkowo załamują go na krawędziach, jak grube szkło.",
+	"Screen saver": "Wygaszacz ekranu",
+	"After {0}": "Po {0}",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje.",
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Po tym czasie bez naciśnięcia klawisza na ekranie zostaje tylko tapeta. Dowolny klawisz przywraca wszystko."
 }

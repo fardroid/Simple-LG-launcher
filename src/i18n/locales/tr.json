@@ -230,8 +230,6 @@
 	"Cards": "Kartlar",
 	"Text size": "Metin boyutu",
 	"All the text on the weather and calendar cards.": "Hava durumu ve takvim kartlarındaki tüm metin.",
-	"Frosted glass": "Buzlu cam",
-	"The cards blur the picture behind them.": "Kartlar arkalarındaki resmi bulanıklaştırır.",
 	"Shadows": "Gölgeler",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Saatin ve kartların altında yumuşak bir gölge. Olmazsa TV'nin çizeceği şey biraz azalır.",
 	"Font": "Yazı tipi",
@@ -419,7 +417,6 @@
 	"Start-up picture": "Açılış resmi",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Başlatıcı açılırken TV'nin bir an gösterdiği şey (belleği boşaltmak için onu kapattıktan sonra): duvar kâğıdı, başlatıcının logosu ya da siyah.",
 	"Frost": "Buzlu cam",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Camın arkasındaki resmi ne kadar bulanıklaştırdığı: %100 en fazla, %30'de resim daha net görünür.",
 	"Could not load the news. Check the feeds and the internet. It will try again": "Haberler yüklenemedi. Kaynakları ve interneti kontrol edin. Yeniden denenecek",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "Haberler yüklenemedi. Çoğu haber sitesi yalnızca Homebrew Channel (root) üzerinden okunabilir",
 	"Turn on Google News or add a feed first": "Önce Google Haberler'i açın veya bir kaynak ekleyin",
@@ -624,5 +621,13 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel'dan güncelleyin",
 	"Clock weight": "Saat rakamlarının kalınlığı",
 	"Card background": "Widget arka planı",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Açık veya koyu, renk temasının tonunda. Otomatik: tüm widget'lar arkalarındaki resme göre birlikte açık ya da koyu olur, böylece her birinde metin rahat okunur."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Açık veya koyu, renk temasının tonunda. Otomatik: tüm widget'lar arkalarındaki resme göre birlikte açık ya da koyu olur, böylece her birinde metin rahat okunur.",
+	"Glass": "Cam",
+	"Frosted": "Buzlu",
+	"Liquid": "Sıvı",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Buzlu: widget'lar arkalarındaki resmi bulanıklaştırır. Sıvı: kalın cam gibi kenarlarında resmi ayrıca kırar.",
+	"Screen saver": "Ekran koruyucu",
+	"After {0}": "{0} sonra",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar.",
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Bu süre boyunca tuşa basılmazsa ekranda yalnızca duvar kağıdı kalır. Herhangi bir tuş her şeyi geri getirir."
 }

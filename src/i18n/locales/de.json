@@ -230,8 +230,6 @@
 	"Cards": "Karten",
 	"Text size": "Textgröße",
 	"All the text on the weather and calendar cards.": "Der gesamte Text auf den Wetter- und Kalenderkarten.",
-	"Frosted glass": "Milchglas",
-	"The cards blur the picture behind them.": "Die Karten verwischen das Bild hinter ihnen.",
 	"Shadows": "Schatten",
 	"A soft shadow under the clock and the cards. Without it the TV has a little less to draw.": "Ein weicher Schatten unter Uhr und Karten. Ohne ihn hat der Fernseher etwas weniger zu zeichnen.",
 	"Font": "Schrift",
@@ -419,7 +417,6 @@
 	"Start-up picture": "Startbild",
 	"What the TV shows for a moment while the launcher starts (after the TV has unloaded it to free memory): the wallpaper, the launcher's logo or black.": "Was der Fernseher kurz zeigt, während der Launcher startet (nachdem er ihn aus dem Speicher entladen hat): das Hintergrundbild, das Logo des Launchers oder Schwarz.",
 	"Frost": "Mattheit",
-	"How much the glass blurs the picture behind it: 100% is the most, 30% lets most of the picture through.": "Wie stark das Glas das Bild dahinter verwischt: 100 % am stärksten, bei 30 % ist das Bild deutlicher zu sehen.",
 	"Could not load the news. Check the feeds and the internet. It will try again": "Die Nachrichten konnten nicht geladen werden. Prüfen Sie die Feeds und das Internet. Es wird erneut versucht",
 	"Could not load the news. Most news sites can only be read through the Homebrew Channel (root)": "Die Nachrichten konnten nicht geladen werden. Die meisten Nachrichtenseiten lassen sich nur über den Homebrew Channel (Root) lesen",
 	"Turn on Google News or add a feed first": "Schalten Sie zuerst Google News ein oder fügen Sie einen Feed hinzu",
@@ -624,5 +621,13 @@
 	"· update it in the Homebrew Channel": "· im Homebrew Channel aktualisieren",
 	"Clock weight": "Stärke der Uhrziffern",
 	"Card background": "Widget-Hintergrund",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt."
+	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt.",
+	"Glass": "Glas",
+	"Frosted": "Matt",
+	"Liquid": "Flüssig",
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas.",
+	"Screen saver": "Bildschirmschoner",
+	"After {0}": "Nach {0}",
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Wie stark das Glas das Bild dahinter weichzeichnet: 100 % am stärksten; aus lässt es klar, sodass Flüssigglas es nur bricht.",
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Nach dieser Zeit ohne Tastendruck bleibt auf dem Bildschirm nur das Hintergrundbild. Jede Taste holt alles zurück."
 }

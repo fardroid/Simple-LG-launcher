@@ -42,13 +42,16 @@ uniform vec2 u_layout;
 uniform vec2 u_center;
 uniform float u_flip;
 uniform vec3 u_grow;      // everything grows by u_grow.z round the point u_grow.xy (a card in focus)
+uniform vec2 u_shift;     // then moves by this much (the app row sinking under the screen saver)
 varying vec2 v_p;
 varying vec2 v_uv;
+varying vec2 v_at;        // where it lands on the screen (layout px), after the growth and the move
 void main () {
 	vec2 at = u_quad.xy + a_pos * u_quad.zw;
 	v_p = at - u_center;
 	v_uv = a_pos;
-	at = u_grow.xy + (at - u_grow.xy) * u_grow.z;
+	at = u_grow.xy + (at - u_grow.xy) * u_grow.z + u_shift;
+	v_at = at;
 	// into a target the picture is drawn upside down, so that its first row is the top, as in an uploaded picture
 	gl_Position = vec4(at.x / u_layout.x * 2.0 - 1.0, u_flip * (1.0 - at.y / u_layout.y * 2.0), 0.0, 1.0);
 }
@@ -94,9 +97,18 @@ void main () {
 }
 )";
 
+// The place in the texture is worked out in high precision where the GPU has it: in medium precision (16-bit floats on the
+// TV's PowerVR) a coordinate near 1 has steps of almost a pixel of a 1920 px picture, so a picture sliding slowly (the screen
+// saver) moved smoothly at the left of the screen and in jerks, band by band, towards the right (seen on the TV).
 const char *IMAGE = R"(
 uniform sampler2D u_tex;
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+uniform highp vec4 u_src;
+varying highp vec2 v_uv;
+#else
 uniform vec4 u_src;
+varying vec2 v_uv;
+#endif
 uniform vec4 u_tint;
 uniform vec4 u_tint2;
 uniform int u_across;
@@ -104,15 +116,16 @@ uniform vec2 u_half;
 uniform float u_radius;
 uniform float u_opacity;
 uniform float u_bright;
+uniform float u_premul;   // 1: the texture is premultiplied already (a target drawn with see-through parts)
 varying vec2 v_p;
-varying vec2 v_uv;
 void main () {
 	vec4 t = texture2D(u_tex, u_src.xy + v_uv * u_src.zw);
 	vec4 tint = u_across == 1 ? mix(u_tint, u_tint2, v_uv.x) : u_tint;
-	float a = t.a * tint.a * u_opacity;
-	if (u_radius > 0.0) a *= clamp(0.5 - box(v_p, u_half, u_radius), 0.0, 1.0);
+	float k = tint.a * u_opacity;
+	if (u_radius > 0.0) k *= clamp(0.5 - box(v_p, u_half, u_radius), 0.0, 1.0);
+	float a = t.a * k;
 	vec3 rgb = min(t.rgb * tint.rgb * u_bright, vec3(1.0));
-	gl_FragColor = vec4(rgb * a, a);
+	gl_FragColor = u_premul > 0.5 ? vec4(t.rgb * tint.rgb * k, a) : vec4(rgb * a, a);
 }
 )";
 
@@ -141,20 +154,80 @@ void main () {
 }
 )";
 
+// Liquid glass (gfx::liquid): the frosted wallpaper seen through a slab of glass whose edge is a convex bevel, as the web's liquid
+// glass demos do it (archisvaze/liquid-glass, gentpan/liquidglass, ybouane/liquidglass): the flat middle shows what is under it
+// as it is; over the bevel, a ray coming straight down through the tilted surface is bent (Snell's law) and goes down through the
+// glass's height there, so the picture is taken from further inside and stretched out towards the edge, each colour a little
+// differently (blue bends more). The bevel is never wider than the corner's radius. No light is drawn on the glass: highlights
+// on the bevel made its volume show, and only the lens was wanted (seen on the TV).
+const char *LIQUID_HEAD = R"(
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+float box (vec2 p, vec2 b, float r) {
+	vec2 q = abs(p) - b + vec2(r);
+	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+)";
+const char *LIQUID = R"(
+uniform sampler2D u_tex;
+uniform vec2 u_half;
+uniform float u_radius;
+uniform float u_opacity;
+uniform float u_bright;
+uniform vec2 u_screen;      // the layout's size (the frost covers the whole screen)
+uniform vec4 u_glass;       // bevel width, thickness (px), dispersion (0-1), index of refraction
+varying vec2 v_p;
+varying vec2 v_at;
+// the surface over the bevel: a squircle, 0 at the rim, 1 where the flat top starts
+float height (float t) { float s = 1.0 - t; return pow(1.0 - s * s * s * s, 0.25); }
+// how far the picture is taken from, inwards, at depth t into the bevel: the ray through the surface, tilted by its slope, is
+// bent by the glass (Snell) and goes down through the glass's height there; 0 at the very rim (no height) and on the flat top
+float shift (float t, float h, float dh, float bevel, float ior) {
+	float tilt = atan(dh * u_glass.y / bevel);
+	float bent = asin(clamp(sin(tilt) / ior, -1.0, 1.0));
+	return h * u_glass.y * (tan(tilt) - tan(bent));
+}
+vec3 frost (vec2 at) { return texture2D(u_tex, clamp(at, vec2(0.0), u_screen) / u_screen).rgb; }
+void main () {
+	float d = box(v_p, u_half, u_radius);
+	float cover = clamp(0.5 - d, 0.0, 1.0);
+	if (cover <= 0.0) discard;
+	// the bevel is never wider than the corner's radius, so that it follows the corner exactly (no crease on its diagonal)
+	float bevel = max(1.0, min(u_glass.x, min(u_radius, min(u_half.x, u_half.y)) - 1.0));
+	float t = clamp(-d / bevel, 0.0, 1.0);
+	float h = height(t);
+	float dh = t < 1.0 ? (height(min(t + 0.001, 1.0)) - h) / 0.001 : 0.0;
+	vec2 e = vec2(0.5, 0.0);
+	vec2 n = normalize(vec2(box(v_p + e.xy, u_half, u_radius) - box(v_p - e.xy, u_half, u_radius), box(v_p + e.yx, u_half, u_radius) - box(v_p - e.yx, u_half, u_radius)) + 1e-5);
+	// only the lens: the picture bent at the edge, its colours parted (blue bends more); no light on the glass. It is taken from
+	// where the card is on the screen now (v_at), so that a card growing in focus does not grow the picture behind it.
+	float ior = u_glass.w, k = u_glass.z * 0.06;
+	vec3 c = vec3(frost(v_at - n * shift(t, h, dh, bevel, ior * (1.0 - k))).r, frost(v_at - n * shift(t, h, dh, bevel, ior)).g,
+		frost(v_at - n * shift(t, h, dh, bevel, ior * (1.0 + k))).b);
+	float a = cover * u_opacity;
+	gl_FragColor = vec4(min(c * u_bright, vec3(1.0)) * a, a);
+}
+)";
+
 struct Program {
 	GLuint id = 0;
 	GLint flip, grow, quad, layout, center, color, half, radius, soft, dy, mode, tex, src, tint, tint2, across, opacity, bright;
 	GLint c[5], at0, at4, count, dir, len;
+	GLint screen, glass, shift, premul;
 	GLint loc (const char *n) { return glGetUniformLocation(id, n); }
 };
 
-Program shape, img, grad;
+Program shape, img, grad, lens;
 GLuint quad_buffer;
 std::vector<Rect> clips;
 float group_alpha = 1;
 float outer_alpha = 1;      // a whole screen faded (set_outer_alpha), times each group's own
 bool into_target = false;
-float grow_x = 0, grow_y = 0, grow_k = 1;
+float grow_x = 0, grow_y = 0, grow_k = 1, shift_x = 0, shift_y = 0;
+bool liquid_ok = false;
 
 GLuint compile (GLenum type, const std::string &src) {
 	GLuint s = glCreateShader(type);
@@ -171,10 +244,10 @@ GLuint compile (GLenum type, const std::string &src) {
 	return s;
 }
 
-bool build (Program &p, const char *fragment) {
+bool build (Program &p, const char *fragment, const char *head = SDF) {
 	p.id = glCreateProgram();
 	glAttachShader(p.id, compile(GL_VERTEX_SHADER, VERTEX));
-	glAttachShader(p.id, compile(GL_FRAGMENT_SHADER, std::string(SDF) + fragment));
+	glAttachShader(p.id, compile(GL_FRAGMENT_SHADER, std::string(head) + fragment));
 	glBindAttribLocation(p.id, 0, "a_pos");
 	glLinkProgram(p.id);
 	GLint ok = 0;
@@ -185,12 +258,13 @@ bool build (Program &p, const char *fragment) {
 		logf("program: %s", info);
 		return false;
 	}
-	p.flip = p.loc("u_flip"); p.grow = p.loc("u_grow"); p.quad = p.loc("u_quad"); p.layout = p.loc("u_layout"); p.center = p.loc("u_center");
+	p.flip = p.loc("u_flip"); p.grow = p.loc("u_grow"); p.shift = p.loc("u_shift"); p.quad = p.loc("u_quad"); p.layout = p.loc("u_layout"); p.center = p.loc("u_center");
 	p.color = p.loc("u_color"); p.half = p.loc("u_half"); p.radius = p.loc("u_radius"); p.soft = p.loc("u_soft"); p.dy = p.loc("u_dy"); p.mode = p.loc("u_mode");
-	p.tex = p.loc("u_tex"); p.src = p.loc("u_src"); p.tint = p.loc("u_tint"); p.tint2 = p.loc("u_tint2"); p.across = p.loc("u_across"); p.opacity = p.loc("u_opacity"); p.bright = p.loc("u_bright");
+	p.tex = p.loc("u_tex"); p.src = p.loc("u_src"); p.tint = p.loc("u_tint"); p.tint2 = p.loc("u_tint2"); p.across = p.loc("u_across"); p.opacity = p.loc("u_opacity"); p.bright = p.loc("u_bright"); p.premul = p.loc("u_premul");
 	const char *cs[5] = {"u_c0", "u_c1", "u_c2", "u_c3", "u_c4"};
 	for (int i = 0; i < 5; i++) p.c[i] = p.loc(cs[i]);
 	p.at0 = p.loc("u_at0"); p.at4 = p.loc("u_at4"); p.count = p.loc("u_count"); p.dir = p.loc("u_dir"); p.len = p.loc("u_len");
+	p.screen = p.loc("u_screen"); p.glass = p.loc("u_glass");
 	return true;
 }
 
@@ -199,6 +273,7 @@ void use (Program &p, Rect quad, Rect shape_rect, float radius) {
 	glUseProgram(p.id);
 	glUniform1f(p.flip, into_target ? -1.f : 1.f);
 	glUniform3f(p.grow, grow_x, grow_y, grow_k);
+	if (p.shift >= 0) glUniform2f(p.shift, shift_x, shift_y);
 	glUniform4f(p.quad, quad.x, quad.y, quad.w, quad.h);
 	glUniform2f(p.layout, LAYOUT_W, LAYOUT_H);
 	glUniform2f(p.center, shape_rect.x + shape_rect.w / 2, shape_rect.y + shape_rect.h / 2);
@@ -228,7 +303,7 @@ void apply_clip () {
 	if (clips.empty()) { glDisable(GL_SCISSOR_TEST); return; }
 	Rect c = clips.back();
 	// the clip grows with what it holds
-	c = {grow_x + (c.x - grow_x) * grow_k, grow_y + (c.y - grow_y) * grow_k, c.w * grow_k, c.h * grow_k};
+	c = {grow_x + (c.x - grow_x) * grow_k + shift_x, grow_y + (c.y - grow_y) * grow_k + shift_y, c.w * grow_k, c.h * grow_k};
 	float sx = screen_w / LAYOUT_W, sy = screen_h / LAYOUT_H;
 	glEnable(GL_SCISSOR_TEST);
 	int x = (int)std::floor(c.x * sx), y = (int)std::floor(c.y * sy);
@@ -244,6 +319,9 @@ bool init (int width, int height) {
 	screen_w = width;
 	screen_h = height;
 	if (!build(shape, SHAPE) || !build(img, IMAGE) || !build(grad, GRADIENT)) return false;
+	// the liquid glass is an extra: without it the cards fall back to the frosted glass
+	liquid_ok = build(lens, LIQUID, LIQUID_HEAD);
+	if (!liquid_ok) logf("gl: no liquid glass (its shader did not build)");
 	const float corners[] = {0, 0, 1, 0, 0, 1, 1, 1};
 	glGenBuffers(1, &quad_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, quad_buffer);
@@ -254,6 +332,10 @@ bool init (int width, int height) {
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 	logf("gl: %s, %s", (const char *)glGetString(GL_RENDERER), (const char *)glGetString(GL_VERSION));
+	GLint range[2] = {0, 0}, mid = 0, high = 0;
+	glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_MEDIUM_FLOAT, range, &mid);
+	glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, range, &high);
+	logf("gl: fragment float precision: medium %d bits, high %d bits", (int)mid, (int)high);
 	return true;
 }
 
@@ -285,8 +367,9 @@ void begin_frame (Color c, Target *t) {
 	group_alpha = 1;
 	outer_alpha = 1;
 	grow_k = 1;
+	shift_x = shift_y = 0;
 	apply_clip();
-	glClearColor(c.r, c.g, c.b, 1);
+	glClearColor(c.r, c.g, c.b, c.a);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -299,6 +382,16 @@ void set_grow (float cx, float cy, float k) {
 	grow_x = cx;
 	grow_y = cy;
 	grow_k = k;
+	apply_clip();
+}
+
+Rect grown (Rect r) {
+	return {grow_x + (r.x - grow_x) * grow_k + shift_x, grow_y + (r.y - grow_y) * grow_k + shift_y, r.w * grow_k, r.h * grow_k};
+}
+
+void set_shift (float dx, float dy) {
+	shift_x = dx;
+	shift_y = dy;
 	apply_clip();
 }
 
@@ -379,6 +472,40 @@ void image (const Texture &t, Rect r, float opacity, float radius, Color tint, f
 	glUniform1f(img.opacity, opacity);
 	glUniform1f(img.bright, brightness);
 	glUniform1f(img.radius, radius > 0 ? std::min(radius, std::min(r.w, r.h) / 2) : 0.f);
+	glUniform1f(img.premul, 0);
+	draw();
+}
+
+void layer (const Texture &t, Rect r, float opacity) {
+	opacity *= group_alpha * outer_alpha;
+	if (!t.id || opacity <= 0) return;
+	use(img, r, r, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, t.id);
+	glUniform1i(img.tex, 0);
+	glUniform4f(img.src, 0, 0, 1, 1);
+	glUniform4f(img.tint, 1, 1, 1, 1);
+	glUniform1i(img.across, 0);
+	glUniform1f(img.opacity, opacity);
+	glUniform1f(img.bright, 1);
+	glUniform1f(img.radius, 0);
+	glUniform1f(img.premul, 1);
+	draw();
+}
+
+bool liquid_available () { return liquid_ok; }
+
+void liquid (const Texture &frost, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g) {
+	opacity *= group_alpha * outer_alpha;
+	if (!liquid_ok || !frost.id || opacity <= 0 || r.w <= 0 || r.h <= 0) return;
+	use(lens, r, r, radius);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, frost.id);
+	glUniform1i(lens.tex, 0);
+	glUniform1f(lens.opacity, opacity);
+	glUniform1f(lens.bright, brightness);
+	glUniform2f(lens.screen, LAYOUT_W, LAYOUT_H);
+	glUniform4f(lens.glass, g.bevel, g.thickness, g.dispersion, g.ior);
 	draw();
 }
 
