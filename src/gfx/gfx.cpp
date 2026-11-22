@@ -81,6 +81,8 @@ void main () {
 	float a;
 	if (u_mode == 0) a = clamp(0.5 - d, 0.0, 1.0);
 	else if (u_mode == 1) a = (1.0 - smoothstep(-u_soft, u_soft, d)) * clamp(0.5 + box(v_p + vec2(0.0, u_dy), u_half, u_radius), 0.0, 1.0);
+	// 5: the same shadow under the box, inside it only (it falls on the picture behind, which a see-through card shows)
+	else if (u_mode == 5) a = (1.0 - smoothstep(-u_soft, u_soft, d)) * clamp(0.5 - box(v_p + vec2(0.0, u_dy), u_half, u_radius), 0.0, 1.0);
 	else if (u_mode == 3) a = mix(1.0 - clamp(d / u_soft, 0.0, 1.0), 1.0 - smoothstep(0.0, u_soft, d), u_dy);
 	else if (u_mode == 4) {
 		// the dark spreading along an edge of the screen: strongest in the middle of the right edge of the quad, thinning to the quad's
@@ -393,6 +395,18 @@ void set_shift (float dx, float dy) {
 	shift_x = dx;
 	shift_y = dy;
 	apply_clip();
+}
+
+void shadow_under (Rect r, float radius, float dy, float blur, Color c) {
+	c.a *= group_alpha * outer_alpha;
+	if (c.a <= 0 || blur <= 0) return;
+	Rect s{r.x, r.y + dy, r.w, r.h};
+	use(shape, r, s, radius);
+	glUniform4f(shape.color, c.r, c.g, c.b, c.a);
+	glUniform1f(shape.soft, blur * 0.6f);
+	glUniform1f(shape.dy, dy);
+	glUniform1i(shape.mode, 5);
+	draw();
 }
 
 void rect (Rect r, float radius, Color c) {
