@@ -618,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· mettez-le à jour dans Homebrew Channel",
 	"Clock weight": "Épaisseur des chiffres",
 	"Card background": "Fond des widgets",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Clair ou foncé, dans la teinte du thème de couleurs. Auto : tous les widgets deviennent clairs ou foncés ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun.",
 	"Glass": "Verre",
 	"Frosted": "Dépoli",
 	"Liquid": "Liquide",
@@ -626,5 +625,7 @@
 	"Screen saver": "Économiseur d'écran",
 	"After {0}": "Après {0}",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "À quel point le verre floute l'image derrière lui : 100 % au maximum ; désactivé, il reste clair et le verre liquide ne fait que la réfracter.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Après ce délai sans appui, seul le fond d'écran reste à l'écran. N'importe quelle touche ramène tout."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Après ce délai sans appui, seul le fond d'écran reste à l'écran. N'importe quelle touche ramène tout.",
+	"Neutral": "Neutre",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Clair ou sombre, dans la teinte du thème de couleur ; neutre : sans couleur, seulement le verre. Auto : tous les widgets deviennent clairs ou sombres ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun."
 }

@@ -79,7 +79,7 @@ std::string labels_text (std::string v) { return v == "none" ? tr("None", "Не�
 std::string shift_text (std::string v) { return v == "on" ? tr("On", "Вкл.") : v == "off" ? tr("Off", "Выкл.") : tr("Auto", "Авто"); }
 std::string dim_text (std::string v) { return v == "night" ? tr("At night", "Ночью") : v == "always" ? tr("Always", "Всегда") : tr("Off", "Выкл."); }
 std::string glass_text (std::string v) { return v == "liquid" ? tr("Liquid", "Жидкое") : v == "frost" ? tr("Frosted", "Матовое") : tr("Off", "Выкл."); }
-std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлая") : v == "dark" ? tr("Dark", "Тёмная") : tr("Auto", "Авто"); }
+std::string plate_text (std::string v) { return v == "light" ? tr("Light", "Светлая") : v == "dark" ? tr("Dark", "Тёмная") : v == "neutral" ? tr("Neutral", "Нейтральная") : tr("Auto", "Авто"); }
 std::string theme_text (std::string v) { const ThemeColors &t = theme_colors(v); return tr(t.en, t.ru); }
 std::vector<std::string> theme_list () {
 	std::vector<std::string> out;
@@ -160,8 +160,8 @@ std::vector<Pref> base_prefs () {
 			{200, 300, 400, 500, 600}, [] (const UserConfig &c) { return c.clock.weight; }, [] (UserConfig c, int v) { c.clock.weight = v; return c; }, weight_text),
 		range("cardSize", "look", tr("Text size", "Размер текста"), tr("All the text on the weather and calendar cards.", "Весь текст на виджетах погоды и календаря."),
 			ranges::cardSize, [] (const UserConfig &c) { return c.cardSize; }, [] (UserConfig c, int v) { c.cardSize = v; return c; }, pct),
-		choice<std::string>("plates", "look", tr("Card background", "Подложка виджетов"), tr("Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Светлая или тёмная, в оттенке цветовой темы. Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
-			SV{"auto", "light", "dark"}, [] (const UserConfig &c) { return c.plates; }, [] (UserConfig c, std::string v) { c.plates = v; return c; }, plate_text),
+		choice<std::string>("plates", "look", tr("Card background", "Подложка виджетов"), tr("Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Светлая или тёмная, в оттенке цветовой темы; нейтральная: без цвета, только стекло. Авто: все виджеты вместе становятся светлыми или тёмными в зависимости от картинки за ними, чтобы текст хорошо читался на каждом."),
+			SV{"auto", "light", "dark", "neutral"}, [] (const UserConfig &c) { return c.plates; }, [] (UserConfig c, std::string v) { c.plates = v; return c; }, plate_text),
 		only([] (const UserConfig &c) { return c.wallpaper.mode != "gradient"; },
 			choice<std::string>("glass", "look", tr("Glass", "Стекло"), tr("Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Матовое: виджеты размывают картинку под собой. Жидкое: ещё и преломляют её у краёв, как толстое стекло."),
 				SV{"off", "frost", "liquid"}, [] (const UserConfig &c) { return c.glass ? c.glassKind : std::string("off"); },

@@ -618,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel'dan güncelleyin",
 	"Clock weight": "Saat rakamlarının kalınlığı",
 	"Card background": "Widget arka planı",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Açık veya koyu, renk temasının tonunda. Otomatik: tüm widget'lar arkalarındaki resme göre birlikte açık ya da koyu olur, böylece her birinde metin rahat okunur.",
 	"Glass": "Cam",
 	"Frosted": "Buzlu",
 	"Liquid": "Sıvı",
@@ -626,5 +625,7 @@
 	"Screen saver": "Ekran koruyucu",
 	"After {0}": "{0} sonra",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Bu süre boyunca tuşa basılmazsa ekranda yalnızca duvar kağıdı kalır. Herhangi bir tuş her şeyi geri getirir."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Bu süre boyunca tuşa basılmazsa ekranda yalnızca duvar kağıdı kalır. Herhangi bir tuş her şeyi geri getirir.",
+	"Neutral": "Nötr",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Renk temasının tonunda açık ya da koyu; nötr: renksiz, yalnızca cam. Otomatik: arkadaki resme göre tüm widget'lar birlikte açık ya da koyu olur, böylece yazı her birinde okunur kalır."
 }

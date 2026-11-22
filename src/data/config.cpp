@@ -176,7 +176,7 @@ UserConfig parse_config (const std::string &raw) {
 	c.bottomMargin = ranged(field(p, "bottomMargin"), ranges::bottomMargin);
 	c.cardSize = ranged(field(p, "cardSize"), ranges::cardSize);
 	std::string plates = str(field(p, "plates"));
-	c.plates = plates == "light" || plates == "dark" ? plates : "auto";
+	c.plates = plates == "light" || plates == "dark" || plates == "neutral" ? plates : "auto";
 	c.glass = not_false(field(p, "glass"));
 	c.glassKind = str(field(p, "glassKind")) == "liquid" ? "liquid" : "frost";
 	c.frost = ranged(field(p, "frost"), ranges::frost);

@@ -58,9 +58,6 @@ void halo (Rect r, float radius, float fade, Color c, bool smooth = true);
  *  at the middle of that side and thins towards the top, the bottom and the left of `r`. */
 void edge_glow (Rect r, float density, Color c, bool smooth = true);
 void ring (Rect r, float radius, float spread, Color c);
-/** The part of shadow()'s shadow that lies under the box itself, inside it: drawn over a see-through card's glass, as the shadow
- *  falls on the picture behind it. */
-void shadow_under (Rect r, float radius, float dy, float blur, Color c);
 /** A texture over `r`, faded by `opacity`, multiplied by `tint` (white = as it is; its alpha fades too), corners rounded by
  *  `radius`, `brightness` > 1 lightens (CSS filter: brightness). `src`: the part of the texture, in its pixels (w 0: all).
  *  `across`: the tint goes from `tint` on the left to this colour on the right (text filled with a gradient). */

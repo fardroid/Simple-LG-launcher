@@ -130,10 +130,10 @@ void Notices::draw (double now, const Wallpaper *wp, const UserConfig &cfg, cons
 		if (k <= 0) continue;
 		Rect r{(1920 - it.w) / 2, std::round((float)it.y.at(now) - 24 * (1 - k)), it.w, it.h};
 		gfx::set_alpha(k);
-		gfx::shadow(r, CARD_RADIUS, 30, 80, {0, 0, 0, 0.5f});
+		gfx::shadow(r, card_radius(cfg), 30, 80, {0, 0, 0, 0.5f});
 		// under the glass, so that what is under the banner never shows through (with Glass off the plate's colour alone is not
 		// opaque)
-		gfx::rect(r, CARD_RADIUS, th.bg);
+		gfx::rect(r, card_radius(cfg), th.bg);
 		if (wp) draw_plate(r, *wp, cfg, look, old_look, 0, wp->change(now));
 		round_icon({r.x + PAD, std::round(r.y + (it.h - ICON) / 2), ICON, ICON}, notice_color(it.kind), notice_glyph(it.kind));
 		float tx = r.x + PAD + ICON + ICON_GAP;

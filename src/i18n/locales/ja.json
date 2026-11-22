@@ -618,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel で更新",
 	"Clock weight": "時計の数字の太さ",
 	"Card background": "ウィジェットの背景",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "明るいか暗いか、カラーテーマの色合いで。自動：背後の画像に応じてすべてのウィジェットが一緒に明るく・暗くなり、どれでも文字が読みやすくなります。",
 	"Glass": "ガラス",
 	"Frosted": "すりガラス",
 	"Liquid": "リキッド",
@@ -626,5 +625,7 @@
 	"Screen saver": "スクリーンセーバー",
 	"After {0}": "{0}後",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "この時間キーを押さないと、画面には壁紙だけが残ります。いずれかのキーで元に戻ります。"
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "この時間キーを押さないと、画面には壁紙だけが残ります。いずれかのキーで元に戻ります。",
+	"Neutral": "ニュートラル",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "カラーテーマの色合いで明るくまたは暗く。ニュートラルは色なしでガラスのみ。自動では、背後の画像に合わせてすべてのウィジェットが一緒に明るくまたは暗くなり、どれでも文字が読みやすくなります。"
 }

@@ -251,6 +251,7 @@ static void plates () {
 	auto dusk = theme_map("dusk");
 	eq(dusk[0] < dusk[143], true, "the dusk theme gets brighter towards the bottom right");
 	eq(A(plate_look("auto", "dusk", {}, {clock, weather, calendar})), std::string("147,154,189,0.16"), "on the dusk theme the plates are light");
+	eq(A(plate_look("neutral", "dusk", {}, {clock, weather, calendar})), std::string("0,0,0,0.00"), "neutral plates have no colour, only the glass");
 }
 
 static void weather () {
