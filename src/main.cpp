@@ -1590,9 +1590,10 @@ void lifecycle (const std::string &msg) {
 
 namespace {
 /** Something on the screen in front moves (the home screen under Settings stays still). */
-// The screen saver may come: the launcher in front on its home screen, nothing open over it, the setting on.
+// The screen saver may come: the launcher in front, on any of its screens (Settings left open would otherwise stand still on the
+// screen for hours), the setting on; not while a tile is being moved or the way of opening is being switched.
 bool saver_allowed () {
-	return app.front && app.screen == App::Screen::home && !app.menu.open() && !app.quick.is_open() && !app.home.lifting() && app.cfg.saverMinutes > 0;
+	return app.front && !app.home.lifting() && app.mode_busy.empty() && app.cfg.saverMinutes > 0;
 }
 
 void start_saver (double now) {
@@ -1906,7 +1907,7 @@ int main (int argc, char **argv) {
 	bool was_moving = false;
 	while (app.running) {
 		double now = now_ms();
-		bool moving = screen_moving(now) | (app.wallpaper.update(now) && app.screen == App::Screen::home);
+		bool moving = screen_moving(now) | app.wallpaper.update(now);
 		std::time_t tt = std::time(nullptr);
 		std::tm lt;
 		localtime_r(&tt, &lt);
@@ -1986,6 +1987,7 @@ int main (int argc, char **argv) {
 					else if (app.screen == App::Screen::home && app.home.key_up(ev.key.keysym.scancode, now)) app.dirty = true;
 					break;
 				case SDL_TEXTINPUT:
+					app.last_input = now;
 					if (app.screen == App::Screen::picker) { app.picker.text_input(ev.text.text); app.dirty = true; }
 					break;
 				case SDL_TEXTEDITING:
@@ -2060,7 +2062,7 @@ int main (int argc, char **argv) {
 		if (icons::upload_ready()) { app.dirty = true; app.home.mark_board(); }
 		now = now_ms();
 		offer_banner();
-		moving = screen_moving(now) | (app.wallpaper.update(now) && app.screen == App::Screen::home);
+		moving = screen_moving(now) | app.wallpaper.update(now);
 		bool ended = was_moving && !moving;
 		was_moving = moving;
 		if (!app.dirty && !moving && !ended) continue;
@@ -2076,30 +2078,54 @@ int main (int argc, char **argv) {
 		const double FADE_MS = 1400;
 		if (!board) { board = gfx::make_target(); old_board = gfx::make_target(); }
 		bool targets = board && old_board;
-		// the screen saver: the wallpaper drawn live (it zooms), the cards from a picture of their own over it (see-through
-		// round them), fading; that picture is made only while the saver shows (8 MB of video memory)
+		// the screen saver: the wallpaper drawn live (it zooms), what was over it from a picture of its own (see-through round it),
+		// fading; that picture is made only while the saver shows (8 MB of video memory). The home screen alone goes in parts (its
+		// cards in the picture, the row drawn live as it sinks); any other screen, or a menu or the quick settings open over the
+		// home screen, goes whole, as one picture (`whole`, decided as it starts: nothing on the screen changes under it)
 		static std::unique_ptr<Target> cards;
-		static bool have_cards = false;
-		bool saver = targets && app.screen == App::Screen::home && app.saver.showing(now);
+		static bool have_cards = false, whole = false;
+		bool saver = targets && app.saver.showing(now);
 		if (saver && !cards) { cards = gfx::make_target(); have_cards = false; }
 		if (!saver && cards) { cards.reset(); have_cards = false; }
 		saver = saver && cards;
-		app.wallpaper.set_settled(targets && !saver);
+		// Settings and the screens opened from it cover the whole screen, 90 % opaque (SCREEN_OPACITY), over the wallpaper alone;
+		// the home screen is drawn only while Settings steps aside to show a change on it (its peek)
+		float peek = app.screen == App::Screen::settings ? app.settings.peek(now) : 0;
+		bool on_home = app.screen == App::Screen::home || peek > 0;
+		// the pictures of the board cross-fade when the wallpaper changes, and the wallpaper is then drawn as if its change were
+		// over; drawn alone (behind Settings, under the screen saver) it cross-fades itself (behind Settings it changed at once)
+		app.wallpaper.set_settled(targets && on_home && !saver);
 		if (targets && app.wallpaper.shown_at() != seen_shown) {
 			seen_shown = app.wallpaper.shown_at();
 			if (have_board) { std::swap(board, old_board); changed_at = now; }
 			have_board = false;
 		}
-		// Settings and the screens opened from it cover the whole screen, 90 % opaque (SCREEN_OPACITY), over the wallpaper alone;
-		// the home screen is drawn only while Settings steps aside to show a change on it (its peek)
-		float peek = app.screen == App::Screen::settings ? app.settings.peek(now) : 0;
-		bool on_home = app.screen == App::Screen::home || peek > 0;
-		if (saver) {
-			float fade = app.saver.cards(now);
-			if (fade < 1 && (!have_cards || app.home.board_needed(now))) {
-				gfx::begin_frame({0, 0, 0, 0}, cards.get());
+		// what is drawn over the wallpaper, as on the screen (the overlays of the screen open, and the menu over any screen)
+		auto draw_screen = [&] () {
+			if (on_home) {
 				app.home.draw_board(now, lt);
 				app.home.draw_live(now, lt);
+				app.home.draw_row(now);
+				app.home.draw_overlay(now);
+			}
+			if (app.screen == App::Screen::settings) app.settings.draw(now);
+			else if (app.screen == App::Screen::picker) app.picker.draw(now);
+			else if (app.screen == App::Screen::gallery) app.gallery.draw(now);
+			else if (app.screen == App::Screen::home_method) app.home_method.draw(now);
+			if (app.screen == App::Screen::home) app.quick.draw(app.cfg.theme, now);
+			app.menu.draw(app.cfg.theme, now);
+		};
+		float saver_fade = 0;
+		if (saver) {
+			if (!have_cards) whole = app.screen != App::Screen::home || app.menu.open() || app.quick.is_open();
+			saver_fade = whole ? app.saver.progress(now) : app.saver.cards(now);
+			if (saver_fade < 1 && (!have_cards || (!whole && app.home.board_needed(now)))) {
+				gfx::begin_frame({0, 0, 0, 0}, cards.get());
+				if (whole) draw_screen();
+				else {
+					app.home.draw_board(now, lt);
+					app.home.draw_live(now, lt);
+				}
 				have_cards = true;
 				have_board = false;
 			}
@@ -2117,8 +2143,7 @@ int main (int argc, char **argv) {
 			gfx::set_grow(cx, cy, k);
 			app.wallpaper.draw(now, 1 - app.saver.progress(now));
 			gfx::set_grow(0, 0, 1);
-			float fade = app.saver.cards(now);
-			if (fade < 1) gfx::layer(*cards->tex, {0, 0, 1920, 1080}, 1 - fade);
+			if (saver_fade < 1) gfx::layer(*cards->tex, {0, 0, 1920, 1080}, 1 - saver_fade);
 		} else if (!on_home) app.wallpaper.draw(now);
 		else {
 			if (!targets) { app.wallpaper.draw(now); app.home.draw_board(now, lt); }
@@ -2132,7 +2157,7 @@ int main (int argc, char **argv) {
 		double t1 = now_ms();
 		if (saver) {
 			float r = app.saver.row(now);
-			if (r < 1) {
+			if (!whole && r < 1) {
 				gfx::set_shift(0, Saver::ROW_SINK * r);
 				gfx::set_outer_alpha(1 - r);
 				app.home.draw_row(now);
@@ -2144,12 +2169,14 @@ int main (int argc, char **argv) {
 			app.home.draw_row(now);
 			app.home.draw_overlay(now);
 		}
-		if (app.screen == App::Screen::settings) app.settings.draw(now);      // fades itself, all but the changed row, while it peeks
-		else if (app.screen == App::Screen::picker) app.picker.draw(now);
-		else if (app.screen == App::Screen::gallery) app.gallery.draw(now);
-		else if (app.screen == App::Screen::home_method) app.home_method.draw(now);
-		if (app.screen == App::Screen::home) app.quick.draw(app.cfg.theme, now);
-		app.menu.draw(app.cfg.theme, now);
+		if (!saver) {
+			if (app.screen == App::Screen::settings) app.settings.draw(now);      // fades itself, all but the changed row, while it peeks
+			else if (app.screen == App::Screen::picker) app.picker.draw(now);
+			else if (app.screen == App::Screen::gallery) app.gallery.draw(now);
+			else if (app.screen == App::Screen::home_method) app.home_method.draw(now);
+			if (app.screen == App::Screen::home) app.quick.draw(app.cfg.theme, now);
+			app.menu.draw(app.cfg.theme, now);
+		}
 		app.notices.draw(now, &app.wallpaper, app.cfg, app.home.plates(), app.home.old_plates());
 		double t2 = now_ms();
 		SDL_GL_SwapWindow(app.win);

@@ -10,28 +10,31 @@
 
 static std::mutex jobs_lock, posted_lock;
 static std::condition_variable jobs_ready;
-static std::deque<std::function<void()>> jobs, posted;
+static std::deque<std::function<void()>> jobs, soon, posted;     // soon: run_soon's jobs, taken first
 static std::vector<std::thread> workers;
 static bool stopping;
 static unsigned wake;
 
+// A worker: run_soon's jobs first; `only_soon`: the one kept for them, so that they never wait for slow jobs to end.
+static void work (bool only_soon) {
+	for (;;) {
+		std::function<void()> job;
+		{
+			std::unique_lock<std::mutex> l(jobs_lock);
+			jobs_ready.wait(l, [only_soon] { return stopping || !soon.empty() || (!only_soon && !jobs.empty()); });
+			if (stopping) return;
+			auto &q = !soon.empty() ? soon : jobs;
+			job = std::move(q.front());
+			q.pop_front();
+		}
+		job();
+	}
+}
+
 void tasks_start (int count, unsigned wake_event) {
 	wake = wake_event;
-	for (int i = 0; i < count; i++) {
-		workers.emplace_back([] {
-			for (;;) {
-				std::function<void()> job;
-				{
-					std::unique_lock<std::mutex> l(jobs_lock);
-					jobs_ready.wait(l, [] { return stopping || !jobs.empty(); });
-					if (stopping) return;
-					job = std::move(jobs.front());
-					jobs.pop_front();
-				}
-				job();
-			}
-		});
-	}
+	for (int i = 0; i < count; i++) workers.emplace_back(work, false);
+	workers.emplace_back(work, true);
 }
 
 void tasks_stop () {
@@ -49,7 +52,15 @@ void run_background (std::function<void()> job) {
 		std::lock_guard<std::mutex> l(jobs_lock);
 		jobs.push_back(std::move(job));
 	}
-	jobs_ready.notify_one();
+	jobs_ready.notify_all();     // (one woken might be the worker kept for run_soon, which leaves this job alone)
+}
+
+void run_soon (std::function<void()> job) {
+	{
+		std::lock_guard<std::mutex> l(jobs_lock);
+		soon.push_back(std::move(job));
+	}
+	jobs_ready.notify_all();
 }
 
 void post_main (std::function<void()> fn) {

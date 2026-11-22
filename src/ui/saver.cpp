@@ -15,10 +15,9 @@ void Saver::start (double now) {
 	if (target_ == 1) return;
 	float v = progress(now);
 	if (v <= 0) {
-		// a fresh start: it grows to ZOOM as it comes on, and drifts from the middle
+		// a fresh start: the view begins where it is now (1: the whole picture) and drifts from there
 		from_ = View();
-		from_.s = ZOOM;
-		to_ = pick(from_);
+		to_ = pick();
 		drift_at_ = now;
 	}
 	seg_ = {v, 1, now, std::max(1.0, ENTER_MS * (1 - v)), true};
@@ -51,19 +50,15 @@ float Saver::progress (double now) const {
 
 float Saver::cards (double now) const { return clamp01((progress(now) - CARDS_DELAY) / (1 - CARDS_DELAY)); }
 
-// The next place to drift to. The picture grows by ZOOM round a point inside the screen, which keeps the screen covered; moving
-// that point pans the picture by (ZOOM - 1) times its way. Only the point moves: a picture that grows or shrinks slowly is
-// resampled unevenly and shimmers like hot air (seen on the TV), one that only slides does not. The point goes at least a third
-// of the screen's width away each time, so each drift is a clear slide of some 50-100 px.
-Saver::View Saver::pick (const View &from) {
+// A view to drift to: zoomed in and out by turns (4-6 % and 9-12 %), round a point in the middle half of the screen. Growing by
+// s round a point inside the screen keeps the screen covered; moving that point pans the picture by (s - 1) times its way.
+Saver::View Saver::pick () {
 	std::uniform_real_distribution<float> u(0, 1);
 	View v;
-	v.s = ZOOM;
-	for (int i = 0; i < 20; i++) {
-		v.x = 1920 * (0.08f + 0.84f * u(rng_));
-		v.y = 1080 * (0.08f + 0.84f * u(rng_));
-		if (std::hypot(v.x - from.x, (v.y - from.y) * 1.78f) > 640) break;
-	}
+	v.s = zoom_in_ ? 1.09f + 0.03f * u(rng_) : 1.04f + 0.02f * u(rng_);
+	v.x = 1920 * (0.25f + 0.5f * u(rng_));
+	v.y = 1080 * (0.25f + 0.5f * u(rng_));
+	zoom_in_ = !zoom_in_;
 	return v;
 }
 
@@ -76,7 +71,7 @@ void Saver::view (double now, float &cx, float &cy, float &k) {
 	// one drift after another, each from where the last one ended, as long as it is on
 	while (on() && now - drift_at_ >= STEP_MS) {
 		from_ = to_;
-		to_ = pick(from_);
+		to_ = pick();
 		drift_at_ += STEP_MS;
 	}
 	View d = drift(now);

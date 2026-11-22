@@ -97,9 +97,18 @@ void main () {
 }
 )";
 
+// The place in the texture is worked out in high precision where the GPU has it: in medium precision (16-bit floats on the
+// TV's PowerVR) a coordinate near 1 has steps of almost a pixel of a 1920 px picture, so a picture sliding slowly (the screen
+// saver) moved smoothly at the left of the screen and in jerks, band by band, towards the right (seen on the TV).
 const char *IMAGE = R"(
 uniform sampler2D u_tex;
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+uniform highp vec4 u_src;
+varying highp vec2 v_uv;
+#else
 uniform vec4 u_src;
+varying vec2 v_uv;
+#endif
 uniform vec4 u_tint;
 uniform vec4 u_tint2;
 uniform int u_across;
@@ -109,7 +118,6 @@ uniform float u_opacity;
 uniform float u_bright;
 uniform float u_premul;   // 1: the texture is premultiplied already (a target drawn with see-through parts)
 varying vec2 v_p;
-varying vec2 v_uv;
 void main () {
 	vec4 t = texture2D(u_tex, u_src.xy + v_uv * u_src.zw);
 	vec4 tint = u_across == 1 ? mix(u_tint, u_tint2, v_uv.x) : u_tint;
@@ -324,6 +332,10 @@ bool init (int width, int height) {
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 	logf("gl: %s, %s", (const char *)glGetString(GL_RENDERER), (const char *)glGetString(GL_VERSION));
+	GLint range[2] = {0, 0}, mid = 0, high = 0;
+	glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_MEDIUM_FLOAT, range, &mid);
+	glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, range, &high);
+	logf("gl: fragment float precision: medium %d bits, high %d bits", (int)mid, (int)high);
 	return true;
 }
 

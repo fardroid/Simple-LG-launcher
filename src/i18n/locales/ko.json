@@ -628,6 +628,6 @@
 	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "반투명: 위젯이 뒤의 그림을 흐리게 합니다. 리퀴드: 두꺼운 유리처럼 가장자리에서 그림을 굴절시키기도 합니다.",
 	"Screen saver": "화면 보호기",
 	"After {0}": "{0} 후",
-	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "홈 화면에서 이 시간 동안 키를 누르지 않으면 앱과 위젯이 사라지고 배경 화면만 천천히 확대되며 움직입니다. 슬라이드쇼는 30초마다 사진을 바꿉니다. 아무 키나 누르면 홈 화면으로 돌아갑니다.",
-	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다."
+	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다.",
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "이 시간 동안 키를 누르지 않으면 화면에 배경 화면만 남습니다. 아무 키나 누르면 모두 돌아옵니다."
 }

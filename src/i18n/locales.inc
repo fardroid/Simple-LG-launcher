@@ -629,8 +629,8 @@ static const Entry LOCALE_DE[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas."},
 	{"Screen saver", "Bildschirmschoner"},
 	{"After {0}", "Nach {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Wird so lange auf dem Startbildschirm keine Taste gedrückt, machen Apps und Widgets dem Hintergrundbild Platz, das langsam heranzoomt und wandert; eine Diashow wechselt das Bild alle 30 Sekunden. Jede Taste holt den Startbildschirm zurück."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Wie stark das Glas das Bild dahinter weichzeichnet: 100 % am stärksten; aus lässt es klar, sodass Flüssigglas es nur bricht."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Nach dieser Zeit ohne Tastendruck bleibt auf dem Bildschirm nur das Hintergrundbild. Jede Taste holt alles zurück."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ES[] = {
@@ -1263,8 +1263,8 @@ static const Entry LOCALE_ES[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Esmerilado: los widgets difuminan la imagen de detrás. Líquido: además la curvan en sus bordes, como un cristal grueso."},
 	{"Screen saver", "Salvapantallas"},
 	{"After {0}", "A los {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Si pasa este tiempo sin pulsar ninguna tecla en la pantalla de inicio, las apps y los widgets dejan solo el fondo, que se acerca y se desplaza despacio; una presentación cambia la imagen cada 30 segundos. Cualquier tecla devuelve la pantalla de inicio."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Cuánto difumina el cristal la imagen de detrás: 100 % es el máximo; desactivado lo deja transparente, y el cristal líquido solo la refracta."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Tras este tiempo sin pulsar nada, en la pantalla solo queda el fondo. Cualquier tecla lo devuelve todo."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_FR[] = {
@@ -1897,8 +1897,8 @@ static const Entry LOCALE_FR[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Dépoli : les widgets floutent l'image derrière eux. Liquide : ils la courbent aussi sur leurs bords, comme un verre épais."},
 	{"Screen saver", "Économiseur d'écran"},
 	{"After {0}", "Après {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Après ce délai sans appui sur une touche à l'écran d'accueil, les applis et les widgets laissent place au seul fond d'écran, qui zoome et glisse lentement ; un diaporama change d'image toutes les 30 secondes. N'importe quelle touche fait revenir l'écran d'accueil."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "À quel point le verre floute l'image derrière lui : 100 % au maximum ; désactivé, il reste clair et le verre liquide ne fait que la réfracter."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Après ce délai sans appui, seul le fond d'écran reste à l'écran. N'importe quelle touche ramène tout."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_IT[] = {
@@ -2531,8 +2531,8 @@ static const Entry LOCALE_IT[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Smerigliato: i widget sfocano l'immagine dietro. Liquido: la piegano anche ai bordi, come un vetro spesso."},
 	{"Screen saver", "Salvaschermo"},
 	{"After {0}", "Dopo {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Dopo questo tempo senza premere tasti nella schermata iniziale, app e widget lasciano spazio al solo sfondo, che si avvicina e scorre lentamente; una presentazione cambia immagine ogni 30 secondi. Qualsiasi tasto riporta la schermata iniziale."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto il vetro sfoca l'immagine dietro: 100% al massimo; disattivato resta trasparente e il vetro liquido la rifrange soltanto."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Dopo questo tempo senza premere tasti, sullo schermo resta solo lo sfondo. Qualsiasi tasto riporta tutto."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_JA[] = {
@@ -3165,8 +3165,8 @@ static const Entry LOCALE_JA[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。"},
 	{"Screen saver", "スクリーンセーバー"},
 	{"After {0}", "{0}後"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "ホーム画面でこの時間キーを押さないと、アプリとウィジェットが消えて壁紙だけになり、ゆっくりズームしながら動きます。スライドショーでは30秒ごとに画像が変わります。いずれかのキーでホーム画面に戻ります。"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。"},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "この時間キーを押さないと、画面には壁紙だけが残ります。いずれかのキーで元に戻ります。"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_KO[] = {
@@ -3799,8 +3799,8 @@ static const Entry LOCALE_KO[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "반투명: 위젯이 뒤의 그림을 흐리게 합니다. 리퀴드: 두꺼운 유리처럼 가장자리에서 그림을 굴절시키기도 합니다."},
 	{"Screen saver", "화면 보호기"},
 	{"After {0}", "{0} 후"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "홈 화면에서 이 시간 동안 키를 누르지 않으면 앱과 위젯이 사라지고 배경 화면만 천천히 확대되며 움직입니다. 슬라이드쇼는 30초마다 사진을 바꿉니다. 아무 키나 누르면 홈 화면으로 돌아갑니다."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "이 시간 동안 키를 누르지 않으면 화면에 배경 화면만 남습니다. 아무 키나 누르면 모두 돌아옵니다."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PL[] = {
@@ -4433,8 +4433,8 @@ static const Entry LOCALE_PL[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Matowe: widżety rozmywają obraz za sobą. Płynne: dodatkowo załamują go na krawędziach, jak grube szkło."},
 	{"Screen saver", "Wygaszacz ekranu"},
 	{"After {0}", "Po {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Gdy przez tyle czasu na ekranie głównym nie zostanie naciśnięty żaden klawisz, aplikacje i widżety ustępują miejsca samej tapecie, która powoli się przybliża i przesuwa; pokaz slajdów zmienia obraz co 30 sekund. Dowolny klawisz przywraca ekran główny."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Po tym czasie bez naciśnięcia klawisza na ekranie zostaje tylko tapeta. Dowolny klawisz przywraca wszystko."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PT[] = {
@@ -5067,8 +5067,8 @@ static const Entry LOCALE_PT[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Fosco: os widgets desfocam a imagem atrás. Líquido: também a curvam nas bordas, como vidro grosso."},
 	{"Screen saver", "Proteção de tela"},
 	{"After {0}", "Após {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Após esse tempo sem nenhuma tecla na tela inicial, os apps e os widgets dão lugar só ao papel de parede, que se aproxima e desliza devagar; uma apresentação troca a imagem a cada 30 segundos. Qualquer tecla traz a tela inicial de volta."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto o vidro desfoca a imagem atrás: 100% é o máximo; desligado deixa-o transparente, e o vidro líquido só a refrata."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Após esse tempo sem nenhuma tecla, só o papel de parede fica na tela. Qualquer tecla traz tudo de volta."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_TR[] = {
@@ -5701,8 +5701,8 @@ static const Entry LOCALE_TR[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Buzlu: widget'lar arkalarındaki resmi bulanıklaştırır. Sıvı: kalın cam gibi kenarlarında resmi ayrıca kırar."},
 	{"Screen saver", "Ekran koruyucu"},
 	{"After {0}", "{0} sonra"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Ana ekranda bu süre boyunca hiçbir tuşa basılmazsa uygulamalar ve widget'lar yerini yalnızca duvar kağıdına bırakır; duvar kağıdı yavaşça yakınlaşır ve kayar. Slayt gösterisi resmi 30 saniyede bir değiştirir. Herhangi bir tuş ana ekranı geri getirir."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Bu süre boyunca tuşa basılmazsa ekranda yalnızca duvar kağıdı kalır. Herhangi bir tuş her şeyi geri getirir."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_UK[] = {
@@ -6335,8 +6335,8 @@ static const Entry LOCALE_UK[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "Матове: віджети розмивають картинку під собою. Рідке: ще й заломлюють її біля країв, як товсте скло."},
 	{"Screen saver", "Заставка"},
 	{"After {0}", "Через {0}"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Якщо стільки часу не натискати кнопки на головному екрані, застосунки й віджети поступаються місцем шпалерам: вони повільно наближаються й пливуть, а в слайд-шоу картинка змінюється кожні 30 секунд. Будь-яка кнопка повертає головний екран."},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Наскільки скло розмиває картинку під собою: 100% — найсильніше; якщо вимкнути, скло прозоре, і рідке скло лише заломлює картинку."},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Після цього часу без натискань на екрані лишаються самі шпалери. Будь-яка кнопка повертає все."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ZH[] = {
@@ -6969,8 +6969,8 @@ static const Entry LOCALE_ZH[] = {
 	{"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.", "磨砂：小部件会模糊背后的图片。液态：还会像厚玻璃一样在边缘折射图片。"},
 	{"Screen saver", "屏幕保护"},
 	{"After {0}", "{0}后"},
-	{"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "在主屏幕上这么长时间不按任何键，应用和小组件会让位于壁纸，壁纸会缓慢放大和移动；幻灯片每 30 秒换一张图片。按任意键即可回到主屏幕。"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "玻璃对其后图片的模糊程度：100% 最强；关闭后玻璃透明，液态玻璃只折射图片。"},
+	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "在这段时间内不按任何键，屏幕上只留下壁纸。按任意键即可恢复。"},
 	{nullptr, nullptr}
 };
 static const Locale LOCALES[] = {

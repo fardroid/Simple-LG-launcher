@@ -210,7 +210,7 @@ std::vector<Pref> base_prefs () {
 	}));
 
 	append(out, group(tr("Screen saver", "Заставка"), {
-		choice<int>("saver", "wallpaper", tr("Screen saver", "Заставка"), tr("After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Если столько времени не нажимать кнопки на главном экране, приложения и виджеты уступают место обоям: они медленно приближаются и плывут, а в слайд-шоу картинка меняется каждые 30 секунд. Любая кнопка возвращает главный экран."),
+		choice<int>("saver", "wallpaper", tr("Screen saver", "Заставка"), tr("After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Через это время без нажатий на экране остаются одни обои. Любая кнопка возвращает всё."),
 			SAVER_MINUTES, [] (const UserConfig &c) { return c.saverMinutes; }, [] (UserConfig c, int v) { c.saverMinutes = v; return c; },
 			[] (int m) { return m == 0 ? tr("Off", "Выкл.") : fmt(tr("After {0}", "Через {0}"), interval_text(m * 60)); })
 	}));

@@ -70,7 +70,7 @@ void Wallpaper::make_ahead (int frost) {
 	if (!cur_.small || frost < ranges::frost.min || frost > ranges::frost.max || glass_cache_.count(frost) || glass_making_.count(frost)) return;
 	glass_making_.insert(frost);
 	auto small = cur_.small;
-	run_background([this, small, frost] {
+	run_soon([this, small, frost] {
 		auto f = frost_of(*small, frost);
 		post_main([this, small, frost, f] {
 			if (cache_of_ != small.get()) return;
@@ -94,7 +94,7 @@ void Wallpaper::remake_glass () {
 		if (on_glass) on_glass();
 	} else {
 		auto small = cur_.small;
-		run_background([this, gen, seq, small, frost] {
+		run_soon([this, gen, seq, small, frost] {
 			auto f = frost_of(*small, frost);
 			post_main([this, gen, seq, small, frost, f] {
 				if (gen != generation_ || seq != frost_seq_ || cur_.small != small) return;
@@ -136,7 +136,7 @@ void Wallpaper::configure (const WallpaperConfig &c, const std::string &theme, i
 	int gen = generation_;
 	WallpaperConfig cfg = cfg_;
 	// the folder's pictures (or the ticked ones), listed off the main thread
-	run_background([this, gen, cfg] {
+	run_soon([this, gen, cfg] {
 		std::vector<std::string> files;
 		if (cfg.mode == "folder") {
 			for (auto &e : list_dir(cfg.path)) {
@@ -165,7 +165,7 @@ void Wallpaper::files_changed (const std::string &arrived) {
 	if (cfg_.mode != "pictures") return;
 	int gen = generation_;
 	std::vector<std::string> paths = cfg_.paths;
-	run_background([this, gen, paths] {
+	run_soon([this, gen, paths] {
 		std::vector<std::string> files;
 		for (auto &f : paths) if (file_exists(f)) files.push_back(f);
 		post_main([this, gen, files] {
@@ -206,7 +206,7 @@ void Wallpaper::advance (double now) {
 void Wallpaper::load (const std::string &path) {
 	int gen = generation_, strength = frost_;
 	loading_ = true;
-	run_background([this, gen, path, strength] {
+	run_soon([this, gen, path, strength] {
 		std::string data, why;
 		std::shared_ptr<Pixels> fitted, small, frost;
 		BrightnessMap map;
@@ -288,7 +288,9 @@ void Wallpaper::draw (double now, float shade) {
 	gfx::gradient(screen, 155, stops, 3);
 	double f = settled_ ? 1.0 : std::min(1.0, (now - cur_.shown_at) / FADE_MS);
 	float fade = (float)ease(Ease::ease_in_out, f);
-	if (prev_.tex && f < 1) gfx::image(*prev_.tex, screen, 1 - fade);
+	// the old picture stays whole under the new one as it comes (both fading let the theme's background show through half-way,
+	// a dip in the light, seen behind Settings); it fades only into the gradient
+	if (prev_.tex && f < 1) gfx::image(*prev_.tex, screen, cur_.tex ? 1 : 1 - fade);
 	if (cur_.tex) gfx::image(*cur_.tex, screen, fade);
 	// Settings → Wallpaper → Dim the picture
 	if (dim() > 0) gfx::rect(screen, 0, {0, 0, 0, dim()});
