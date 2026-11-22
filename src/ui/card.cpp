@@ -37,7 +37,7 @@ void layer (Rect card, float radius, const TexturePtr &frost, const PlateLook &l
 
 void draw_plate (Rect card, const Wallpaper &wp, const UserConfig &cfg, const PlateLook &look, const PlateLook &old_look, float focus, float f) {
 	if (card.w <= 0 || card.h <= 0) return;
-	const float radius = card_radius(cfg);
+	const float radius = CARD_RADIUS;
 	if (cfg.shadows) gfx::shadow(card, radius, 34, 70, {0, 0, 0, 0.45f});
 	const TexturePtr &frost = cfg.glass ? wp.glass().frost : nullptr;
 	const TexturePtr &old_frost = cfg.glass ? wp.old_glass().frost : nullptr;
@@ -55,5 +55,3 @@ void draw_plate (Rect card, const Wallpaper &wp, const UserConfig &cfg, const Pl
 	gfx::ring({card.x + 1, card.y + 1, card.w - 2, card.h + 40}, CARD_RADIUS - 1, 1, {1, 1, 1, 0.28f});
 	gfx::pop_clip();
 }
-
-float card_radius (const UserConfig &cfg) { return liquid_on(cfg) ? LIQUID_RADIUS : CARD_RADIUS; }

@@ -2,7 +2,7 @@
 
 ## 2.2.7
 
-- **Liquid glass with wider, stronger edges**, picked on a page of sliders: archisvaze/liquid-glass's default. With liquid glass the cards' corners round by 60 px instead of 36, so that the bevel, never wider than the corner's radius, can be 60 px wide; the glass is 80 px thick (was 60). The bending is plain to see now, where it was barely there.
+- **Liquid glass with wider, stronger edges**, picked on a page of sliders: archisvaze/liquid-glass's default. The cards' corners now round by 60 px instead of 36, with every kind of glass, so that liquid glass's bevel, never wider than the corner's radius, can be 60 px wide; the glass is 80 px thick (was 60). The bending is plain to see now, where it was barely there.
 - **Card background: Neutral** (Settings → Appearance → *Card background*): no colour, only the glass; with liquid glass and a little frost the picture shows through as it is.
 - **The cards' shadow falls under them too.** It was drawn only round a card, as CSS draws a box-shadow; but the card is glass, and the shadow falls on the picture behind it. A light card sat in a dark frame and looked lit from inside. The shadow now goes on under the card as well, seen through the glass, evenly (as dark as it is at the card's sides): a shadow that thinned out towards the card's edges, as a real one does, made the edges look lit, like sanded glass.
 - **A banner's background no longer turns from dark to light behind Settings.** A banner took the cards' colour from the home screen as it was drawn last, which behind Settings could be for another picture; when the wallpaper then changed, the banner's background went from that colour to the right one. It now takes the colour for the picture on the screen.
