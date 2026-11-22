@@ -44,7 +44,7 @@ namespace gfx {
 bool init (int width, int height);
 /** A target the size of the screen (null when the GPU cannot make one). */
 std::unique_ptr<Target> make_target ();
-/** Starts drawing into `t` (null: the screen), cleared to `clear`. */
+/** Starts drawing into `t` (null: the screen), cleared to `clear` (its alpha too: 0 leaves a target see-through). */
 void begin_frame (Color clear, Target *t = nullptr);
 
 /** A rounded rectangle, its edge anti-aliased. */
@@ -63,6 +63,8 @@ void ring (Rect r, float radius, float spread, Color c);
  *  `across`: the tint goes from `tint` on the left to this colour on the right (text filled with a gradient). */
 void image (const Texture &t, Rect r, float opacity = 1, float radius = 0, Color tint = {1, 1, 1, 1}, float brightness = 1, Rect src = {},
 	const Color *across = nullptr);
+/** A target's picture drawn over `r`, faded by `opacity`: its see-through parts stay see-through (it is premultiplied). */
+void layer (const Texture &t, Rect r, float opacity);
 /** The shape of the liquid glass: its convex bevel's width and the glass's thickness (px), how much the colours part (0-1), and
  *  the bevel's profile (smooth: a squircle, steep only at the very edge; otherwise a quarter circle). */
 struct LiquidGlass { float bevel = 54, thickness = 84, dispersion = 1; bool smooth = true; };
@@ -85,6 +87,8 @@ void set_outer_alpha (float a);
 float outer_alpha_now ();
 /** Everything drawn from now on grows by `k` round the point cx, cy (CSS transform: scale); k 1 puts it back. */
 void set_grow (float cx, float cy, float k);
+/** Everything drawn from now on moves by dx, dy (after the growth); 0, 0 puts it back. */
+void set_shift (float dx, float dy);
 
 /** Drawing inside this rectangle only (screen pixels of the layout); pop restores the one before. */
 void push_clip (Rect r);

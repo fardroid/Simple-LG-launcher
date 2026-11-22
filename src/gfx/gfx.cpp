@@ -42,13 +42,14 @@ uniform vec2 u_layout;
 uniform vec2 u_center;
 uniform float u_flip;
 uniform vec3 u_grow;      // everything grows by u_grow.z round the point u_grow.xy (a card in focus)
+uniform vec2 u_shift;     // then moves by this much (the app row sinking under the screen saver)
 varying vec2 v_p;
 varying vec2 v_uv;
 void main () {
 	vec2 at = u_quad.xy + a_pos * u_quad.zw;
 	v_p = at - u_center;
 	v_uv = a_pos;
-	at = u_grow.xy + (at - u_grow.xy) * u_grow.z;
+	at = u_grow.xy + (at - u_grow.xy) * u_grow.z + u_shift;
 	// into a target the picture is drawn upside down, so that its first row is the top, as in an uploaded picture
 	gl_Position = vec4(at.x / u_layout.x * 2.0 - 1.0, u_flip * (1.0 - at.y / u_layout.y * 2.0), 0.0, 1.0);
 }
@@ -104,15 +105,17 @@ uniform vec2 u_half;
 uniform float u_radius;
 uniform float u_opacity;
 uniform float u_bright;
+uniform float u_premul;   // 1: the texture is premultiplied already (a target drawn with see-through parts)
 varying vec2 v_p;
 varying vec2 v_uv;
 void main () {
 	vec4 t = texture2D(u_tex, u_src.xy + v_uv * u_src.zw);
 	vec4 tint = u_across == 1 ? mix(u_tint, u_tint2, v_uv.x) : u_tint;
-	float a = t.a * tint.a * u_opacity;
-	if (u_radius > 0.0) a *= clamp(0.5 - box(v_p, u_half, u_radius), 0.0, 1.0);
+	float k = tint.a * u_opacity;
+	if (u_radius > 0.0) k *= clamp(0.5 - box(v_p, u_half, u_radius), 0.0, 1.0);
+	float a = t.a * k;
 	vec3 rgb = min(t.rgb * tint.rgb * u_bright, vec3(1.0));
-	gl_FragColor = vec4(rgb * a, a);
+	gl_FragColor = u_premul > 0.5 ? vec4(t.rgb * tint.rgb * k, a) : vec4(rgb * a, a);
 }
 )";
 
@@ -209,7 +212,7 @@ struct Program {
 	GLuint id = 0;
 	GLint flip, grow, quad, layout, center, color, half, radius, soft, dy, mode, tex, src, tint, tint2, across, opacity, bright;
 	GLint c[5], at0, at4, count, dir, len;
-	GLint origin, screen, glass, part;
+	GLint origin, screen, glass, part, shift, premul;
 	GLint loc (const char *n) { return glGetUniformLocation(id, n); }
 };
 
@@ -219,7 +222,7 @@ std::vector<Rect> clips;
 float group_alpha = 1;
 float outer_alpha = 1;      // a whole screen faded (set_outer_alpha), times each group's own
 bool into_target = false;
-float grow_x = 0, grow_y = 0, grow_k = 1;
+float grow_x = 0, grow_y = 0, grow_k = 1, shift_x = 0, shift_y = 0;
 bool liquid_ok = false;
 
 GLuint compile (GLenum type, const std::string &src) {
@@ -251,9 +254,9 @@ bool build (Program &p, const char *fragment, const char *head = SDF) {
 		logf("program: %s", info);
 		return false;
 	}
-	p.flip = p.loc("u_flip"); p.grow = p.loc("u_grow"); p.quad = p.loc("u_quad"); p.layout = p.loc("u_layout"); p.center = p.loc("u_center");
+	p.flip = p.loc("u_flip"); p.grow = p.loc("u_grow"); p.shift = p.loc("u_shift"); p.quad = p.loc("u_quad"); p.layout = p.loc("u_layout"); p.center = p.loc("u_center");
 	p.color = p.loc("u_color"); p.half = p.loc("u_half"); p.radius = p.loc("u_radius"); p.soft = p.loc("u_soft"); p.dy = p.loc("u_dy"); p.mode = p.loc("u_mode");
-	p.tex = p.loc("u_tex"); p.src = p.loc("u_src"); p.tint = p.loc("u_tint"); p.tint2 = p.loc("u_tint2"); p.across = p.loc("u_across"); p.opacity = p.loc("u_opacity"); p.bright = p.loc("u_bright");
+	p.tex = p.loc("u_tex"); p.src = p.loc("u_src"); p.tint = p.loc("u_tint"); p.tint2 = p.loc("u_tint2"); p.across = p.loc("u_across"); p.opacity = p.loc("u_opacity"); p.bright = p.loc("u_bright"); p.premul = p.loc("u_premul");
 	const char *cs[5] = {"u_c0", "u_c1", "u_c2", "u_c3", "u_c4"};
 	for (int i = 0; i < 5; i++) p.c[i] = p.loc(cs[i]);
 	p.at0 = p.loc("u_at0"); p.at4 = p.loc("u_at4"); p.count = p.loc("u_count"); p.dir = p.loc("u_dir"); p.len = p.loc("u_len");
@@ -266,6 +269,7 @@ void use (Program &p, Rect quad, Rect shape_rect, float radius) {
 	glUseProgram(p.id);
 	glUniform1f(p.flip, into_target ? -1.f : 1.f);
 	glUniform3f(p.grow, grow_x, grow_y, grow_k);
+	if (p.shift >= 0) glUniform2f(p.shift, shift_x, shift_y);
 	glUniform4f(p.quad, quad.x, quad.y, quad.w, quad.h);
 	glUniform2f(p.layout, LAYOUT_W, LAYOUT_H);
 	glUniform2f(p.center, shape_rect.x + shape_rect.w / 2, shape_rect.y + shape_rect.h / 2);
@@ -295,7 +299,7 @@ void apply_clip () {
 	if (clips.empty()) { glDisable(GL_SCISSOR_TEST); return; }
 	Rect c = clips.back();
 	// the clip grows with what it holds
-	c = {grow_x + (c.x - grow_x) * grow_k, grow_y + (c.y - grow_y) * grow_k, c.w * grow_k, c.h * grow_k};
+	c = {grow_x + (c.x - grow_x) * grow_k + shift_x, grow_y + (c.y - grow_y) * grow_k + shift_y, c.w * grow_k, c.h * grow_k};
 	float sx = screen_w / LAYOUT_W, sy = screen_h / LAYOUT_H;
 	glEnable(GL_SCISSOR_TEST);
 	int x = (int)std::floor(c.x * sx), y = (int)std::floor(c.y * sy);
@@ -355,8 +359,9 @@ void begin_frame (Color c, Target *t) {
 	group_alpha = 1;
 	outer_alpha = 1;
 	grow_k = 1;
+	shift_x = shift_y = 0;
 	apply_clip();
-	glClearColor(c.r, c.g, c.b, 1);
+	glClearColor(c.r, c.g, c.b, c.a);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -369,6 +374,12 @@ void set_grow (float cx, float cy, float k) {
 	grow_x = cx;
 	grow_y = cy;
 	grow_k = k;
+	apply_clip();
+}
+
+void set_shift (float dx, float dy) {
+	shift_x = dx;
+	shift_y = dy;
 	apply_clip();
 }
 
@@ -449,6 +460,24 @@ void image (const Texture &t, Rect r, float opacity, float radius, Color tint, f
 	glUniform1f(img.opacity, opacity);
 	glUniform1f(img.bright, brightness);
 	glUniform1f(img.radius, radius > 0 ? std::min(radius, std::min(r.w, r.h) / 2) : 0.f);
+	glUniform1f(img.premul, 0);
+	draw();
+}
+
+void layer (const Texture &t, Rect r, float opacity) {
+	opacity *= group_alpha * outer_alpha;
+	if (!t.id || opacity <= 0) return;
+	use(img, r, r, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, t.id);
+	glUniform1i(img.tex, 0);
+	glUniform4f(img.src, 0, 0, 1, 1);
+	glUniform4f(img.tint, 1, 1, 1, 1);
+	glUniform1i(img.across, 0);
+	glUniform1f(img.opacity, opacity);
+	glUniform1f(img.bright, 1);
+	glUniform1f(img.radius, 0);
+	glUniform1f(img.premul, 1);
 	draw();
 }
 

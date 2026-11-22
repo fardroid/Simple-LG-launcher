@@ -626,5 +626,8 @@
 	"Glass": "Vidro",
 	"Frosted": "Fosco",
 	"Liquid": "Líquido",
-	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Fosco: os widgets desfocam a imagem atrás. Líquido: também a curvam nas bordas, como vidro grosso."
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Fosco: os widgets desfocam a imagem atrás. Líquido: também a curvam nas bordas, como vidro grosso.",
+	"Screen saver": "Proteção de tela",
+	"After {0}": "Após {0}",
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Após esse tempo sem nenhuma tecla na tela inicial, os apps e os widgets dão lugar só ao papel de parede, que se aproxima e desliza devagar; uma apresentação troca a imagem a cada 30 segundos. Qualquer tecla traz a tela inicial de volta."
 }

@@ -209,6 +209,12 @@ std::vector<Pref> base_prefs () {
 				ranges::dimStrength, [] (const UserConfig &c) { return c.wallpaper.dimStrength; }, [] (UserConfig c, int v) { c.wallpaper.dimStrength = v; return c; }, pct))
 	}));
 
+	append(out, group(tr("Screen saver", "Заставка"), {
+		choice<int>("saver", "wallpaper", tr("Screen saver", "Заставка"), tr("After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.", "Если столько времени не нажимать кнопки на главном экране, приложения и виджеты уступают место обоям: они медленно приближаются и плывут, а в слайд-шоу картинка меняется каждые 30 секунд. Любая кнопка возвращает главный экран."),
+			SAVER_MINUTES, [] (const UserConfig &c) { return c.saverMinutes; }, [] (UserConfig c, int v) { c.saverMinutes = v; return c; },
+			[] (int m) { return m == 0 ? tr("Off", "Выкл.") : fmt(tr("After {0}", "Через {0}"), interval_text(m * 60)); })
+	}));
+
 	// ----- Home screen -----
 	out.push_back(choice<std::string>("language", "home", tr("Language", "Язык"), tr("The language of the launcher. \"Same as the TV\" follows the TV's own language.", "Язык лаунчера. «Как на ТВ» следует языку самого телевизора."),
 		LANG_SETTINGS, [] (const UserConfig &c) { return c.language; }, [] (UserConfig c, std::string v) { c.language = v; return c; }, lang_name));

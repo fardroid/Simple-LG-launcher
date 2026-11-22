@@ -626,5 +626,8 @@
 	"Glass": "Verre",
 	"Frosted": "Dépoli",
 	"Liquid": "Liquide",
-	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Dépoli : les widgets floutent l'image derrière eux. Liquide : ils la courbent aussi sur leurs bords, comme un verre épais."
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Dépoli : les widgets floutent l'image derrière eux. Liquide : ils la courbent aussi sur leurs bords, comme un verre épais.",
+	"Screen saver": "Économiseur d'écran",
+	"After {0}": "Après {0}",
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Après ce délai sans appui sur une touche à l'écran d'accueil, les applis et les widgets laissent place au seul fond d'écran, qui zoome et glisse lentement ; un diaporama change d'image toutes les 30 secondes. N'importe quelle touche fait revenir l'écran d'accueil."
 }

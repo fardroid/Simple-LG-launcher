@@ -626,5 +626,8 @@
 	"Glass": "Vetro",
 	"Frosted": "Smerigliato",
 	"Liquid": "Liquido",
-	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Smerigliato: i widget sfocano l'immagine dietro. Liquido: la piegano anche ai bordi, come un vetro spesso."
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Smerigliato: i widget sfocano l'immagine dietro. Liquido: la piegano anche ai bordi, come un vetro spesso.",
+	"Screen saver": "Salvaschermo",
+	"After {0}": "Dopo {0}",
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Dopo questo tempo senza premere tasti nella schermata iniziale, app e widget lasciano spazio al solo sfondo, che si avvicina e scorre lentamente; una presentazione cambia immagine ogni 30 secondi. Qualsiasi tasto riporta la schermata iniziale."
 }

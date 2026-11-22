@@ -626,5 +626,8 @@
 	"Glass": "Glas",
 	"Frosted": "Matt",
 	"Liquid": "Flüssig",
-	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas."
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "Matt: Die Widgets zeichnen das Bild dahinter weich. Flüssig: Sie brechen es zusätzlich an ihren Rändern, wie dickes Glas.",
+	"Screen saver": "Bildschirmschoner",
+	"After {0}": "Nach {0}",
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "Wird so lange auf dem Startbildschirm keine Taste gedrückt, machen Apps und Widgets dem Hintergrundbild Platz, das langsam heranzoomt und wandert; eine Diashow wechselt das Bild alle 30 Sekunden. Jede Taste holt den Startbildschirm zurück."
 }

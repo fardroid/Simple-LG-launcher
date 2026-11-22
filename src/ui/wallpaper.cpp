@@ -177,7 +177,7 @@ void Wallpaper::files_changed (const std::string &arrived) {
 			if (files.size() != files_.size()) logf("wallpaper: %zu pictures now", files.size());
 			files_ = files;
 			if (first) advance(now_ms());
-			else if (files_.size() > 1 && next_at_ < 0) next_at_ = now_ms() + cfg_.intervalSec * 1000.0;
+			else if (files_.size() > 1 && next_at_ < 0) next_at_ = now_ms() + step_ms();
 		});
 	});
 }
@@ -200,7 +200,7 @@ void Wallpaper::advance (double now) {
 	}
 	last_ = next;
 	load(next);
-	next_at_ = files_.size() > 1 ? now + cfg_.intervalSec * 1000.0 : -1;
+	next_at_ = files_.size() > 1 ? now + step_ms() : -1;
 }
 
 void Wallpaper::load (const std::string &path) {
@@ -247,6 +247,17 @@ bool Wallpaper::update (double now) {
 	return now - cur_.shown_at < FADE_MS;
 }
 
+// the screen saver changes the picture of a slideshow every 30 s
+const double SAVER_STEP_MS = 30000;
+
+double Wallpaper::step_ms () const { return saver_ ? SAVER_STEP_MS : cfg_.intervalSec * 1000.0; }
+
+void Wallpaper::set_saver (bool on, double now) {
+	if (on == saver_) return;
+	saver_ = on;
+	if (files_.size() > 1) next_at_ = now + step_ms();
+}
+
 double Wallpaper::next_event (double now) const {
 	if (next_at_ < 0 || paused_at_ >= 0) return -1;
 	return std::max(0.0, next_at_ - now);
@@ -269,7 +280,7 @@ float Wallpaper::change (double now) const {
 	return (float)ease(Ease::ease_in_out, f);
 }
 
-void Wallpaper::draw (double now) {
+void Wallpaper::draw (double now, float shade) {
 	const Theme &t = theme_named(theme_);
 	Rect screen{0, 0, 1920, 1080};
 	// the theme's gradient (155deg, start 0%, mid 55%, end 100%) is always underneath
@@ -285,5 +296,5 @@ void Wallpaper::draw (double now) {
 	if (now - cur_.shown_at >= FADE_MS) { prev_.tex.reset(); prev_.glass = Glass(); prev_.small.reset(); }
 	// .wallpaper__scrim
 	GradientStop scrim[] = {{{0, 0, 0, 0.22f}, 0}, {{0, 0, 0, 0.08f}, 0.35f}, {{0, 0, 0, 0}, 0.55f}, {{0, 0, 0, 0.5f}, 1}};
-	gfx::gradient(screen, 180, scrim, 4);
+	if (shade > 0) gfx::gradient(screen, 180, scrim, 4, shade);
 }

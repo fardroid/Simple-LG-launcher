@@ -626,5 +626,8 @@
 	"Glass": "ガラス",
 	"Frosted": "すりガラス",
 	"Liquid": "リキッド",
-	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。"
+	"Frosted: the cards blur the picture behind them. Liquid: they also bend it at their edges, like thick glass.": "すりガラス：ウィジェットが背後の画像をぼかします。リキッド：さらに厚いガラスのように縁で画像を屈折させます。",
+	"Screen saver": "スクリーンセーバー",
+	"After {0}": "{0}後",
+	"After this long without a key on the home screen, the apps and the widgets make way for the wallpaper alone, which slowly zooms and drifts; a slideshow changes the picture every 30 seconds. Any key brings the home screen back.": "ホーム画面でこの時間キーを押さないと、アプリとウィジェットが消えて壁紙だけになり、ゆっくりズームしながら動きます。スライドショーでは30秒ごとに画像が変わります。いずれかのキーでホーム画面に戻ります。"
 }

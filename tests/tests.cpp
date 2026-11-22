@@ -32,6 +32,7 @@ void run_posted ();
 #include "i18n/dates.h"
 #include "ui/boardlayout.h"
 #include "ui/plates.h"
+#include "ui/saver.h"
 
 #include <cmath>
 
@@ -575,6 +576,34 @@ static void settings () {
 	eq(glass_of(parse_config(config_json(liquid_cfg))), std::string("liquid"), "liquid glass is kept in the settings");
 	eq(glass_of(parse_config(R"({"glass":false})")) + " " + glass_of(parse_config(R"({"glass":true})")), std::string("off frost"), "the old on/off glass reads as off or frosted");
 	eq(glass_of(apply_pref(apply_pref(liquid_cfg, "glass", Press::left), "glass", Press::right)), std::string("liquid"), "frosted again from liquid keeps going to liquid next");
+	// the screen saver: its delay, kept in the settings, and an unknown value read as the default
+	auto saver_text = [&] (const UserConfig &c) { for (auto &o : options_for("wallpaper", c, info)) if (o.id == "saver") return o.valueText; return std::string("-"); };
+	eq(S{saver_text(c0), saver_text(apply_pref(c0, "saver", Press::right)), saver_text(apply_pref(apply_pref(c0, "saver", Press::left), "saver", Press::left))},
+		S{"Через 5 минут", "Через 10 минут", "Выкл."}, "Screen saver: after 5 minutes at first, then longer or off");
+	UserConfig never = c0; never.saverMinutes = 0;
+	eq(S{std::to_string(parse_config(config_json(never)).saverMinutes), std::to_string(parse_config(R"({"saverMinutes":7})").saverMinutes), std::to_string(parse_config("{}").saverMinutes)},
+		S{"0", "5", "5"}, "the screen saver's delay is kept; one not offered reads as 5 minutes");
+	{
+		Saver sv;
+		float cx, cy, k;
+		eq(S{show(sv.showing(0)), std::to_string((int)(sv.progress(0) * 100))}, S{"false", "0"}, "the screen saver is off at first");
+		sv.start(1000);
+		bool half = sv.row(1500) > 0.3f && sv.row(1500) < 0.7f && sv.cards(1500) < sv.row(1500);
+		eq(S{show(sv.on()), show(half), std::to_string((int)(sv.progress(2000) * 100)), std::to_string((int)(sv.cards(2000) * 100))}, S{"true", "true", "100", "100"},
+			"coming on: the row first, the widgets a beat later, all gone after 1 s");
+		sv.view(2000 + Saver::STEP_MS * 2.5, cx, cy, k);
+		eq(show(k > 1.03f && k < 1.13f && cx > 400 && cx < 1520 && cy > 200 && cy < 880), std::string("true"), "the wallpaper keeps zooming and drifting, within the screen");
+		double t = 2000 + Saver::STEP_MS * 3;
+		sv.start(t + 100);
+		sv.wake(t);
+		eq(S{show(sv.on()), show(sv.showing(t + 100)), show(sv.showing(t + Saver::EXIT_MS))}, S{"false", "true", "false"}, "a key: back to the home screen in half a second");
+		sv.start(t + 1000);
+		sv.wake(t + 1250);       // halfway in: back from there, sooner
+		eq(show(!sv.showing(t + 1250 + Saver::EXIT_MS)), std::string("true"), "a key while it comes on turns it back from where it is");
+		sv.start(t + 5000);
+		sv.stop();
+		eq(show(sv.showing(t + 5001)), std::string("false"), "the launcher going to the back ends it at once");
+	}
 	auto picture_text = [&] (const SystemInfo &si) { for (auto &o : options_for("wallpaper", pic, si)) if (o.id == "wallpaper") return o.valueText; return std::string(); };
 	SystemInfo titled = info;
 	titled.picture_title = "Matterhorn from Lake Grindji";

@@ -10,6 +10,7 @@
 
 using json = nlohmann::json;
 
+const std::vector<int> SAVER_MINUTES = {0, 2, 5, 10, 15, 30, 60};
 const std::vector<std::string> LANG_SETTINGS = {"auto", "en", "ru", "es", "fr", "de", "it", "pt", "tr", "uk", "zh", "ja", "ko", "pl"};
 // lib/feeds.ts EDITIONS
 const std::vector<std::string> NEWS_COUNTRIES = {"AE", "AR", "AU", "BG", "BR", "CA", "CL", "CN", "CO", "CZ", "DE", "EG", "ES", "FR", "GB", "GR",
@@ -211,6 +212,9 @@ UserConfig parse_config (const std::string &raw) {
 	c.news.feeds = feeds;
 
 	c.quote.on = is_true(field(field(p, "quote"), "on"));
+	const json &sv = field(p, "saverMinutes");
+	int saver = sv.is_number() ? (int)sv.get<double>() : -1;
+	c.saverMinutes = std::find(SAVER_MINUTES.begin(), SAVER_MINUTES.end(), saver) != SAVER_MINUTES.end() ? saver : d.saverMinutes;
 
 	c.wallpaper.mode = path.empty() ? "gradient" : mode;
 	c.wallpaper.path = path;
@@ -237,7 +241,7 @@ std::string config_json (const UserConfig &c) {
 		{"hookBoot", c.hookBoot}, {"theme", c.theme}, {"iconScale", c.iconScale}, {"showLabels", c.showLabels},
 		{"labelsSelectedOnly", c.labelsSelectedOnly}, {"rows", c.rows}, {"sideMargin", c.sideMargin},
 		{"bottomMargin", c.bottomMargin}, {"cardSize", c.cardSize}, {"plates", c.plates}, {"glass", c.glass}, {"glassKind", c.glassKind}, {"frost", c.frost},
-		{"shadows", c.shadows}, {"pixelShift", c.pixelShift}, {"clockFormat", c.clockFormat},
+		{"shadows", c.shadows}, {"pixelShift", c.pixelShift}, {"clockFormat", c.clockFormat}, {"saverMinutes", c.saverMinutes},
 		{"clock", {{"size", c.clock.size}, {"weight", c.clock.weight}, {"font", c.clock.font},
 			{"opacity", c.clock.opacity}, {"showDate", c.clock.showDate}, {"dateSize", c.clock.dateSize}, {"showPeriod", c.clock.showPeriod}}},
 		{"weather", {{"on", c.weather.on}, {"city", city}, {"unit", c.weather.unit}, {"showCity", c.weather.showCity}}},

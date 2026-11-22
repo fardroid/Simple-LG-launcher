@@ -41,6 +41,7 @@
 #include "ui/pickers.h"
 #include "ui/settings.h"
 #include "ui/notices.h"
+#include "ui/saver.h"
 #include "ui/wallpaper.h"
 
 #include <SDL.h>
@@ -56,6 +57,7 @@
 #include <chrono>
 #include <cmath>
 #include <map>
+#include <set>
 #include <mutex>
 #include <thread>
 #include <cstring>
@@ -112,6 +114,9 @@ struct App {
 	QuickPanel quick;                // over the home screen: Down from the row
 	std::string menu_key;            // the tile it is for
 	Notices notices;                 // the banners at the top, over every screen
+	Saver saver;                     // the screen saver over the home screen
+	double last_input = 0;           // the last key, pointer move or click (the screen saver counts from it)
+	std::set<int> swallowed;         // keys that woke the screen saver: their repeats and release do nothing else
 	std::string version;
 	bool manual_refresh = false;     // the "Refresh list" button: say what was found
 	bool dirty = true, running = true, front = true;
@@ -1507,7 +1512,10 @@ void on_activate (const TileModel &t) {
  *  the download), "update:install" that and Install answered by itself; "keys:R,R,OK,BACK" presses keys of the remote on the screen
  *  that is open (L R U D OK BACK), as the remote would; "restart-notice" shows the home screen as when the TV needs a restart
  *  (in the launcher only, until the way of opening is read again: the TV is not changed). */
+void start_saver (double now);
+
 void test_open (const std::string &what) {
+	if (what == "saver") { start_saver(now_ms()); return; }
 	if (what == "restart-notice") {
 		if (!app.home_mode) app.home_mode = HomeModeInfo();
 		app.home_mode->restart = true;
@@ -1582,7 +1590,40 @@ void lifecycle (const std::string &msg) {
 
 namespace {
 /** Something on the screen in front moves (the home screen under Settings stays still). */
+// The screen saver may come: the launcher in front on its home screen, nothing open over it, the setting on.
+bool saver_allowed () {
+	return app.front && app.screen == App::Screen::home && !app.menu.open() && !app.quick.is_open() && !app.home.lifting() && app.cfg.saverMinutes > 0;
+}
+
+void start_saver (double now) {
+	if (app.saver.on()) return;
+	logf("screen saver: on");
+	app.saver.start(now);
+	app.wallpaper.set_saver(true, now);
+	app.dirty = true;
+}
+
+// `at_once`: the launcher went to the back (LG's own screen saver, an app): gone with no animation, under whatever came
+void end_saver (double now, bool at_once) {
+	if (!app.saver.showing(now)) return;
+	logf("screen saver: off%s", at_once ? " at once" : "");
+	if (at_once) app.saver.stop(); else app.saver.wake(now);
+	app.wallpaper.set_saver(false, now);
+	app.home.mark_board();
+	app.dirty = true;
+}
+
+// Any key, pointer move or click: while the screen saver shows, it only wakes it (true: used up).
+bool saver_input (double now, int key = -1) {
+	app.last_input = now;
+	if (!app.saver.showing(now)) return false;
+	end_saver(now, false);
+	if (key >= 0) app.swallowed.insert(key);
+	return true;
+}
+
 bool screen_moving (double now) {
+	if (app.saver.animating(now)) return true;
 	if (app.notices.animating(now)) return true;         // a banner's ring runs down, over any screen
 	if (app.menu.open() && app.menu.animating(now)) return true;      // over any screen (Restart the TV is asked over Settings)
 	if (app.screen == App::Screen::settings) return app.settings.animating(now);
@@ -1887,10 +1928,16 @@ int main (int argc, char **argv) {
 			if (app.front && (AS_HOME || app.helper_on)) run_background([] { hbc_exec(name_last_input_command(APP_ID, "com.webos.app.home"), 10000); });
 		}
 
+		// the screen saver after the time set without a key
+		double saver_due = saver_allowed() && !app.saver.showing(now) ? app.last_input + app.cfg.saverMinutes * 60000.0 : -1;
+		if (saver_due >= 0 && now >= saver_due) { start_saver(now); moving = true; saver_due = -1; }
 		// sleep until an event, the next minute or the next slideshow step; while something moves, no sleep (vsync paces it)
 		SDL_Event ev;
 		int timeout = 0;
-		if (!moving && !app.dirty && !was_moving) {
+		// the screen saver's slow drift: about 30 frames a second is enough (a fraction of a pixel each)
+		bool drifting = !moving && app.saver.showing(now);
+		if (drifting) timeout = 33;
+		else if (!moving && !app.dirty && !was_moving) {
 			double until = (60 - lt.tm_sec) * 1000.0;
 			double wall = app.wallpaper.next_event(now);
 			if (wall >= 0) until = std::min(until, wall + 1);
@@ -1904,6 +1951,7 @@ int main (int argc, char **argv) {
 			for (double t : {app.screen == App::Screen::settings ? app.settings.next_event(now) : -1.0, app.name_at >= 0 ? std::max(0.0, app.name_at - now) : -1.0})
 				if (t >= 0) until = std::min(until, t + 1);
 			if (demo && demo_step < demo_keys.size()) until = std::min(until, std::max(1.0, demo_next - now));
+			if (saver_due >= 0) until = std::min(until, std::max(1.0, saver_due - now + 1));
 			timeout = (int)std::max(1.0, std::min(until, 60000.0));
 		}
 		bool got = timeout > 0 ? SDL_WaitEventTimeout(&ev, timeout) : SDL_PollEvent(&ev);
@@ -1913,6 +1961,8 @@ int main (int argc, char **argv) {
 			switch (ev.type) {
 				case SDL_QUIT: app.running = false; break;
 				case SDL_KEYDOWN:
+					if (app.swallowed.count(ev.key.keysym.scancode) && ev.key.repeat) break;     // held from waking the saver
+					if (saver_input(now, ev.key.keysym.scancode)) break;
 					if (AS_HOME && ev.key.keysym.scancode == SDL_SCANCODE_WEBOS_HOME) {
 						// the Home key while the launcher is Home and in front: back to the home screen
 						if (!ev.key.repeat) { app.menu.close(); app.quick.close(now); close_screens(); app.home.wake(); }
@@ -1929,6 +1979,7 @@ int main (int argc, char **argv) {
 					app.dirty = true;
 					break;
 				case SDL_KEYUP:
+					if (app.swallowed.erase(ev.key.keysym.scancode)) break;
 					if (app.menu.open()) { if (app.menu.key_up(ev.key.keysym.scancode, now)) app.dirty = true; }
 					else if (app.quick.is_open()) { if (app.quick.key_up(ev.key.keysym.scancode, now)) app.dirty = true; }
 					else if (app.screen == App::Screen::settings) { if (app.settings.key_up(ev.key.keysym.scancode, now)) app.dirty = true; }
@@ -1941,6 +1992,7 @@ int main (int argc, char **argv) {
 					logf("text editing: \"%s\"", ev.edit.text);
 					break;
 				case SDL_MOUSEMOTION: {
+					if (saver_input(now)) break;
 					float x = ev.motion.x * sx, y = ev.motion.y * sy;
 					if (app.menu.open()) app.menu.pointer(x, y, now);
 					else if (app.screen == App::Screen::settings) app.settings.pointer(x, y, now);
@@ -1950,6 +2002,7 @@ int main (int argc, char **argv) {
 					break;
 				}
 				case SDL_MOUSEBUTTONDOWN: {
+					if (saver_input(now)) break;
 					if (ev.button.button != SDL_BUTTON_LEFT) break;
 					float x = ev.button.x * sx, y = ev.button.y * sy;
 					if (app.menu.open()) app.menu.click(x, y, now);
@@ -1960,6 +2013,7 @@ int main (int argc, char **argv) {
 					break;
 				}
 				case SDL_MOUSEWHEEL:
+					if (saver_input(now)) break;
 					if (app.menu.open()) break;
 					if (app.screen == App::Screen::settings) app.settings.wheel(ev.wheel.y, now);
 					else if (app.screen == App::Screen::home) app.home.wheel(ev.wheel.y, now);
@@ -1976,11 +2030,13 @@ int main (int argc, char **argv) {
 						// the apps and inputs again: the TV adds an app of its own for a device switched on over HDMI (its CEC
 						// name, e.g. com.webos.app.hdmi2 "Xiaomi OTT") and takes it away when the device goes
 						if (!app.front) refresh_apps();
+						if (!app.front) app.last_input = now;
 						app.front = true;
 						app.home.set_front(true);
 						app.wallpaper.set_paused(false, now);
 					} else if (ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST || ev.window.event == SDL_WINDOWEVENT_HIDDEN) {
 						app.front = false;
+						end_saver(now, true);
 						app.home.set_front(false);
 						app.wallpaper.set_paused(true, now);
 						app.home.pointer_left();
@@ -1998,6 +2054,7 @@ int main (int argc, char **argv) {
 			app.dirty = true;
 		}
 		if (run_main_posted()) app.dirty = true;
+		if (app.saver.showing(now_ms())) app.dirty = true;
 		// an icon or glyph arrived: the board (kept as a picture) is drawn again too, or what is on the cards (the calendar's
 		// arrows) would show only at its next change
 		if (icons::upload_ready()) { app.dirty = true; app.home.mark_board(); }
@@ -2019,7 +2076,15 @@ int main (int argc, char **argv) {
 		const double FADE_MS = 1400;
 		if (!board) { board = gfx::make_target(); old_board = gfx::make_target(); }
 		bool targets = board && old_board;
-		app.wallpaper.set_settled(targets);
+		// the screen saver: the wallpaper drawn live (it zooms), the cards from a picture of their own over it (see-through
+		// round them), fading; that picture is made only while the saver shows (8 MB of video memory)
+		static std::unique_ptr<Target> cards;
+		static bool have_cards = false;
+		bool saver = targets && app.screen == App::Screen::home && app.saver.showing(now);
+		if (saver && !cards) { cards = gfx::make_target(); have_cards = false; }
+		if (!saver && cards) { cards.reset(); have_cards = false; }
+		saver = saver && cards;
+		app.wallpaper.set_settled(targets && !saver);
 		if (targets && app.wallpaper.shown_at() != seen_shown) {
 			seen_shown = app.wallpaper.shown_at();
 			if (have_board) { std::swap(board, old_board); changed_at = now; }
@@ -2029,7 +2094,16 @@ int main (int argc, char **argv) {
 		// the home screen is drawn only while Settings steps aside to show a change on it (its peek)
 		float peek = app.screen == App::Screen::settings ? app.settings.peek(now) : 0;
 		bool on_home = app.screen == App::Screen::home || peek > 0;
-		if (on_home && targets && (!have_board || app.home.board_needed(now))) {
+		if (saver) {
+			float fade = app.saver.cards(now);
+			if (fade < 1 && (!have_cards || app.home.board_needed(now))) {
+				gfx::begin_frame({0, 0, 0, 0}, cards.get());
+				app.home.draw_board(now, lt);
+				app.home.draw_live(now, lt);
+				have_cards = true;
+				have_board = false;
+			}
+		} else if (on_home && targets && (!have_board || app.home.board_needed(now))) {
 			gfx::begin_frame(theme_named(app.cfg.theme).bg, board.get());
 			app.wallpaper.draw(now);
 			app.home.draw_board(now, lt);
@@ -2037,7 +2111,15 @@ int main (int argc, char **argv) {
 		}
 		gfx::begin_frame(theme_named(app.cfg.theme).bg);
 		double f = (now - changed_at) / FADE_MS;
-		if (!on_home) app.wallpaper.draw(now);
+		if (saver) {
+			float cx, cy, k;
+			app.saver.view(now, cx, cy, k);
+			gfx::set_grow(cx, cy, k);
+			app.wallpaper.draw(now, 1 - app.saver.progress(now));
+			gfx::set_grow(0, 0, 1);
+			float fade = app.saver.cards(now);
+			if (fade < 1) gfx::layer(*cards->tex, {0, 0, 1920, 1080}, 1 - fade);
+		} else if (!on_home) app.wallpaper.draw(now);
 		else {
 			if (!targets) { app.wallpaper.draw(now); app.home.draw_board(now, lt); }
 			else if (f < 1) {
@@ -2048,7 +2130,17 @@ int main (int argc, char **argv) {
 			app.home.draw_live(now, lt);
 		}
 		double t1 = now_ms();
-		if (on_home) {
+		if (saver) {
+			float r = app.saver.row(now);
+			if (r < 1) {
+				gfx::set_shift(0, Saver::ROW_SINK * r);
+				gfx::set_outer_alpha(1 - r);
+				app.home.draw_row(now);
+				app.home.draw_overlay(now);
+				gfx::set_shift(0, 0);
+				gfx::set_outer_alpha(1);
+			}
+		} else if (on_home) {
 			app.home.draw_row(now);
 			app.home.draw_overlay(now);
 		}

@@ -28,7 +28,11 @@ public:
 	void files_changed (const std::string &arrived = "");
 	/** Moves the slideshow on when its time came. Returns true while something on it is changing (a fade). */
 	bool update (double now);
-	void draw (double now);
+	/** `shade`: how much of the soft shade at the top and bottom is drawn (1: all; the screen saver fades it out). */
+	void draw (double now, float shade = 1);
+	/** The screen saver is on: a slideshow changes its picture every 30 s, whatever its own time (the next change counts
+	 *  from now, both ways). */
+	void set_saver (bool on, double now);
 	/** ms until the next slideshow step (-1: none). */
 	double next_event (double now) const;
 	/** The launcher went to the back or came to the front. */
@@ -74,6 +78,7 @@ private:
 	int glass_frost_ = -1;                 // the step cur_.glass is of
 	void own_cache ();
 	void make_ahead (int frost);
-	bool loading_ = false, settled_ = false;
+	bool loading_ = false, settled_ = false, saver_ = false;
+	double step_ms () const;
 	float dim_ = 0;
 };

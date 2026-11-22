@@ -77,6 +77,7 @@ struct UserConfig {
 	bool shadows = true;
 	std::string pixelShift = "auto"; // auto on off
 	std::string clockFormat = "24h"; // tv 12h 24h
+	int saverMinutes = 5;            // the screen saver after this long without a key on the home screen (0: never)
 	ClockConfig clock;
 	WeatherConfig weather;
 	CalendarConfig calendar;
@@ -91,6 +92,7 @@ std::string config_json (const UserConfig &c);
 std::vector<int> range_values (const Range &r);
 
 extern const std::vector<std::string> LANG_SETTINGS;
+extern const std::vector<int> SAVER_MINUTES;
 extern const std::vector<std::string> NEWS_COUNTRIES;
 bool valid_calendar_source (const std::string &s);
 std::string normalize_feed_url (const std::string &raw);
