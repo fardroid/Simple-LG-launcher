@@ -763,6 +763,14 @@ void Home::prepare_board (double now) {
 	if (why != logged_plates_) { logged_plates_ = why; logf("%s", why); }
 }
 
+PlateLook Home::plates_for (const BrightnessMap &map) const {
+	std::vector<std::array<int, 4>> rects;
+	for (auto &col : board_.columns) for (auto &c : col.cards) rects.push_back({c.x, c.y, c.w, c.h});
+	BrightnessMap seen = map;
+	if (wp_) for (auto &v : seen) v *= 1 - wp_->dim();     // a dimmed wallpaper is that much darker behind them
+	return plate_look(cfg_.plates, cfg_.theme, seen, rects);
+}
+
 void Home::draw_card (const BoardCard &c, double now, const std::tm &clock, bool live) {
 	Face face = clock_face(cfg_.clock.font);
 	int i = card_index(c.id);

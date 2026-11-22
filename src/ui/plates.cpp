@@ -96,6 +96,8 @@ PlateLook look_for (float b, const std::string &theme) {
 }
 
 PlateLook plate_look (const std::string &mode, const std::string &theme, const BrightnessMap &map, const std::vector<std::array<int, 4>> &rects) {
+	// neutral: no colour, only the glass (the card in focus lights up as on the others)
+	if (mode == "neutral") return {{0, 0, 0, 0}, {1, 1, 1, 0.1f}, false};
 	if (mode == "light") return light_look(theme);
 	if (mode == "dark") return dark_look(theme);
 	float brightest = brightest_of(map.empty() ? theme_map(theme) : map, rects);

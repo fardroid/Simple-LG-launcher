@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "Disattivato. LG Home si apre come al solito",
 	"Setting up…": "Configurazione…",
 	"Looking for new apps…": "Ricerca di nuove app…",
-	"Default background restored": "Sfondo predefinito ripristinato",
-	"Loading the wallpaper…": "Caricamento dello sfondo…",
-	"Starting the slideshow…": "Avvio della presentazione…",
 	"Connecting the calendars…": "Connessione dei calendari…",
 	"Calendars removed": "Calendari rimossi",
 	"Weather for {0}": "Meteo per {0}",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· aggiornalo nell'Homebrew Channel",
 	"Clock weight": "Spessore delle cifre",
 	"Card background": "Sfondo dei widget",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Chiaro o scuro, nella tinta del tema di colori. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno.",
 	"Glass": "Vetro",
 	"Frosted": "Smerigliato",
 	"Liquid": "Liquido",
@@ -629,5 +625,7 @@
 	"Screen saver": "Salvaschermo",
 	"After {0}": "Dopo {0}",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Quanto il vetro sfoca l'immagine dietro: 100% al massimo; disattivato resta trasparente e il vetro liquido la rifrange soltanto.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Dopo questo tempo senza premere tasti, sullo schermo resta solo lo sfondo. Qualsiasi tasto riporta tutto."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Dopo questo tempo senza premere tasti, sullo schermo resta solo lo sfondo. Qualsiasi tasto riporta tutto.",
+	"Neutral": "Neutro",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Chiaro o scuro, nella tonalità del tema colore; neutro: senza colore, solo il vetro. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno."
 }

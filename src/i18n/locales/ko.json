@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "꺼짐. LG Home이 평소처럼 열립니다",
 	"Setting up…": "설정 중…",
 	"Looking for new apps…": "새 앱을 찾는 중…",
-	"Default background restored": "기본 배경을 복원했습니다",
-	"Loading the wallpaper…": "배경화면을 불러오는 중…",
-	"Starting the slideshow…": "슬라이드쇼를 시작하는 중…",
 	"Connecting the calendars…": "캘린더를 연결하는 중…",
 	"Calendars removed": "캘린더를 제거했습니다",
 	"Weather for {0}": "{0}의 날씨",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· Homebrew Channel에서 업데이트",
 	"Clock weight": "시계 숫자 굵기",
 	"Card background": "위젯 배경",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "밝게 또는 어둡게, 색상 테마의 색조로. 자동: 뒤의 그림에 따라 모든 위젯이 함께 밝아지거나 어두워져 각 위젯의 글자가 잘 읽힙니다.",
 	"Glass": "유리",
 	"Frosted": "반투명",
 	"Liquid": "리퀴드",
@@ -629,5 +625,7 @@
 	"Screen saver": "화면 보호기",
 	"After {0}": "{0} 후",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "이 시간 동안 키를 누르지 않으면 화면에 배경 화면만 남습니다. 아무 키나 누르면 모두 돌아옵니다."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "이 시간 동안 키를 누르지 않으면 화면에 배경 화면만 남습니다. 아무 키나 누르면 모두 돌아옵니다.",
+	"Neutral": "중립",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "색상 테마의 색조로 밝게 또는 어둡게. 중립: 색 없이 유리만. 자동: 뒤의 사진에 따라 모든 위젯이 함께 밝거나 어두워져 어느 위젯에서나 글자가 잘 읽힙니다."
 }

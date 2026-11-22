@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "已关闭。LG Home 将照常打开",
 	"Setting up…": "正在设置…",
 	"Looking for new apps…": "正在查找新应用…",
-	"Default background restored": "已恢复默认背景",
-	"Loading the wallpaper…": "正在加载壁纸…",
-	"Starting the slideshow…": "正在启动幻灯片…",
 	"Connecting the calendars…": "正在连接日历…",
 	"Calendars removed": "日历已移除",
 	"Weather for {0}": "{0}的天气",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· 在 Homebrew Channel 中更新",
 	"Clock weight": "时钟数字粗细",
 	"Card background": "小部件背景",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "浅色或深色，采用配色主题的色调。自动：所有小部件会根据背后的图片一起变浅或变深，让每个小部件上的文字都清晰可读。",
 	"Glass": "玻璃",
 	"Frosted": "磨砂",
 	"Liquid": "液态",
@@ -629,5 +625,7 @@
 	"Screen saver": "屏幕保护",
 	"After {0}": "{0}后",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "玻璃对其后图片的模糊程度：100% 最强；关闭后玻璃透明，液态玻璃只折射图片。",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "在这段时间内不按任何键，屏幕上只留下壁纸。按任意键即可恢复。"
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "在这段时间内不按任何键，屏幕上只留下壁纸。按任意键即可恢复。",
+	"Neutral": "中性",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "浅色或深色，带有配色主题的色调；中性：无颜色，只有玻璃。自动：所有小组件会根据后面的图片一起变浅或变深，让每个上的文字都清晰易读。"
 }

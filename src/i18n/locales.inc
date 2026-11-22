@@ -28,9 +28,6 @@ static const Entry LOCALE_DE[] = {
 	{"Off. LG Home opens as usual", "Aus. LG Home öffnet sich wie gewohnt"},
 	{"Setting up…", "Wird eingerichtet…"},
 	{"Looking for new apps…", "Suche nach neuen Apps…"},
-	{"Default background restored", "Standardhintergrund wiederhergestellt"},
-	{"Loading the wallpaper…", "Hintergrund wird geladen…"},
-	{"Starting the slideshow…", "Diashow wird gestartet…"},
 	{"Connecting the calendars…", "Kalender werden verbunden…"},
 	{"Calendars removed", "Kalender entfernt"},
 	{"Weather for {0}", "Wetter für {0}"},
@@ -622,7 +619,6 @@ static const Entry LOCALE_DE[] = {
 	{"· update it in the Homebrew Channel", "· im Homebrew Channel aktualisieren"},
 	{"Clock weight", "Stärke der Uhrziffern"},
 	{"Card background", "Widget-Hintergrund"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Hell oder dunkel, im Farbton des Farbthemas. Auto: Alle Widgets werden gemeinsam hell oder dunkel, je nach Bild dahinter, damit der Text auf jedem gut lesbar bleibt."},
 	{"Glass", "Glas"},
 	{"Frosted", "Matt"},
 	{"Liquid", "Flüssig"},
@@ -631,6 +627,8 @@ static const Entry LOCALE_DE[] = {
 	{"After {0}", "Nach {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Wie stark das Glas das Bild dahinter weichzeichnet: 100 % am stärksten; aus lässt es klar, sodass Flüssigglas es nur bricht."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Nach dieser Zeit ohne Tastendruck bleibt auf dem Bildschirm nur das Hintergrundbild. Jede Taste holt alles zurück."},
+	{"Neutral", "Neutral"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Hell oder dunkel, im Farbton des Farbschemas; neutral: ohne Farbe, nur das Glas. Auto: Alle Widgets werden je nach Bild dahinter gemeinsam hell oder dunkel, damit der Text auf jedem gut lesbar bleibt."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ES[] = {
@@ -662,9 +660,6 @@ static const Entry LOCALE_ES[] = {
 	{"Off. LG Home opens as usual", "Desactivado. LG Home se abre como siempre"},
 	{"Setting up…", "Configurando…"},
 	{"Looking for new apps…", "Buscando aplicaciones nuevas…"},
-	{"Default background restored", "Fondo predeterminado restaurado"},
-	{"Loading the wallpaper…", "Cargando el fondo…"},
-	{"Starting the slideshow…", "Iniciando la presentación…"},
 	{"Connecting the calendars…", "Conectando los calendarios…"},
 	{"Calendars removed", "Calendarios eliminados"},
 	{"Weather for {0}", "Tiempo en {0}"},
@@ -1256,7 +1251,6 @@ static const Entry LOCALE_ES[] = {
 	{"· update it in the Homebrew Channel", "· actualízalo en Homebrew Channel"},
 	{"Clock weight", "Grosor de los dígitos"},
 	{"Card background", "Fondo de los widgets"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro u oscuro, en el tono del tema de color. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno."},
 	{"Glass", "Cristal"},
 	{"Frosted", "Esmerilado"},
 	{"Liquid", "Líquido"},
@@ -1265,6 +1259,8 @@ static const Entry LOCALE_ES[] = {
 	{"After {0}", "A los {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Cuánto difumina el cristal la imagen de detrás: 100 % es el máximo; desactivado lo deja transparente, y el cristal líquido solo la refracta."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Tras este tiempo sin pulsar nada, en la pantalla solo queda el fondo. Cualquier tecla lo devuelve todo."},
+	{"Neutral", "Neutro"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro u oscuro, en el tono del tema de color; neutro: sin color, solo el cristal. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_FR[] = {
@@ -1296,9 +1292,6 @@ static const Entry LOCALE_FR[] = {
 	{"Off. LG Home opens as usual", "Désactivé. LG Home s’ouvre comme d’habitude"},
 	{"Setting up…", "Configuration…"},
 	{"Looking for new apps…", "Recherche de nouvelles applications…"},
-	{"Default background restored", "Fond par défaut rétabli"},
-	{"Loading the wallpaper…", "Chargement du fond d’écran…"},
-	{"Starting the slideshow…", "Démarrage du diaporama…"},
 	{"Connecting the calendars…", "Connexion des calendriers…"},
 	{"Calendars removed", "Calendriers supprimés"},
 	{"Weather for {0}", "Météo pour {0}"},
@@ -1890,7 +1883,6 @@ static const Entry LOCALE_FR[] = {
 	{"· update it in the Homebrew Channel", "· mettez-le à jour dans Homebrew Channel"},
 	{"Clock weight", "Épaisseur des chiffres"},
 	{"Card background", "Fond des widgets"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Clair ou foncé, dans la teinte du thème de couleurs. Auto : tous les widgets deviennent clairs ou foncés ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun."},
 	{"Glass", "Verre"},
 	{"Frosted", "Dépoli"},
 	{"Liquid", "Liquide"},
@@ -1899,6 +1891,8 @@ static const Entry LOCALE_FR[] = {
 	{"After {0}", "Après {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "À quel point le verre floute l'image derrière lui : 100 % au maximum ; désactivé, il reste clair et le verre liquide ne fait que la réfracter."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Après ce délai sans appui, seul le fond d'écran reste à l'écran. N'importe quelle touche ramène tout."},
+	{"Neutral", "Neutre"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Clair ou sombre, dans la teinte du thème de couleur ; neutre : sans couleur, seulement le verre. Auto : tous les widgets deviennent clairs ou sombres ensemble selon l'image derrière eux, pour que le texte reste lisible sur chacun."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_IT[] = {
@@ -1930,9 +1924,6 @@ static const Entry LOCALE_IT[] = {
 	{"Off. LG Home opens as usual", "Disattivato. LG Home si apre come al solito"},
 	{"Setting up…", "Configurazione…"},
 	{"Looking for new apps…", "Ricerca di nuove app…"},
-	{"Default background restored", "Sfondo predefinito ripristinato"},
-	{"Loading the wallpaper…", "Caricamento dello sfondo…"},
-	{"Starting the slideshow…", "Avvio della presentazione…"},
 	{"Connecting the calendars…", "Connessione dei calendari…"},
 	{"Calendars removed", "Calendari rimossi"},
 	{"Weather for {0}", "Meteo per {0}"},
@@ -2524,7 +2515,6 @@ static const Entry LOCALE_IT[] = {
 	{"· update it in the Homebrew Channel", "· aggiornalo nell'Homebrew Channel"},
 	{"Clock weight", "Spessore delle cifre"},
 	{"Card background", "Sfondo dei widget"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Chiaro o scuro, nella tinta del tema di colori. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno."},
 	{"Glass", "Vetro"},
 	{"Frosted", "Smerigliato"},
 	{"Liquid", "Liquido"},
@@ -2533,6 +2523,8 @@ static const Entry LOCALE_IT[] = {
 	{"After {0}", "Dopo {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto il vetro sfoca l'immagine dietro: 100% al massimo; disattivato resta trasparente e il vetro liquido la rifrange soltanto."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Dopo questo tempo senza premere tasti, sullo schermo resta solo lo sfondo. Qualsiasi tasto riporta tutto."},
+	{"Neutral", "Neutro"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Chiaro o scuro, nella tonalità del tema colore; neutro: senza colore, solo il vetro. Auto: tutti i widget diventano chiari o scuri insieme in base all'immagine dietro, così il testo resta leggibile su ciascuno."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_JA[] = {
@@ -2564,9 +2556,6 @@ static const Entry LOCALE_JA[] = {
 	{"Off. LG Home opens as usual", "オフ。LG Home はこれまでどおり開きます"},
 	{"Setting up…", "設定中…"},
 	{"Looking for new apps…", "新しいアプリを探しています…"},
-	{"Default background restored", "既定の背景に戻しました"},
-	{"Loading the wallpaper…", "壁紙を読み込んでいます…"},
-	{"Starting the slideshow…", "スライドショーを開始しています…"},
 	{"Connecting the calendars…", "カレンダーに接続しています…"},
 	{"Calendars removed", "カレンダーを削除しました"},
 	{"Weather for {0}", "{0}の天気"},
@@ -3158,7 +3147,6 @@ static const Entry LOCALE_JA[] = {
 	{"· update it in the Homebrew Channel", "· Homebrew Channel で更新"},
 	{"Clock weight", "時計の数字の太さ"},
 	{"Card background", "ウィジェットの背景"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "明るいか暗いか、カラーテーマの色合いで。自動：背後の画像に応じてすべてのウィジェットが一緒に明るく・暗くなり、どれでも文字が読みやすくなります。"},
 	{"Glass", "ガラス"},
 	{"Frosted", "すりガラス"},
 	{"Liquid", "リキッド"},
@@ -3167,6 +3155,8 @@ static const Entry LOCALE_JA[] = {
 	{"After {0}", "{0}後"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "ガラスが背後の画像をどれだけぼかすか。100%が最大、オフにすると透明になり、リキッドガラスは画像を屈折させるだけになります。"},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "この時間キーを押さないと、画面には壁紙だけが残ります。いずれかのキーで元に戻ります。"},
+	{"Neutral", "ニュートラル"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "カラーテーマの色合いで明るくまたは暗く。ニュートラルは色なしでガラスのみ。自動では、背後の画像に合わせてすべてのウィジェットが一緒に明るくまたは暗くなり、どれでも文字が読みやすくなります。"},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_KO[] = {
@@ -3198,9 +3188,6 @@ static const Entry LOCALE_KO[] = {
 	{"Off. LG Home opens as usual", "꺼짐. LG Home이 평소처럼 열립니다"},
 	{"Setting up…", "설정 중…"},
 	{"Looking for new apps…", "새 앱을 찾는 중…"},
-	{"Default background restored", "기본 배경을 복원했습니다"},
-	{"Loading the wallpaper…", "배경화면을 불러오는 중…"},
-	{"Starting the slideshow…", "슬라이드쇼를 시작하는 중…"},
 	{"Connecting the calendars…", "캘린더를 연결하는 중…"},
 	{"Calendars removed", "캘린더를 제거했습니다"},
 	{"Weather for {0}", "{0}의 날씨"},
@@ -3792,7 +3779,6 @@ static const Entry LOCALE_KO[] = {
 	{"· update it in the Homebrew Channel", "· Homebrew Channel에서 업데이트"},
 	{"Clock weight", "시계 숫자 굵기"},
 	{"Card background", "위젯 배경"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "밝게 또는 어둡게, 색상 테마의 색조로. 자동: 뒤의 그림에 따라 모든 위젯이 함께 밝아지거나 어두워져 각 위젯의 글자가 잘 읽힙니다."},
 	{"Glass", "유리"},
 	{"Frosted", "반투명"},
 	{"Liquid", "리퀴드"},
@@ -3801,6 +3787,8 @@ static const Entry LOCALE_KO[] = {
 	{"After {0}", "{0} 후"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "유리가 뒤의 사진을 얼마나 흐리게 할지 정합니다. 100%가 가장 강하고, 끄면 투명해져 리퀴드 글래스는 사진을 굴절만 시킵니다."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "이 시간 동안 키를 누르지 않으면 화면에 배경 화면만 남습니다. 아무 키나 누르면 모두 돌아옵니다."},
+	{"Neutral", "중립"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "색상 테마의 색조로 밝게 또는 어둡게. 중립: 색 없이 유리만. 자동: 뒤의 사진에 따라 모든 위젯이 함께 밝거나 어두워져 어느 위젯에서나 글자가 잘 읽힙니다."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PL[] = {
@@ -3832,9 +3820,6 @@ static const Entry LOCALE_PL[] = {
 	{"Off. LG Home opens as usual", "Wyłączone. LG Home otwiera się jak zwykle"},
 	{"Setting up…", "Konfigurowanie…"},
 	{"Looking for new apps…", "Szukanie nowych aplikacji…"},
-	{"Default background restored", "Przywrócono domyślne tło"},
-	{"Loading the wallpaper…", "Ładowanie tapety…"},
-	{"Starting the slideshow…", "Uruchamianie pokaz slajdów…"},
 	{"Connecting the calendars…", "Łączenie kalendarzy…"},
 	{"Calendars removed", "Usunięto kalendarze"},
 	{"Weather for {0}", "Pogoda dla: {0}"},
@@ -4426,7 +4411,6 @@ static const Entry LOCALE_PL[] = {
 	{"· update it in the Homebrew Channel", "· zaktualizuj w Homebrew Channel"},
 	{"Clock weight", "Grubość cyfr zegara"},
 	{"Card background", "Tło widżetów"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Jasne lub ciemne, w odcieniu motywu kolorów. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, żeby tekst był czytelny na każdym."},
 	{"Glass", "Szkło"},
 	{"Frosted", "Matowe"},
 	{"Liquid", "Płynne"},
@@ -4435,6 +4419,8 @@ static const Entry LOCALE_PL[] = {
 	{"After {0}", "Po {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Po tym czasie bez naciśnięcia klawisza na ekranie zostaje tylko tapeta. Dowolny klawisz przywraca wszystko."},
+	{"Neutral", "Neutralne"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Jasne lub ciemne, w odcieniu motywu kolorów; neutralne: bez koloru, samo szkło. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, aby tekst był czytelny na każdym."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_PT[] = {
@@ -4466,9 +4452,6 @@ static const Entry LOCALE_PT[] = {
 	{"Off. LG Home opens as usual", "Desativado. O LG Home abre como de costume"},
 	{"Setting up…", "Configurando…"},
 	{"Looking for new apps…", "Procurando aplicativos novos…"},
-	{"Default background restored", "Fundo padrão restaurado"},
-	{"Loading the wallpaper…", "Carregando o papel de parede…"},
-	{"Starting the slideshow…", "Iniciando a apresentação…"},
 	{"Connecting the calendars…", "Conectando os calendários…"},
 	{"Calendars removed", "Calendários removidos"},
 	{"Weather for {0}", "Clima em {0}"},
@@ -5060,7 +5043,6 @@ static const Entry LOCALE_PT[] = {
 	{"· update it in the Homebrew Channel", "· atualize no Homebrew Channel"},
 	{"Clock weight", "Espessura dos dígitos"},
 	{"Card background", "Fundo dos widgets"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro ou escuro, no tom do tema de cores. Auto: todos os widgets ficam claros ou escuros em conjunto conforme a imagem por trás, para que o texto se leia bem em cada um."},
 	{"Glass", "Vidro"},
 	{"Frosted", "Fosco"},
 	{"Liquid", "Líquido"},
@@ -5069,6 +5051,8 @@ static const Entry LOCALE_PT[] = {
 	{"After {0}", "Após {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Quanto o vidro desfoca a imagem atrás: 100% é o máximo; desligado deixa-o transparente, e o vidro líquido só a refrata."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Após esse tempo sem nenhuma tecla, só o papel de parede fica na tela. Qualquer tecla traz tudo de volta."},
+	{"Neutral", "Neutro"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Claro ou escuro, no tom do tema de cores; neutro: sem cor, só o vidro. Auto: todos os widgets ficam claros ou escuros juntos conforme a imagem por trás, para que o texto se leia bem em cada um."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_TR[] = {
@@ -5100,9 +5084,6 @@ static const Entry LOCALE_TR[] = {
 	{"Off. LG Home opens as usual", "Kapalı. LG Home her zamanki gibi açılır"},
 	{"Setting up…", "Ayarlanıyor…"},
 	{"Looking for new apps…", "Yeni uygulamalar aranıyor…"},
-	{"Default background restored", "Varsayılan arka plan geri yüklendi"},
-	{"Loading the wallpaper…", "Duvar kağıdı yükleniyor…"},
-	{"Starting the slideshow…", "Slayt gösterisi başlatılıyor…"},
 	{"Connecting the calendars…", "Takvimler bağlanıyor…"},
 	{"Calendars removed", "Takvimler kaldırıldı"},
 	{"Weather for {0}", "{0} için hava durumu"},
@@ -5694,7 +5675,6 @@ static const Entry LOCALE_TR[] = {
 	{"· update it in the Homebrew Channel", "· Homebrew Channel'dan güncelleyin"},
 	{"Clock weight", "Saat rakamlarının kalınlığı"},
 	{"Card background", "Widget arka planı"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Açık veya koyu, renk temasının tonunda. Otomatik: tüm widget'lar arkalarındaki resme göre birlikte açık ya da koyu olur, böylece her birinde metin rahat okunur."},
 	{"Glass", "Cam"},
 	{"Frosted", "Buzlu"},
 	{"Liquid", "Sıvı"},
@@ -5703,6 +5683,8 @@ static const Entry LOCALE_TR[] = {
 	{"After {0}", "{0} sonra"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Camın arkasındaki resmi ne kadar bulanıklaştıracağı: en fazla %100; kapalıyken cam saydam kalır ve sıvı cam resmi yalnızca kırar."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Bu süre boyunca tuşa basılmazsa ekranda yalnızca duvar kağıdı kalır. Herhangi bir tuş her şeyi geri getirir."},
+	{"Neutral", "Nötr"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Renk temasının tonunda açık ya da koyu; nötr: renksiz, yalnızca cam. Otomatik: arkadaki resme göre tüm widget'lar birlikte açık ya da koyu olur, böylece yazı her birinde okunur kalır."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_UK[] = {
@@ -5734,9 +5716,6 @@ static const Entry LOCALE_UK[] = {
 	{"Off. LG Home opens as usual", "Вимкнено. LG Home відкривається як зазвичай"},
 	{"Setting up…", "Налаштування…"},
 	{"Looking for new apps…", "Шукаємо нові застосунки…"},
-	{"Default background restored", "Типовий фон відновлено"},
-	{"Loading the wallpaper…", "Завантажуємо шпалери…"},
-	{"Starting the slideshow…", "Запускаємо слайд-шоу…"},
 	{"Connecting the calendars…", "Підключаємо календарі…"},
 	{"Calendars removed", "Календарі прибрано"},
 	{"Weather for {0}", "Погода для міста: {0}"},
@@ -6328,7 +6307,6 @@ static const Entry LOCALE_UK[] = {
 	{"· update it in the Homebrew Channel", "· оновіть у Homebrew Channel"},
 	{"Clock weight", "Товщина цифр годинника"},
 	{"Card background", "Підкладка віджетів"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Світла або темна, у відтінку кольорової теми. Авто: усі віджети разом стають світлими або темними залежно від картинки за ними, щоб текст добре читався на кожному."},
 	{"Glass", "Скло"},
 	{"Frosted", "Матове"},
 	{"Liquid", "Рідке"},
@@ -6337,6 +6315,8 @@ static const Entry LOCALE_UK[] = {
 	{"After {0}", "Через {0}"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "Наскільки скло розмиває картинку під собою: 100% — найсильніше; якщо вимкнути, скло прозоре, і рідке скло лише заломлює картинку."},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "Після цього часу без натискань на екрані лишаються самі шпалери. Будь-яка кнопка повертає все."},
+	{"Neutral", "Нейтральна"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "Світла або темна, у відтінку колірної теми; нейтральна: без кольору, лише скло. Авто: усі віджети разом стають світлими або темними залежно від картинки за ними, щоб текст добре читався на кожному."},
 	{nullptr, nullptr}
 };
 static const Entry LOCALE_ZH[] = {
@@ -6368,9 +6348,6 @@ static const Entry LOCALE_ZH[] = {
 	{"Off. LG Home opens as usual", "已关闭。LG Home 将照常打开"},
 	{"Setting up…", "正在设置…"},
 	{"Looking for new apps…", "正在查找新应用…"},
-	{"Default background restored", "已恢复默认背景"},
-	{"Loading the wallpaper…", "正在加载壁纸…"},
-	{"Starting the slideshow…", "正在启动幻灯片…"},
 	{"Connecting the calendars…", "正在连接日历…"},
 	{"Calendars removed", "日历已移除"},
 	{"Weather for {0}", "{0}的天气"},
@@ -6962,7 +6939,6 @@ static const Entry LOCALE_ZH[] = {
 	{"· update it in the Homebrew Channel", "· 在 Homebrew Channel 中更新"},
 	{"Clock weight", "时钟数字粗细"},
 	{"Card background", "小部件背景"},
-	{"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "浅色或深色，采用配色主题的色调。自动：所有小部件会根据背后的图片一起变浅或变深，让每个小部件上的文字都清晰可读。"},
 	{"Glass", "玻璃"},
 	{"Frosted", "磨砂"},
 	{"Liquid", "液态"},
@@ -6971,6 +6947,8 @@ static const Entry LOCALE_ZH[] = {
 	{"After {0}", "{0}后"},
 	{"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.", "玻璃对其后图片的模糊程度：100% 最强；关闭后玻璃透明，液态玻璃只折射图片。"},
 	{"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.", "在这段时间内不按任何键，屏幕上只留下壁纸。按任意键即可恢复。"},
+	{"Neutral", "中性"},
+	{"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.", "浅色或深色，带有配色主题的色调；中性：无颜色，只有玻璃。自动：所有小组件会根据后面的图片一起变浅或变深，让每个上的文字都清晰易读。"},
 	{nullptr, nullptr}
 };
 static const Locale LOCALES[] = {

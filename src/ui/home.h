@@ -51,6 +51,10 @@ public:
 	/** The plates' colour for the picture on screen and the one before it (the banners are drawn in it too). */
 	const PlateLook &plates () const { return look_; }
 	const PlateLook &old_plates () const { return old_look_; }
+	/** The plates' colour over a picture with this brightness grid (empty: the theme's), by the cards' places: what the banners
+	 *  take, for the picture on the screen now even while the board is not drawn (behind Settings, plates() is the look from
+	 *  when it was drawn last, and a banner cross-fading with the wallpaper went from dark to light). */
+	PlateLook plates_for (const BrightnessMap &map) const;
 	/** The launcher is in front (the news pages turn by themselves only then). */
 	void set_front (bool front) { front_ = front; }
 	/** OLED care: the clock, the cards and the apps move a few pixels once a minute (pixelShift "auto" follows this). */

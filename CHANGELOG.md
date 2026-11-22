@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.7
+
+- **Liquid glass with wider, stronger edges**, picked on a page of sliders: archisvaze/liquid-glass's default. The cards' corners now round by 60 px instead of 36, with every kind of glass, so that liquid glass's bevel, never wider than the corner's radius, can be 60 px wide; the glass is 80 px thick (was 60). The bending is plain to see now, where it was barely there.
+- **Card background: Neutral** (Settings → Appearance → *Card background*): no colour, only the glass; with liquid glass and a little frost the picture shows through as it is.
+- **The cards' shadow falls under them too.** It was drawn only round a card, as CSS draws a box-shadow; but the card is glass, and the shadow falls on the picture behind it. A light card sat in a dark frame and looked lit from inside. The shadow now goes on under the card as well, seen through the glass, evenly (as dark as it is at the card's sides): a shadow that thinned out towards the card's edges, as a real one does, made the edges look lit, like sanded glass.
+- **A banner's background no longer turns from dark to light behind Settings.** A banner took the cards' colour from the home screen as it was drawn last, which behind Settings could be for another picture; when the wallpaper then changed, the banner's background went from that colour to the right one. It now takes the colour for the picture on the screen.
+- **No banner when the chosen wallpaper is already on the TV.** Leaving the wallpaper gallery said *Loading the wallpaper…* or *Starting the slideshow…* even when every picture was on the TV already, which read as a download that was not there. A banner now comes only while pictures still download.
+
 ## 2.2.6
 
 - **A screen saver of the launcher's own** (Settings → Wallpaper → *Screen saver*: off, or after 2 to 60 minutes; 5 at first). After that long without a key, on the home screen the app row sinks 60 px and fades and the widgets fade a beat later; any other screen of the launcher, Settings too, fades whole. The wallpaper stays alone, slowly zooming in and out and drifting a different way every 30 s, so no point of it stands still. A key brings back the screen that was there. A slideshow changes its picture every 30 s meanwhile. The wallpaper's dimming applies as it is. Any key, a pointer move or a click brings it back in half a second and does nothing else (OK does not open the tile in focus). LG's own screen saver is not touched: when it comes over the launcher, this one ends at once, under it. Hearth and Glasshouse replace LG's screen saver app instead; that was left aside, as on webOS 10 and later Glasshouse's own notes say it left the picture, sound or HDMI off on some TVs until they were unplugged.

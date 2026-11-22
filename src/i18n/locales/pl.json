@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "Wyłączone. LG Home otwiera się jak zwykle",
 	"Setting up…": "Konfigurowanie…",
 	"Looking for new apps…": "Szukanie nowych aplikacji…",
-	"Default background restored": "Przywrócono domyślne tło",
-	"Loading the wallpaper…": "Ładowanie tapety…",
-	"Starting the slideshow…": "Uruchamianie pokaz slajdów…",
 	"Connecting the calendars…": "Łączenie kalendarzy…",
 	"Calendars removed": "Usunięto kalendarze",
 	"Weather for {0}": "Pogoda dla: {0}",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· zaktualizuj w Homebrew Channel",
 	"Clock weight": "Grubość cyfr zegara",
 	"Card background": "Tło widżetów",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Jasne lub ciemne, w odcieniu motywu kolorów. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, żeby tekst był czytelny na każdym.",
 	"Glass": "Szkło",
 	"Frosted": "Matowe",
 	"Liquid": "Płynne",
@@ -629,5 +625,7 @@
 	"Screen saver": "Wygaszacz ekranu",
 	"After {0}": "Po {0}",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Jak mocno szkło rozmywa obraz pod sobą: 100% najmocniej; wyłączone zostawia je przejrzyste, a płynne szkło tylko go załamuje.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Po tym czasie bez naciśnięcia klawisza na ekranie zostaje tylko tapeta. Dowolny klawisz przywraca wszystko."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Po tym czasie bez naciśnięcia klawisza na ekranie zostaje tylko tapeta. Dowolny klawisz przywraca wszystko.",
+	"Neutral": "Neutralne",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Jasne lub ciemne, w odcieniu motywu kolorów; neutralne: bez koloru, samo szkło. Auto: wszystkie widżety razem stają się jasne lub ciemne zależnie od obrazu za nimi, aby tekst był czytelny na każdym."
 }

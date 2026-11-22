@@ -1175,11 +1175,12 @@ void setup_gallery_and_menu () {
 		app.screen = App::Screen::settings;
 		refresh_settings();
 		sync_collection(true);
+		// a banner only for pictures still to come; one already on the TV simply shows (a banner saying it was loading it read
+		// as a download that was not there)
 		int coming = app.collection.missing();
 		if (coming > 0)
 			notify(NoticeKind::download, fmt(tr("The wallpaper downloads in the background: {0}", "Обои скачиваются в фоне: {0}"),
 				count(coming, "picture", "pictures", "картинка", "картинки", "картинок")));
-		else notify(choice.mode == "gradient" ? NoticeKind::done : NoticeKind::info, choice.mode == "gradient" ? tr("Default background restored", "Фон по умолчанию восстановлен") : w.mode == "image" ? tr("Loading the wallpaper…", "Загружаем обои…") : tr("Starting the slideshow…", "Запускаем слайд-шоу…"));
 	};
 	// OK held on a tile: it is lifted to be moved, with buttons over it to hide it and (an app that can be removed) uninstall it
 	app.home.on_long_press = [] (const TileModel &t) {
@@ -2177,7 +2178,7 @@ int main (int argc, char **argv) {
 			if (app.screen == App::Screen::home) app.quick.draw(app.cfg.theme, now);
 			app.menu.draw(app.cfg.theme, now);
 		}
-		app.notices.draw(now, &app.wallpaper, app.cfg, app.home.plates(), app.home.old_plates());
+		app.notices.draw(now, &app.wallpaper, app.cfg, app.home.plates_for(app.wallpaper.glass().map), app.home.plates_for(app.wallpaper.old_glass().map));
 		double t2 = now_ms();
 		SDL_GL_SwapWindow(app.win);
 		double t3 = now_ms();

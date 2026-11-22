@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "Desactivado. LG Home se abre como siempre",
 	"Setting up…": "Configurando…",
 	"Looking for new apps…": "Buscando aplicaciones nuevas…",
-	"Default background restored": "Fondo predeterminado restaurado",
-	"Loading the wallpaper…": "Cargando el fondo…",
-	"Starting the slideshow…": "Iniciando la presentación…",
 	"Connecting the calendars…": "Conectando los calendarios…",
 	"Calendars removed": "Calendarios eliminados",
 	"Weather for {0}": "Tiempo en {0}",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· actualízalo en Homebrew Channel",
 	"Clock weight": "Grosor de los dígitos",
 	"Card background": "Fondo de los widgets",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Claro u oscuro, en el tono del tema de color. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno.",
 	"Glass": "Cristal",
 	"Frosted": "Esmerilado",
 	"Liquid": "Líquido",
@@ -629,5 +625,7 @@
 	"Screen saver": "Salvapantallas",
 	"After {0}": "A los {0}",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Cuánto difumina el cristal la imagen de detrás: 100 % es el máximo; desactivado lo deja transparente, y el cristal líquido solo la refracta.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Tras este tiempo sin pulsar nada, en la pantalla solo queda el fondo. Cualquier tecla lo devuelve todo."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Tras este tiempo sin pulsar nada, en la pantalla solo queda el fondo. Cualquier tecla lo devuelve todo.",
+	"Neutral": "Neutro",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Claro u oscuro, en el tono del tema de color; neutro: sin color, solo el cristal. Auto: todos los widgets se vuelven claros u oscuros a la vez según la imagen de detrás, para que el texto se lea bien en cada uno."
 }

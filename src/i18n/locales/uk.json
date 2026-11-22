@@ -27,9 +27,6 @@
 	"Off. LG Home opens as usual": "Вимкнено. LG Home відкривається як зазвичай",
 	"Setting up…": "Налаштування…",
 	"Looking for new apps…": "Шукаємо нові застосунки…",
-	"Default background restored": "Типовий фон відновлено",
-	"Loading the wallpaper…": "Завантажуємо шпалери…",
-	"Starting the slideshow…": "Запускаємо слайд-шоу…",
 	"Connecting the calendars…": "Підключаємо календарі…",
 	"Calendars removed": "Календарі прибрано",
 	"Weather for {0}": "Погода для міста: {0}",
@@ -621,7 +618,6 @@
 	"· update it in the Homebrew Channel": "· оновіть у Homebrew Channel",
 	"Clock weight": "Товщина цифр годинника",
 	"Card background": "Підкладка віджетів",
-	"Light or dark, in the hue of the colour theme. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Світла або темна, у відтінку кольорової теми. Авто: усі віджети разом стають світлими або темними залежно від картинки за ними, щоб текст добре читався на кожному.",
 	"Glass": "Скло",
 	"Frosted": "Матове",
 	"Liquid": "Рідке",
@@ -629,5 +625,7 @@
 	"Screen saver": "Заставка",
 	"After {0}": "Через {0}",
 	"How much the glass blurs the picture behind it: 100% is the most; off leaves it clear, so that liquid glass only bends it.": "Наскільки скло розмиває картинку під собою: 100% — найсильніше; якщо вимкнути, скло прозоре, і рідке скло лише заломлює картинку.",
-	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Після цього часу без натискань на екрані лишаються самі шпалери. Будь-яка кнопка повертає все."
+	"After this long without a key, only the wallpaper stays on the screen. Any key brings everything back.": "Після цього часу без натискань на екрані лишаються самі шпалери. Будь-яка кнопка повертає все.",
+	"Neutral": "Нейтральна",
+	"Light or dark, in the hue of the colour theme; neutral: no colour, only the glass. Auto: all the cards turn light or dark together, depending on the picture behind them, so the text stays readable on each.": "Світла або темна, у відтінку колірної теми; нейтральна: без кольору, лише скло. Авто: усі віджети разом стають світлими або темними залежно від картинки за ними, щоб текст добре читався на кожному."
 }
