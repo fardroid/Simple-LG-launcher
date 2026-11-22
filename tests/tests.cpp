@@ -592,7 +592,10 @@ static void settings () {
 		eq(S{show(sv.on()), show(half), std::to_string((int)(sv.progress(2000) * 100)), std::to_string((int)(sv.cards(2000) * 100))}, S{"true", "true", "100", "100"},
 			"coming on: the row first, the widgets a beat later, all gone after 1 s");
 		sv.view(2000 + Saver::STEP_MS * 2.5, cx, cy, k);
-		eq(show(k > 1.03f && k < 1.13f && cx > 400 && cx < 1520 && cy > 200 && cy < 880), std::string("true"), "the wallpaper keeps zooming and drifting, within the screen");
+		float cx2, cy2, k2;
+		sv.view(2000 + Saver::STEP_MS * 2.6, cx2, cy2, k2);
+		eq(show(k == Saver::ZOOM && k2 == Saver::ZOOM && (cx != cx2 || cy != cy2) && cx > 100 && cx < 1820 && cy > 60 && cy < 1020), std::string("true"),
+			"the wallpaper keeps its size and only slides, within the screen");
 		double t = 2000 + Saver::STEP_MS * 3;
 		sv.start(t + 100);
 		sv.wake(t);

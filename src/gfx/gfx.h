@@ -70,8 +70,6 @@ void layer (const Texture &t, Rect r, float opacity);
 struct LiquidGlass { float bevel = 54, thickness = 84, dispersion = 1; bool smooth = true; };
 /** The frosted wallpaper `frost` (over the whole screen) seen through liquid glass shaped as the rounded box `r`. */
 void liquid (const Texture &frost, Rect r, float radius, float opacity, float brightness, const LiquidGlass &g);
-/** The light on that glass (its bevel's highlights and the line round it), over what is drawn there. */
-void liquid_light (Rect r, float radius, const LiquidGlass &g, float opacity);
 /** The GPU built the liquid glass's shader (false: the cards keep the frosted glass). */
 bool liquid_available ();
 /** A CSS linear-gradient(angle, stops) over `r` (angle in degrees, 180 = top to bottom), clipped to a rounded rectangle. */
